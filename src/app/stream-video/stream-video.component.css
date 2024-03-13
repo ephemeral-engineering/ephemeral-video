@@ -1,0 +1,12 @@
+:host {
+    display: block;
+    height: 100%;
+}
+
+.mirror {
+    transform: rotateY(180deg);
+    /* Safari and Chrome */
+    -webkit-transform: rotateY(180deg);
+    /* Firefox */
+    -moz-transform: rotateY(180deg);
+}

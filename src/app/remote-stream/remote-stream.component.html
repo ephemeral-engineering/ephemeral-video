@@ -1,0 +1,46 @@
+<app-controlled-stream [stream]="_remoteStream" [mediaStream]="_mediaStream" [videoStyle]="_videoStyle">
+    <span label>{{_nickname}}-{{_publishOptions.topic}}</span>
+    <div controls>
+        <div>
+            <button mat-mini-fab color="primary" aria-label="snapshot" title="snapshot" (click)="snapshot()">
+                <mat-icon>photo_camera</mat-icon>
+            </button>
+        </div>
+        <div class="mt-1">
+            <button mat-mini-fab color="accent" aria-label="publish-audio" title="publish audio"
+                (click)="togglePublishAudio()">
+                <mat-icon>{{_publishOptions.audio ? 'mic':'mic_off'}}</mat-icon>
+            </button>
+        </div>
+        <div class="mt-1">
+            <button mat-mini-fab color="accent" aria-label="publish-video" title="publish video"
+                (click)="togglePublishVideo()">
+                <mat-icon>{{_publishOptions.video ? 'videocam':'videocam_off'}}
+                </mat-icon>
+            </button>
+        </div>
+        <div class="mt-1">
+            <button mat-mini-fab color="primary" aria-label="subscribe-audio" title="subscribe audio"
+                (click)="toggleSubscribeAudio()">
+                <mat-icon>{{_subscribeOptions.audio && audioEnabled ? 'volume_up':'volume_off'}}</mat-icon>
+            </button>
+        </div>
+        <div class="mt-1">
+            <button mat-mini-fab color="primary" aria-label="subscribe-video" title="subscribe video"
+                (click)="toggleSubscribeVideo()">
+                <mat-icon>{{_subscribeOptions.video && videoEnabled ? 'videocam':'videocam_off'}}
+                </mat-icon>
+            </button>
+        </div>
+        <!-- <div class="mt-1">
+            <button mat-mini-fab aria-label="audio" color="basic" (click)="toggleAudio()">
+                <mat-icon>{{audioEnabled ? 'mic':'mic_off'}}</mat-icon>
+            </button>
+        </div>
+        <div class="mt-1">
+            <button mat-mini-fab aria-label="video" color="basic" (click)="toggleVideo()">
+                <mat-icon>{{videoEnabled ? 'videocam':'videocam_off'}}</mat-icon>
+            </button>
+        </div> -->
+    </div>
+</app-controlled-stream>
