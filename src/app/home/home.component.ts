@@ -20,6 +20,7 @@ import { ContextService } from '../context.service';
 import { LocalStreamComponent } from '../local-stream/local-stream.component';
 import { RemoteStreamComponent } from '../remote-stream/remote-stream.component';
 import { WINDOW } from '../windows-provider';
+import { MessageType, MessagesService } from '../messages.service';
 
 interface UserData {
   nickname: string
@@ -65,7 +66,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     return this.localParticipant?.user.getUserData().nickname;
   }
   set nickname(value: string) {
-    // this._nickname = value;
     this.localParticipant?.user.setUserData({ ...this.localParticipant?.user.getUserData(), nickname: value })
     this.contextService.setNickname(value)
   }
@@ -73,7 +73,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   // readonly year: number = new Date().getFullYear();
 
   localParticipant: LocalParticipant | undefined;
-  localParticipantData: UserData | undefined;
 
   localMediaStream: MediaStream | undefined;
   localStream: LocalStream | undefined;
@@ -129,10 +128,19 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     private activatedRoute: ActivatedRoute,
     private authService: AuthService,
     private contextService: ContextService,
+    private messagesService: MessagesService,
     private fb: UntypedFormBuilder,
   ) { }
 
   ngOnInit(): void {
+
+    // Register
+    this.contextService.nickname$.subscribe(value => {
+      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+        console.debug(`${CNAME}|ngOnInit nickname$.subscribe`, value, this.contextService.nickname)
+      }
+      this.localParticipant?.user.setUserData({ ...this.localParticipant.user.getUserData(), nickname: value })
+    });
 
     // this.moderator = !this.authService.user?.isAnonymous;
 
@@ -241,11 +249,12 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
       // Join the conversation
       const userData: UserData = {
-        nickname: this.conversation.peerId, //this.authService.user?.displayName ||
+        nickname: this.contextService.nickname, //this.conversation.peerId, //this.authService.user?.displayName ||
         isModerator: this.moderator
       };
-      this.localParticipantData = userData;
-
+      if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
+        console.warn(`${CNAME}|joining with `, userData)
+      }
       this.isWaitingForAcceptance = true;
       conversation.getOrCreateParticipant(userData, { moderator: this.moderator }).then((participant: LocalParticipant) => {
         if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
@@ -260,8 +269,15 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
             console.log(`${CNAME}|onUserDataUpdate`, this.localParticipant, userData)
           }
-          this.localParticipantData = userData;
         })
+
+        if (this.localParticipant.user.getUserData().nickname !== this.contextService.nickname) {
+          if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
+            console.log(`${CNAME}|adjusting nickname`, participant)
+          }
+          this.localParticipant.user.setUserData({ ...this.localParticipant.user.getUserData(), nickname: this.contextService.nickname })
+        }
+
       }).catch((error: any) => {
         if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
           console.warn(`${CNAME}|addParticipant failed`, error)
@@ -270,6 +286,10 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       })
 
       this.url = `${baseUrl}/${conversation.id}`;
+      this.messagesService.postMessage({
+        type: MessageType.RoomUrl,
+        url: this.url
+      })
     }).catch((error: any) => {
       console.error(`${CNAME}|getOrCreate failed`, error)
     })
@@ -295,12 +315,19 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   onSnapshot(dataUrl: string) {
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
       console.debug(`${CNAME}|took snapshot`, dataUrl);
-      // dataUrl = data:image/png;base64,...
-      const type = dataUrl.split(';')[0].split('/')[1];
-      const str = new Date().toJSON();
-      // str = 2024-01-14T15:04:04.494Z
-      saveAs(dataUrl, `snapshot_${str.slice(0, 10)}_${str.slice(11, 19).replace(/:/g, '-')}.${type}`)
     }
+    // dataUrl = data:image/png;base64,...
+    const type = dataUrl.split(';')[0].split('/')[1];
+    const str = new Date().toJSON();
+    // str = 2024-01-14T15:04:04.494Z
+    saveAs(dataUrl, `snapshot_${str.slice(0, 10)}_${str.slice(11, 19).replace(/:/g, '-')}.${type}`)
+
+    // TODO conditionally saveAs or post ! depending on config passed though inbound message ?
+
+    this.messagesService.postMessage({
+      type: MessageType.Snapshot,
+      dataUrl
+    })
   }
 
   doStoreAndBindLocalMediaStream(mediaStream: MediaStream) {

@@ -1,4 +1,15 @@
 <div class="">
+    <div class="d-flex justify-content-center">
+        <mat-form-field>
+            <mat-label>Nickname</mat-label>
+            <input matInput type="text" [(ngModel)]="nickname">
+            @if (nickname) {
+            <button matSuffix mat-icon-button aria-label="Clear" (click)="nickname=''">
+                <mat-icon>close</mat-icon>
+            </button>
+            }
+        </mat-form-field>
+    </div>
     <!-- <div *ngFor="let kv of remoteStreamsByParticipant | keyvalue" class="row">
         <p>User {{kv.key.id}} </p>
         <span>kv.value.size = {{kv.value.size}}</span>
@@ -116,35 +127,24 @@
     </div>
 
     <div class="d-flex justify-content-center">
-        <div>
-            <!-- <p>Conversation id : {{conversation?.id}}</p>
+        <!-- <p>Conversation id : {{conversation?.id}}</p>
             <p>User id : {{localParticipant?.user?.id}}</p>
             <p>User nickname : {{localParticipantData?.nickname}}</p>
             <p>User moderator : {{moderator}}</p>
             <p>Others can join at url
                 <a href="{{url}}" target="_blank" rel="noopener">{{url}}</a>
             </p> -->
-            <button *ngIf="url" mat-fab extended color="primary" [cdkCopyToClipboard]="url">
-                <mat-icon>link</mat-icon>
-                Copy link
-            </button>
-            <mat-form-field>
-                <mat-label>Nickname</mat-label>
-                <input matInput type="text" [(ngModel)]="nickname">
-                @if (nickname) {
-                <button matSuffix mat-icon-button aria-label="Clear" (click)="nickname=''">
-                    <mat-icon>close</mat-icon>
-                </button>
-                }
-            </mat-form-field>
-            <!-- 
+        <button *ngIf="url" mat-fab extended color="primary" [cdkCopyToClipboard]="url">
+            <mat-icon>link</mat-icon>
+            Copy link
+        </button>
+        <!-- 
             <p>Conversation moderated : {{moderated}}</p>
             <p>
                 <button (click)="toggleModeration()">toggleModeration</button>
             </p> -->
-        </div>
     </div>
-    <div>
+    <!-- <div>
         {{audioTrackCapabilities|json}}
     </div>
     <div>
@@ -152,7 +152,7 @@
     </div>
     <div>
         {{audioTrackSettings|json}}
-    </div>
+    </div> -->
     <!-- <div class="row">
         <div class="col">
             <img [src]="snapshotSrc" />
