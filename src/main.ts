@@ -8,7 +8,6 @@ import { setLogLevel as setEphWebRtcLogLevel } from 'ephemeral-webrtc';
 
 import { AppRoutingModule } from './app/app-routing.module';
 import { AppComponent } from './app/app.component';
-import { AuthGuard } from './app/auth.guard';
 import { WINDOW_PROVIDERS } from './app/windows-provider';
 import { environment } from './environments/environment';
 import { setLogLevel } from './logLevel';
@@ -26,7 +25,7 @@ if (environment.production) {
 bootstrapApplication(AppComponent, {
   providers: [
     importProvidersFrom(AppRoutingModule),
-    WINDOW_PROVIDERS, AuthGuard,
+    WINDOW_PROVIDERS, // AuthGuard,
     // provideAnimations() removed to reduce bundle size
     provideNoopAnimations()
   ]

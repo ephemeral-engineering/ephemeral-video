@@ -1,6 +1,6 @@
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { JsonPipe, KeyValuePipe, NgFor, NgIf, NgStyle } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, HostListener, Inject, OnDestroy, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Inject, OnDestroy, ViewChild } from '@angular/core';
 import { FormsModule, UntypedFormBuilder, UntypedFormControl, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,17 +10,16 @@ import { ActivatedRoute } from "@angular/router";
 
 // import { getDatabase, ref } from "@firebase/database";
 
-import { Conversation, ConversationOptions, LocalParticipant, LocalStream, RemoteParticipant, RemoteStream, User } from 'ephemeral-webrtc';
+import { Conversation, ConversationOptions, LocalParticipant, LocalStream, RemoteParticipant, RemoteStream, User, setLogLevel as setEphWebRtcLogLevel } from 'ephemeral-webrtc';
 
 import { saveAs } from 'file-saver-es';
 
-import { MediaStreamHelper } from '../MediaStreamHelper';
-import { AuthService } from '../auth.service';
 import { ContextService } from '../context.service';
 import { LocalStreamComponent } from '../local-stream/local-stream.component';
+import { MessageType, MessagesService } from '../messages.service';
 import { RemoteStreamComponent } from '../remote-stream/remote-stream.component';
 import { WINDOW } from '../windows-provider';
-import { MessageType, MessagesService } from '../messages.service';
+import { LogLevelText, setLogLevel } from 'src/logLevel';
 
 interface UserData {
   nickname: string
@@ -126,13 +125,17 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   constructor(@Inject(WINDOW) public window: Window,
     private activatedRoute: ActivatedRoute,
-    private authService: AuthService,
     private contextService: ContextService,
     private messagesService: MessagesService,
     private fb: UntypedFormBuilder,
   ) { }
 
   ngOnInit(): void {
+    const logLevel = this.activatedRoute.snapshot.queryParamMap.get('lL') as LogLevelText;
+    setLogLevel(logLevel)
+    setEphWebRtcLogLevel(logLevel)
+
+    const hash = this.activatedRoute.snapshot.queryParamMap.get('hash') as string;
 
     // Register
     this.contextService.nickname$.subscribe(value => {
@@ -160,17 +163,17 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     }
 
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-      console.debug(`${CNAME}|ngOnInit baseUrl conversationId`, baseUrl, conversationId)
+      console.debug(`${CNAME}|ngOnInit baseUrl conversationId`, baseUrl, conversationId, hash)
     }
 
     const options: ConversationOptions = {
-      // ephemeralServerUrl: "https://nodejs-ephemeral-6ql4wqd5pq-ew.a.run.app",
-      ephemeralServerUrl: "http://localhost:3077",
       moderated: this.moderated
     };
 
     // ref(getDatabase(), 'Conversations')
-    Conversation.getOrCreate(conversationId, options).then((conversation: Conversation) => {
+    //"http://localhost:3077",
+    // "https://nodejs-ephemeral-6ql4wqd5pq-ew.a.run.app"
+    Conversation.getOrCreate("http://localhost:3077", conversationId, /^true$/i.test(hash), options).then((conversation: Conversation) => {
       if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
         console.log(`${CNAME}|Conversation`, conversation)
       }
@@ -247,7 +250,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       //   this.messages.push([participant.userData as UserData, message])
       // })
 
-      // Join the conversation
+      // Enter the conversation
       const userData: UserData = {
         nickname: this.contextService.nickname, //this.conversation.peerId, //this.authService.user?.displayName ||
         isModerator: this.moderator

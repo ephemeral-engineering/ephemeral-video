@@ -6,7 +6,7 @@ const CNAME = 'MessagesService';
 export enum MessageType {
   Config = 'config',
   Initialized = 'initialized',
-  Join = 'join',
+  Enter = 'enter',
   Leave = 'leave',
   RoomUrl = 'room-url',
   Snapshot = 'snapshot',
@@ -22,7 +22,8 @@ export class MessagesService {
 
     const listener = (event: any) => {
 
-      if (event.data instanceof Array || (event.data instanceof Object && event.data.type === 'webPackWarnings')) {
+      if (event.data instanceof Array || (event.data instanceof Object && (event.data.type === 'webPackWarnings' ||
+        event.data.source === 'react-devtools-content-script'))) {
         return
       }
 
@@ -33,6 +34,12 @@ export class MessagesService {
       const message = event.data;
       switch (message.type) {
         case MessageType.Config: {
+          break;
+        }
+        case MessageType.Enter: {
+          break;
+        }
+        case MessageType.Leave: {
           break;
         }
         case MessageType.UserData: {

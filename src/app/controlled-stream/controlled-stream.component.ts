@@ -46,7 +46,9 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
           }
           this.pointerChannels.set(dataChannel, data.nickname);
         } else {
-          console.warn(`${CNAME}|dataChannel.onmessage received`, data)
+          if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
+            console.warn(`${CNAME}|dataChannel.onmessage received`, data)
+          }
         }
       };
       dataChannel.addEventListener('error', (error) => {
