@@ -8,8 +8,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { ActivatedRoute } from "@angular/router";
 
-// import { getDatabase, ref } from "@firebase/database";
-
 import { Conversation, ConversationOptions, LocalParticipant, LocalStream, RemoteParticipant, RemoteStream, User, setLogLevel as setEphWebRtcLogLevel } from 'ephemeral-webrtc';
 
 import { saveAs } from 'file-saver-es';
@@ -132,8 +130,10 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     const logLevel = this.activatedRoute.snapshot.queryParamMap.get('lL') as LogLevelText;
-    setLogLevel(logLevel)
-    setEphWebRtcLogLevel(logLevel)
+    if (logLevel) {
+      setLogLevel(logLevel)
+      setEphWebRtcLogLevel(logLevel)
+    }
 
     const hash = this.activatedRoute.snapshot.queryParamMap.get('hash') as string;
 
@@ -153,27 +153,25 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
     var baseUrl: string;
     if (conversationId) {
-      const path = `${this.window.location.pathname}`.split('/');
+      const path = this.window.location.pathname.split('/');
       // remove last element which is the conversationName
       path.pop();
       // and recreate base url
-      baseUrl = `${this.window.location.origin}` + path.join('/');
+      baseUrl = `${this.window.location.origin}${path.join('/')}`;
     } else {
-      baseUrl = `${this.window.location.href}`;
+      // remove trailing slash
+      baseUrl = this.window.location.href.replace(/\/$/, "");
     }
 
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-      console.debug(`${CNAME}|ngOnInit baseUrl conversationId`, baseUrl, conversationId, hash)
+      console.debug(`${CNAME}|ngOnInit`, baseUrl, conversationId, hash)
     }
 
     const options: ConversationOptions = {
       moderated: this.moderated
     };
 
-    // ref(getDatabase(), 'Conversations')
-    //"http://localhost:3077",
-    // "https://nodejs-ephemeral-6ql4wqd5pq-ew.a.run.app"
-    Conversation.getOrCreate("http://localhost:3077", conversationId, /^true$/i.test(hash), options).then((conversation: Conversation) => {
+    Conversation.getOrCreate(conversationId, /^true$/i.test(hash), options).then((conversation: Conversation) => {
       if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
         console.log(`${CNAME}|Conversation`, conversation)
       }
