@@ -121,6 +121,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   //   event.returnValue = true;
   // }
 
+  _connectionStatuses: string[] = new Array();
+
   constructor(@Inject(WINDOW) public window: Window,
     private activatedRoute: ActivatedRoute,
     private contextService: ContextService,
@@ -143,6 +145,10 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         console.debug(`${CNAME}|ngOnInit nickname$.subscribe`, value, this.contextService.nickname)
       }
       this.localParticipant?.user.setUserData({ ...this.localParticipant.user.getUserData(), nickname: value })
+    });
+
+    this.contextService.peerStatus$.subscribe(status => {
+      this._connectionStatuses.push(`${new Date().toLocaleTimeString()}: Peer status ${status}`)
     });
 
     // this.moderator = !this.authService.user?.isAnonymous;
@@ -174,6 +180,10 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     Conversation.getOrCreate(conversationId, /^true$/i.test(hash), options).then((conversation: Conversation) => {
       if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
         console.log(`${CNAME}|Conversation`, conversation)
+      }
+
+      conversation.onConnectionStatus = (status: string) => {
+        this._connectionStatuses.push(`${new Date().toLocaleTimeString()}: Server connection ${status}`);
       }
 
       this.conversation = conversation;

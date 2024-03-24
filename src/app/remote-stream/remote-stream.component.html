@@ -1,5 +1,6 @@
 <app-controlled-stream [stream]="_remoteStream" [mediaStream]="_mediaStream" [videoStyle]="_videoStyle">
     <span label>{{_nickname}}-{{_publishOptions.topic}}</span>
+    <span status>{{_onlineStatus}}</span>
     <div controls>
         <div>
             <button mat-mini-fab color="primary" aria-label="snapshot" title="snapshot" (click)="snapshot()">

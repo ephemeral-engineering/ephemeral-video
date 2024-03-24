@@ -10,6 +10,9 @@
             }
         </mat-form-field>
     </div>
+    <div *ngFor="let status of _connectionStatuses">
+        <span>{{status}}</span>
+    </div>
     <!-- <div *ngFor="let kv of remoteStreamsByParticipant | keyvalue" class="row">
         <p>User {{kv.key.id}} </p>
         <span>kv.value.size = {{kv.value.size}}</span>

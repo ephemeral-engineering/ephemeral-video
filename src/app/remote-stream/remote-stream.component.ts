@@ -7,6 +7,7 @@ import { PublishOptions, RemoteStream, SubscribeOptions, receiveByChunks } from 
 import { MediaStreamHelper } from '../MediaStreamHelper';
 import { DATACHANNEL_SNAPSHOT_PATH } from '../constants';
 import { ControlledStreamComponent } from '../controlled-stream/controlled-stream.component';
+import { ContextService } from '../context.service';
 
 const CNAME = 'RemoteStream';
 
@@ -27,10 +28,18 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
   audioEnabled = false;
   videoEnabled = false;
 
+  constructor(private contextService: ContextService) { }
+
   _nickname = '';
   on_userDataUpdate = (userData: any) => {
     this._nickname = userData.nickname;
   };
+
+  _onlineStatus = '';
+  setOnlineStatus = (onlineStatus: string) => {
+    this._onlineStatus = onlineStatus;
+    this.contextService.recordPeerStatus(onlineStatus)
+  }
 
   _remoteStream: RemoteStream;
   @Input({ required: true }) set remoteStream(remoteStream: RemoteStream) {
@@ -57,6 +66,32 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
       }
       this.mediaStream = mediaStream;
     })
+
+    const on_connectionStateChanged = (event: Event) => {
+      const peerConnection = event.target as RTCPeerConnection;
+      switch (peerConnection.connectionState) {
+        case "new":
+        case "connecting":
+          this.setOnlineStatus("Connecting…");
+          break;
+        case "connected":
+          this.setOnlineStatus("Online");
+          break;
+        case "disconnected":
+          this.setOnlineStatus("Disconnecting…");
+          break;
+        case "closed":
+          this.setOnlineStatus("Offline");
+          break;
+        case "failed":
+          this.setOnlineStatus("Error");
+          break;
+        default:
+          this.setOnlineStatus("Unknown");
+          break;
+      }
+    };
+    this._remoteStream.onPeerConnectionStateChanged(on_connectionStateChanged)
   }
 
   _videoStyle: { [klass: string]: any; } = {};

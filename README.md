@@ -18,6 +18,14 @@ ephemeral-video$ `npm install ../ephemeral-webrtc/ephemeral-webrtc-1.0.0.tgz`
 
 Then `npm run build` or `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
 
+## config
+
+src/app.config.json
+
+"ephemeralServerUrl": "https://ephemeral",
+OR
+"ephemeralServerUrl": "https://localhost:3077",
+
 ## Run
 
 `npm run start`
