@@ -1,4 +1,5 @@
-<app-controlled-stream [stream]="_remoteStream" [mediaStream]="_mediaStream" [videoStyle]="_videoStyle">
+<app-controlled-stream [stream]="_remoteStream" [mediaStream]="_mediaStream" [videoStyle]="_videoStyle"
+    [sinkId]="_sinkId">
     <span label>{{_nickname}}-{{_publishOptions.topic}}</span>
     <span status>{{_onlineStatus}}</span>
     <div controls>

@@ -81,6 +81,11 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     this._muted = muted;
   }
 
+  _sinkId: string;
+  @Input() set sinkId(id: string) {
+    this._sinkId = id;
+  }
+
   @HostBinding("style.--min-height")
   private minHeight: string = '50px';
   @HostBinding("style.--min-width")

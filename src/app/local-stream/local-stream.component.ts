@@ -27,16 +27,20 @@ export class LocalStreamComponent implements OnInit {
   _localStream: LocalStream;
   @Input({ required: true }) set localStream(localStream: LocalStream) {
     this._localStream = localStream;
-    if (this._localStream) {
-      this._publishOptions = this._localStream.getPublishOptions();
-      const l_stream = this._localStream;
-      l_stream.onPublishOptionsUpdate(() => {
-        this._publishOptions = l_stream.getPublishOptions();
+
+    if (localStream) {
+      this._publishOptions = localStream.getPublishOptions();
+
+      localStream.onPublishOptionsUpdate(() => {
+        this._publishOptions = localStream.getPublishOptions();
       })
 
-      this.mediaStream = this._localStream.getMediaStream();
+      this.mediaStream = localStream.getMediaStream();
+      localStream.onMediaStream((mediaStream) => {
+        this.mediaStream = mediaStream;
+      })
 
-      this._localStream.onDataChannel(DATACHANNEL_SNAPSHOT_PATH, (dataChannel: RTCDataChannel) => {
+      localStream.onDataChannel(DATACHANNEL_SNAPSHOT_PATH, (dataChannel: RTCDataChannel) => {
 
         // Store to keep a reference, otherwise the instance might be garbage collected
         // I had some weird issues with snapshots not always working, I suspected garbage collection.
@@ -50,7 +54,7 @@ export class LocalStreamComponent implements OnInit {
           if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
             console.debug(`${CNAME}|dataChannel:onopen`, DATACHANNEL_SNAPSHOT_PATH, event)
           }
-          this._localStream.snapshot().then((dataUrl: string) => {
+          localStream.snapshot().then((dataUrl: string) => {
             // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Using_data_channels
             // Error with:
             // dataChannel.send(dataUrl) // TypeError: RTCDataChannel.send: Message size (534010) exceeds maxMessageSize

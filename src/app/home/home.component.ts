@@ -6,18 +6,19 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute } from "@angular/router";
 
 import { Conversation, ConversationOptions, LocalParticipant, LocalStream, RemoteParticipant, RemoteStream, User, setLogLevel as setEphWebRtcLogLevel } from 'ephemeral-webrtc';
 
 import { saveAs } from 'file-saver-es';
 
+import { LogLevelText, setLogLevel } from 'src/logLevel';
 import { ContextService } from '../context.service';
 import { LocalStreamComponent } from '../local-stream/local-stream.component';
 import { MessageType, MessagesService } from '../messages.service';
 import { RemoteStreamComponent } from '../remote-stream/remote-stream.component';
 import { WINDOW } from '../windows-provider';
-import { LogLevelText, setLogLevel } from 'src/logLevel';
 
 interface UserData {
   nickname: string
@@ -40,6 +41,7 @@ const CNAME = 'Home';
     LocalStreamComponent, RemoteStreamComponent,
     MatButtonModule, MatIconModule,
     FormsModule, MatFormFieldModule, MatInputModule,
+    MatSelectModule,
     KeyValuePipe]
 })
 export class HomeComponent implements AfterViewInit, OnDestroy {
@@ -306,21 +308,105 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     })
   }
 
-  ngAfterViewInit() {
-    navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true
-      }, video: true
-    }).then((mediaStream: MediaStream) => {
+  grabbing: boolean = false;
+  audioInMediaDevices: MediaDeviceInfo[];
+  videoInMediaDevices: MediaDeviceInfo[];
+  audioOutMediaDevices: MediaDeviceInfo[];
+
+  updateDeviceList() {
+    navigator.mediaDevices.enumerateDevices()
+      .then((devices) => {
+        this.audioInMediaDevices = devices.filter((d) => d.kind === 'audioinput')
+        this.videoInMediaDevices = devices.filter((d) => d.kind === 'videoinput')
+        this.audioOutMediaDevices = devices.filter((d) => d.kind === 'audiooutput')
+      })
+      .catch((err) => {
+        console.error(`${err.name}: ${err.message}`);
+      });
+  }
+
+  getUserMedia() {
+    return new Promise<void>((resolve, reject) => {
+      const supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
       if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-        console.debug(`${CNAME}|ngAfterViewInit getUserMedia`, mediaStream)
+        console.debug(`${CNAME}|supportedConstraints`, supportedConstraints)
       }
-      this.doStoreAndBindLocalMediaStream(mediaStream)
-      this.publish()
-    }).catch((error) => {
-      console.error(`${CNAME}|ngAfterViewInit getUserMedia`, error)
+
+      const audioConstraints = {
+        echoCancellation: true,
+        noiseSuppression: true,
+        ...this._selectedAudioDeviceId ? { deviceId: this._selectedAudioDeviceId } : {},
+      };
+
+      const videoConstraints = {
+        ...supportedConstraints['width'] ? { width: { min: 640, ideal: 1280, max: 4000 } } : {},
+        ...supportedConstraints['height'] ? { height: { min: 480, ideal: 720, max: 3000 } } : {},
+        // aspectRatio: 1.777777778,
+        ...supportedConstraints['frameRate'] ? { frameRate: { ideal: 30, max: 60 } } : {},
+        // facingMode: { exact: "user" },
+        ...this._selectedVideoDeviceId ? { deviceId: this._selectedVideoDeviceId } : {},
+      };
+
+      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+        console.debug(`${CNAME}|navigator.mediaDevices`, navigator.mediaDevices)
+      }
+      navigator.mediaDevices.getUserMedia({ audio: audioConstraints, video: videoConstraints })
+        .then((mediaStream: MediaStream) => {
+          if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+            console.debug(`${CNAME}|getUserMedia`, mediaStream)
+          }
+
+          this.doStoreAndBindLocalMediaStream(mediaStream)
+          if (this.localStream) {
+            this.localStream.replaceMediaStream(mediaStream)
+          } else {
+            this.publish()
+          }
+          resolve()
+        }).catch((error) => {
+          console.error(`${CNAME}|getUserMedia`, error)
+          reject()
+        }).finally(() => {
+          this.updateDeviceList()
+        })
     })
+
+  }
+
+  ngAfterViewInit() {
+    navigator.mediaDevices.ondevicechange = (event) => {
+      this.updateDeviceList()
+    };
+    this.getUserMedia()
+  }
+
+  _selectedAudioDeviceId: string;
+  set selectedAudioDeviceId(id: string) {
+    this.grabbing = true;
+    this.getUserMedia().then(() => {
+      this._selectedAudioDeviceId = id;
+    }).finally(() => {
+      this.grabbing = false;
+    })
+  }
+
+  _selectedVideoDeviceId: string;
+  set selectedVideoDeviceId(id: string) {
+    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+      console.debug(`${CNAME}|set selectedVideoDeviceId`, id)
+    }
+    this.grabbing = true;
+    this.getUserMedia().then(() => {
+      this._selectedVideoDeviceId = id;
+    }).finally(() => {
+      this.grabbing = false;
+    })
+  }
+
+  _selectedAudioOutputDeviceId: string;
+  set selectedAudioOutputDeviceId(id: string) {
+    this._selectedAudioOutputDeviceId = id;
+    this.contextService.setSinkId(id)
   }
 
   onSnapshot(dataUrl: string) {

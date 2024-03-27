@@ -1,4 +1,4 @@
-<app-stream-video class="" [mediaStream]="_mediaStream" [videoStyle]="_videoStyle" [muted]="_muted"
+<app-stream-video [mediaStream]="_mediaStream" [videoStyle]="_videoStyle" [muted]="_muted" [sinkId]="_sinkId"
     (pointerenter)="onPointerEnter($event)" (pointermove)="onPointerMove($event)"
     (pointerleave)="onPointerLeave($event)"></app-stream-video>
 <div class="pos-abs top-left" #label>

@@ -13,15 +13,21 @@ export class ContextService {
   private peerStatusSubject = new Subject<string>();
   peerStatus$: Observable<string> = this.peerStatusSubject.asObservable();
 
+  private sinkIdSubject = new Subject<string>();
+  sinkId$: Observable<string> = this.sinkIdSubject.asObservable();
+
   constructor() { }
 
   setNickname(value: string) {
     this.nickname = value;
-    this.nicknameSubject.next(value);
+    this.nicknameSubject.next(value)
   }
 
   recordPeerStatus(status: string) {
-    this.peerStatusSubject.next(status);
+    this.peerStatusSubject.next(status)
   }
 
+  setSinkId(sinkId: string) {
+    this.sinkIdSubject.next(sinkId)
+  }
 }

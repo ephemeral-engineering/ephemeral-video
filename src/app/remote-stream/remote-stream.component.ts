@@ -25,10 +25,16 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
 
   // private snapshotDataChannels = new Set<RTCDataChannel>;
 
+  _sinkId: string;
+
   audioEnabled = false;
   videoEnabled = false;
 
-  constructor(private contextService: ContextService) { }
+  constructor(private contextService: ContextService) {
+    this.contextService.sinkId$.subscribe(id => {
+      this._sinkId = id;
+    });
+  }
 
   _nickname = '';
   on_userDataUpdate = (userData: any) => {

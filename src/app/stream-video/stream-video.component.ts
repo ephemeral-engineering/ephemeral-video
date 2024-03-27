@@ -1,5 +1,5 @@
 import { NgClass, NgStyle } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild } from '@angular/core';
 
 export const VIDEO_ROUNDED_CORNERS = { borderRadius: '4px', overflow: 'hidden' };
 
@@ -14,7 +14,7 @@ const CNAME = 'StreamVideo';
 })
 export class StreamVideoComponent { //implements AfterViewInit, OnDestroy
 
-  // @ViewChild("video") videoRef: ElementRef | undefined;
+  @ViewChild("video") videoRef: ElementRef | undefined;
 
   _mediaStream: MediaStream | undefined;
   @Input() set mediaStream(mediaStream: MediaStream | undefined) {
@@ -54,6 +54,10 @@ export class StreamVideoComponent { //implements AfterViewInit, OnDestroy
   _fullscreen = false;
   @Input() set fullscreen(fullscreen: boolean) {
     this._fullscreen = fullscreen;
+  }
+
+  @Input() set sinkId(id: string) {
+    this.videoRef?.nativeElement.setSinkId(id)
   }
 
   // ngAfterViewInit() {
