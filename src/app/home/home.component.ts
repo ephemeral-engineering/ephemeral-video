@@ -125,6 +125,9 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   _connectionStatuses: string[] = new Array();
 
+  bandwidthByPeerId: Map<string, number> = new Map();
+  averageBandwidth: number = 0;
+
   constructor(@Inject(WINDOW) public window: Window,
     private activatedRoute: ActivatedRoute,
     private contextService: ContextService,
@@ -184,16 +187,22 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         console.log(`${CNAME}|Conversation`, conversation)
       }
 
-      conversation.onConnectionStatus = (status: string) => {
-        this._connectionStatuses.push(`${new Date().toLocaleTimeString()}: Server connection ${status}`);
-      }
-
       this.conversation = conversation;
 
       window.history.replaceState({}, '', `${baseUrl}/${conversation.id}`)
 
       // Listen to Conversation events
       //
+
+      conversation.onConnectionStatus = (status: string) => {
+        this._connectionStatuses.push(`${new Date().toLocaleTimeString()}: Server connection ${status}`);
+      }
+
+      conversation.onBandwidth = (peerId: string, speedKbps: number, average: number) => {
+        this.bandwidthByPeerId.set(peerId, speedKbps)
+        this.averageBandwidth = average;
+      };
+
       conversation.onModeratedChanged = (moderated: boolean) => {
         this.moderated = moderated;
       };

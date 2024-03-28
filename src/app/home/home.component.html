@@ -154,6 +154,14 @@
     </div>
 
     <div class="mt-5">
+        Bandwidth
+        <div *ngFor="let kv of bandwidthByPeerId | keyvalue">
+            <span>{{kv.key}}->{{kv.value}}</span>
+        </div>
+        Average: {{averageBandwidth}}
+    </div>
+
+    <div class="mt-5">
         <div>Capabilities:
             <p>audio: {{audioTrackCapabilities | json}}</p>
             <p>video: {{videoTrackCapabilities | json}}</p>
