@@ -1,6 +1,6 @@
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { JsonPipe, KeyValuePipe, NgFor, NgIf, NgStyle } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, Inject, OnDestroy, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, Inject, OnDestroy, ViewChild } from '@angular/core';
 import { FormsModule, UntypedFormBuilder, UntypedFormControl, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -19,6 +19,9 @@ import { LocalStreamComponent } from '../local-stream/local-stream.component';
 import { MessageType, MessagesService } from '../messages.service';
 import { RemoteStreamComponent } from '../remote-stream/remote-stream.component';
 import { WINDOW } from '../windows-provider';
+import { getSessionStorage, setSessionStorage } from '../common';
+import { STORAGE_PREFIX } from '../constants';
+import { FilterOutPipe } from '../filter-out.pipe';
 
 interface UserData {
   nickname: string
@@ -42,7 +45,7 @@ const CNAME = 'Home';
     MatButtonModule, MatIconModule,
     FormsModule, MatFormFieldModule, MatInputModule,
     MatSelectModule,
-    KeyValuePipe]
+    KeyValuePipe, FilterOutPipe]
 })
 export class HomeComponent implements AfterViewInit, OnDestroy {
 
@@ -62,11 +65,13 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   }
 
   get nickname() {
-    return this.localParticipant?.user.getUserData().nickname;
+    //return this.localParticipant?.user.getUserData().nickname || getSessionStorage(`${STORAGE_PREFIX}-nickname`);
+    return this.contextService.nickname
   }
   set nickname(value: string) {
     this.localParticipant?.user.setUserData({ ...this.localParticipant?.user.getUserData(), nickname: value })
     this.contextService.setNickname(value)
+    setSessionStorage(`${STORAGE_PREFIX}-nickname`, value)
   }
 
   // readonly year: number = new Date().getFullYear();
@@ -108,22 +113,22 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   //
   // COMMENTED OUT BECAUSE ephemeral server does the cleanup anyays !
   //
-  // @HostListener('window:unload', ['$event'])
-  // unloadHandler(event: any) {
-  //   // console.log("unloadHandler", event);
-  //   event.preventDefault()
-  //   this.doCleanUp()
-  // }
+  @HostListener('window:unload', ['$event'])
+  unloadHandler(event: any) {
+    // console.log("unloadHandler", event);
+    event.preventDefault()
+    this.doCleanUp()
+  }
   // Use BEFORE unload to hangup (works for Firefox at least)
   // This is useful if user closes the tab, or refreshes the page
-  // @HostListener('window:beforeunload', ['$event'])
-  // beforeUnloadHandler(event: BeforeUnloadEvent) {
-  //   event.preventDefault()
-  //   this.doCleanUp()
-  //   event.returnValue = true;
-  // }
+  @HostListener('window:beforeunload', ['$event'])
+  beforeUnloadHandler(event: BeforeUnloadEvent) {
+    event.preventDefault()
+    this.doCleanUp()
+    event.returnValue = true;
+  }
 
-  _connectionStatuses: string[] = new Array();
+  _notifications: string[] = new Array();
 
   bandwidthByPeerId: Map<string, number> = new Map();
   averageBandwidth: number = 0;
@@ -152,8 +157,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       this.localParticipant?.user.setUserData({ ...this.localParticipant.user.getUserData(), nickname: value })
     });
 
-    this.contextService.peerStatus$.subscribe(status => {
-      this._connectionStatuses.push(`${new Date().toLocaleTimeString()}: Peer status ${status}`)
+    this.contextService.notifications$.subscribe(status => {
+      this._notifications.push(`${new Date().toLocaleTimeString()}: ${status}`)
     });
 
     // this.moderator = !this.authService.user?.isAnonymous;
@@ -195,7 +200,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       //
 
       conversation.onConnectionStatus = (status: string) => {
-        this._connectionStatuses.push(`${new Date().toLocaleTimeString()}: Server connection ${status}`);
+        this._notifications.push(`${new Date().toLocaleTimeString()}: Server ${status}`);
       }
 
       conversation.onBandwidth = (peerId: string, speedKbps: number, average: number) => {
@@ -274,8 +279,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         nickname: this.contextService.nickname, //this.conversation.peerId, //this.authService.user?.displayName ||
         isModerator: this.moderator
       };
-      if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
-        console.warn(`${CNAME}|joining with `, userData)
+      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+        console.debug(`${CNAME}|joining with `, userData)
       }
       this.isWaitingForAcceptance = true;
       conversation.getOrCreateParticipant(userData, { moderator: this.moderator }).then((participant: LocalParticipant) => {
@@ -389,33 +394,45 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     this.getUserMedia()
   }
 
-  _selectedAudioDeviceId: string;
+  _selectedAudioDeviceId = getSessionStorage(`${STORAGE_PREFIX}-audioDeviceId`);
   set selectedAudioDeviceId(id: string) {
     this.grabbing = true;
+    this._selectedAudioDeviceId = id;
     this.getUserMedia().then(() => {
-      this._selectedAudioDeviceId = id;
+      setSessionStorage(`${STORAGE_PREFIX}-audioDeviceId`, id)
     }).finally(() => {
       this.grabbing = false;
     })
   }
+  get selectedAudioDeviceId() {
+    return this._selectedAudioDeviceId || "";
+  }
 
-  _selectedVideoDeviceId: string;
+  _selectedVideoDeviceId = getSessionStorage(`${STORAGE_PREFIX}-videoDeviceId`);
   set selectedVideoDeviceId(id: string) {
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
       console.debug(`${CNAME}|set selectedVideoDeviceId`, id)
     }
     this.grabbing = true;
+    this._selectedVideoDeviceId = id;
     this.getUserMedia().then(() => {
-      this._selectedVideoDeviceId = id;
+      setSessionStorage(`${STORAGE_PREFIX}-videoDeviceId`, id)
     }).finally(() => {
       this.grabbing = false;
     })
   }
+  get selectedVideoDeviceId() {
+    return this._selectedVideoDeviceId || "";
+  }
 
-  _selectedAudioOutputDeviceId: string;
+  _selectedAudioOutputDeviceId = getSessionStorage(`${STORAGE_PREFIX}-audioOutDeviceId`);
   set selectedAudioOutputDeviceId(id: string) {
     this._selectedAudioOutputDeviceId = id;
+    setSessionStorage(`${STORAGE_PREFIX}-audioOutDeviceId`, id)
     this.contextService.setSinkId(id)
+  }
+  get selectedAudioOutputDeviceId() {
+    return this._selectedAudioOutputDeviceId || "";
   }
 
   onSnapshot(dataUrl: string) {
@@ -531,47 +548,41 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     this.doCleanUp()
   }
 
-  public signOut() {
-    if (this.conversation) {
-      this.conversation.close().then(() => {
-        this.conversation = undefined;
-        if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
-          console.info(`${CNAME}|Conversation closed`)
-        }
-      }).catch((error: any) => {
-        console.error(`${CNAME}|Conversation closing error`, error)
-      }).finally(() => {
-        this.doSignOut()
-      })
-    } else {
-      this.doSignOut()
-    }
-  }
+  // public signOut() {
+  //   if (this.conversation) {
+  //     this.conversation.close().then(() => {
+  //       this.conversation = undefined;
+  //       if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
+  //         console.info(`${CNAME}|Conversation closed`)
+  //       }
+  //     }).catch((error: any) => {
+  //       console.error(`${CNAME}|Conversation closing error`, error)
+  //     }).finally(() => {
+  //       this.doSignOut()
+  //     })
+  //   } else {
+  //     this.doSignOut()
+  //   }
+  // }
 
-  private doSignOut() {
-    // TODO: migrate !
-    // firebase.auth().signOut().then(() => {
-    //   if (globalThis.logLevel.isInfoEnabled) {
-    //     console.info(`${CNAME}|signed Out`);
-    //   }
-    //   this.router.navigate(['/login']);
-    // }).catch(error => {
-    //   console.error(`${CNAME}|doSignOut`, error)
-    // });
-  }
+  // private doSignOut() {
+  //   // TODO: migrate !
+  //   // firebase.auth().signOut().then(() => {
+  //   //   if (globalThis.logLevel.isInfoEnabled) {
+  //   //     console.info(`${CNAME}|signed Out`);
+  //   //   }
+  //   //   this.router.navigate(['/login']);
+  //   // }).catch(error => {
+  //   //   console.error(`${CNAME}|doSignOut`, error)
+  //   // });
+  // }
 
   // --------------------------------------------------------------------------
 
   private doCleanUp() {
     if (this.conversation) {
-      this.conversation.close().then(() => {
-        this.conversation = undefined;
-        if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
-          console.info(`${CNAME}|Conversation closed`);
-        }
-      }).catch((error: any) => {
-        console.error(`${CNAME}|Conversation closing error`, error)
-      });
+      this.conversation.close()
+      this.conversation = undefined;
     }
   }
 

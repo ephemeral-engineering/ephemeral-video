@@ -148,8 +148,8 @@
     </div>
 
     <div class="mt-5">
-        <div *ngFor="let status of _connectionStatuses">
-            <span>{{status}}</span>
+        <div *ngFor="let msg of _notifications">
+            <span>{{msg}}</span>
         </div>
     </div>
 
@@ -161,18 +161,28 @@
         Average: {{averageBandwidth}}
     </div>
 
-    <div class="mt-5">
-        <div>Capabilities:
-            <p>audio: {{audioTrackCapabilities | json}}</p>
-            <p>video: {{videoTrackCapabilities | json}}</p>
+    <div class="mt-5 vw-100">
+        <h3>Capabilities</h3>
+        <div>
+            audio:
+            <pre>{{audioTrackCapabilities | filterOut:'deviceId':'groupId' | json}}</pre>
         </div>
-        <div>Constraints:
-            <p>audio: {{audioTrackConstraints | json}}</p>
-            <p>video: {{videoTrackConstraints | json}}</p>
+        <div>video:
+            <pre>{{videoTrackCapabilities | filterOut:'deviceId':'groupId' | json}}</pre>
         </div>
-        <div>Settings:
-            <p>audio: {{audioTrackSettings | json}}</p>
-            <p>video: {{videoTrackSettings | json}}</p>
+        <h3>Constraints</h3>
+        <div>audio:
+            <pre>{{audioTrackConstraints | filterOut:'deviceId':'groupId' | json}}</pre>
+        </div>
+        <div>video:
+            <pre>{{videoTrackConstraints | filterOut:'deviceId':'groupId' | json}}</pre>
+        </div>
+        <h3>Settings</h3>
+        <div>audio:
+            <pre>{{audioTrackSettings | filterOut:'deviceId':'groupId' | json}}</pre>
+        </div>
+        <div>video:
+            <pre>{{videoTrackSettings | filterOut:'deviceId':'groupId' | json}}</pre>
         </div>
     </div>
 

@@ -1,17 +1,19 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
+import { getSessionStorage } from './common';
+import { STORAGE_PREFIX } from './constants';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ContextService {
 
-  nickname: string = "";
+  nickname: string = getSessionStorage(`${STORAGE_PREFIX}-nickname`) || '';
   private nicknameSubject = new Subject<string>();
   nickname$: Observable<string> = this.nicknameSubject.asObservable();
 
-  private peerStatusSubject = new Subject<string>();
-  peerStatus$: Observable<string> = this.peerStatusSubject.asObservable();
+  private notificationSubject = new Subject<string>();
+  notifications$: Observable<string> = this.notificationSubject.asObservable();
 
   private sinkIdSubject = new Subject<string>();
   sinkId$: Observable<string> = this.sinkIdSubject.asObservable();
@@ -23,8 +25,8 @@ export class ContextService {
     this.nicknameSubject.next(value)
   }
 
-  recordPeerStatus(status: string) {
-    this.peerStatusSubject.next(status)
+  recordNotification(msg: string) {
+    this.notificationSubject.next(msg)
   }
 
   setSinkId(sinkId: string) {

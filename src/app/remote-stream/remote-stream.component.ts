@@ -44,7 +44,7 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
   _onlineStatus = '';
   setOnlineStatus = (onlineStatus: string) => {
     this._onlineStatus = onlineStatus;
-    this.contextService.recordPeerStatus(onlineStatus)
+    this.contextService.recordNotification(`peer is ${onlineStatus}`)
   }
 
   _remoteStream: RemoteStream;
