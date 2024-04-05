@@ -7,6 +7,7 @@ import { DATACHANNEL_POINTER_PATH } from '../constants';
 import { ContextService } from '../context.service';
 import { PointerComponent } from '../pointer/pointer.component';
 import { StreamVideoComponent } from '../stream-video/stream-video.component';
+import { GLOBAL_STATE } from '../global-state';
 
 const CNAME = 'ControlledStream';
 
@@ -143,9 +144,9 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
         // send first message indicating the pointer location that will be sent next
         // comes from the current user
         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|broadcast dataChannel.onopen, sending nickname`, dataChannel.label, this.contextService.nickname)
+          console.debug(`${CNAME}|broadcast dataChannel.onopen, sending nickname`, dataChannel.label, GLOBAL_STATE.nickname)
         }
-        dataChannel.send(JSON.stringify({ nickname: this.contextService.nickname }))
+        dataChannel.send(JSON.stringify({ nickname: GLOBAL_STATE.nickname }))
         this.openDataChannels.add(dataChannel);
       };
       dataChannel.onclose = () => {

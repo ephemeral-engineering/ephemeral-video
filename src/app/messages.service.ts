@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ContextService } from './context.service';
+import { GLOBAL_STATE } from './global-state';
 
 const CNAME = 'MessagesService';
 
@@ -43,7 +44,8 @@ export class MessagesService {
           break;
         }
         case MessageType.UserData: {
-          this.contextService.setNickname(message.name)
+          // this.contextService.setNickname(message.name)
+          GLOBAL_STATE.nickname = message.name;
           break;
         }
         default:

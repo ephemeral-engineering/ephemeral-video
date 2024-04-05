@@ -22,6 +22,7 @@ import { WINDOW } from '../windows-provider';
 import { getSessionStorage, setSessionStorage } from '../common';
 import { STORAGE_PREFIX } from '../constants';
 import { FilterOutPipe } from '../filter-out.pipe';
+import { GLOBAL_STATE } from '../global-state';
 
 interface UserData {
   nickname: string
@@ -66,11 +67,12 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   get nickname() {
     //return this.localParticipant?.user.getUserData().nickname || getSessionStorage(`${STORAGE_PREFIX}-nickname`);
-    return this.contextService.nickname
+    return this.gstate.nickname || ''
   }
   set nickname(value: string) {
     this.localParticipant?.user.setUserData({ ...this.localParticipant?.user.getUserData(), nickname: value })
-    this.contextService.setNickname(value)
+    //this.contextService.setNickname(value)
+    this.gstate.nickname = value;
     setSessionStorage(`${STORAGE_PREFIX}-nickname`, value)
   }
 
@@ -135,10 +137,12 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   constructor(@Inject(WINDOW) public window: Window,
     private activatedRoute: ActivatedRoute,
-    private contextService: ContextService,
+    public contextService: ContextService,
     private messagesService: MessagesService,
     private fb: UntypedFormBuilder,
   ) { }
+
+  gstate = GLOBAL_STATE;
 
   ngOnInit(): void {
     const logLevel = this.activatedRoute.snapshot.queryParamMap.get('lL') as LogLevelText;
@@ -150,12 +154,12 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     const hash = this.activatedRoute.snapshot.queryParamMap.get('hash') as string;
 
     // Register
-    this.contextService.nickname$.subscribe(value => {
-      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-        console.debug(`${CNAME}|ngOnInit nickname$.subscribe`, value, this.contextService.nickname)
-      }
-      this.localParticipant?.user.setUserData({ ...this.localParticipant.user.getUserData(), nickname: value })
-    });
+    // this.contextService.nickname$.subscribe(value => {
+    //   if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+    //     console.debug(`${CNAME}|ngOnInit nickname$.subscribe`, value, this.contextService.nickname)
+    //   }
+    //   this.localParticipant?.user.setUserData({ ...this.localParticipant.user.getUserData(), nickname: value })
+    // });
 
     this.contextService.notifications$.subscribe(status => {
       this._notifications.push(`${new Date().toLocaleTimeString()}: ${status}`)
@@ -276,7 +280,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
       // Enter the conversation
       const userData: UserData = {
-        nickname: this.contextService.nickname, //this.conversation.peerId, //this.authService.user?.displayName ||
+        nickname: this.gstate.nickname,//this.contextService.nickname, //this.conversation.peerId, //this.authService.user?.displayName ||
         isModerator: this.moderator
       };
       if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
@@ -298,12 +302,12 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           }
         })
 
-        if (this.localParticipant.user.getUserData().nickname !== this.contextService.nickname) {
-          if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
-            console.log(`${CNAME}|adjusting nickname`, participant)
-          }
-          this.localParticipant.user.setUserData({ ...this.localParticipant.user.getUserData(), nickname: this.contextService.nickname })
-        }
+        // if (this.localParticipant.user.getUserData().nickname !== this.contextService.nickname) {
+        //   if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
+        //     console.log(`${CNAME}|adjusting nickname`, participant)
+        //   }
+        //   this.localParticipant.user.setUserData({ ...this.localParticipant.user.getUserData(), nickname: this.contextService.nickname })
+        // }
 
       }).catch((error: any) => {
         if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
