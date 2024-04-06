@@ -20,7 +20,7 @@ import { MessageType, MessagesService } from '../messages.service';
 import { RemoteStreamComponent } from '../remote-stream/remote-stream.component';
 import { WINDOW } from '../windows-provider';
 import { getSessionStorage, setSessionStorage } from '../common';
-import { STORAGE_PREFIX } from '../constants';
+import { FRAME_RATES, RESOLUTIONS, STORAGE_PREFIX } from '../constants';
 import { FilterOutPipe } from '../filter-out.pipe';
 import { GLOBAL_STATE } from '../global-state';
 
@@ -331,6 +331,9 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   videoInMediaDevices: MediaDeviceInfo[];
   audioOutMediaDevices: MediaDeviceInfo[];
 
+  resolutions: number[] = RESOLUTIONS;
+  frameRates: number[] = FRAME_RATES;
+
   updateDeviceList() {
     navigator.mediaDevices.enumerateDevices()
       .then((devices) => {
@@ -357,10 +360,15 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       };
 
       const videoConstraints = {
-        ...supportedConstraints['width'] ? { width: { min: 640, ideal: 1280, max: 4000 } } : {},
-        ...supportedConstraints['height'] ? { height: { min: 480, ideal: 720, max: 3000 } } : {},
+        // ...supportedConstraints['width'] ? { width: { min: 640, ideal: 1280, max: 4000 } } : {},
+        // Note: Specifying only height, width seems to adapt in consequence
+        // Note: Using min and ideal sometimes does not work, the browser (chrome) selects min instead of ideal.
+        // specifying directly the selected number seems to work better
+        // { min: 480, ideal: this.selectedVideoResolution } 
+        // { exact: this.selectedVideoResolution } make it fail if not possible
+        ...supportedConstraints['height'] ? { height: this.selectedVideoResolution } : {},
         // aspectRatio: 1.777777778,
-        ...supportedConstraints['frameRate'] ? { frameRate: { ideal: 30, max: 60 } } : {},
+        ...supportedConstraints['frameRate'] ? { frameRate: this.selectedVideoFrameRate } : {}, //{ ideal: 30, max: 60 }
         // facingMode: { exact: "user" },
         ...this._selectedVideoDeviceId ? { deviceId: this._selectedVideoDeviceId } : {},
       };
@@ -429,6 +437,50 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     return this._selectedVideoDeviceId || "";
   }
 
+  _selectedVideoResolution = +(getSessionStorage(`${STORAGE_PREFIX}-videoResolution`) || "480");
+  set selectedVideoResolution(resolution: number) {
+    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+      console.debug(`${CNAME}|set selectedVideoResolution`, resolution)
+    }
+    this.grabbing = true;
+
+    // On Chrome, this is better to first stop the video track
+    // because if a lower resolution value was used initially, then it fails
+    // to grab a higher one...
+    if (this.localMediaStream && navigator.userAgent.indexOf("Chrome") > -1
+      && this._selectedVideoResolution < resolution) {
+      const videoTrack = this.localMediaStream.getVideoTracks()[0];
+      videoTrack.stop()
+      // this.localMediaStream.removeTrack(videoTrack);
+    }
+    this._selectedVideoResolution = resolution;
+    this.getUserMedia().then(() => {
+      setSessionStorage(`${STORAGE_PREFIX}-videoResolution`, `${resolution}`)
+    }).finally(() => {
+      this.grabbing = false;
+    })
+  }
+  get selectedVideoResolution() {
+    return this._selectedVideoResolution;
+  }
+
+  _selectedVideoFrameRate = +(getSessionStorage(`${STORAGE_PREFIX}-videoFrameRate`) || "24");
+  set selectedVideoFrameRate(frameRate: number) {
+    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+      console.debug(`${CNAME}|set selectedVideoFrameRate`, frameRate)
+    }
+    this.grabbing = true;
+    this._selectedVideoFrameRate = frameRate;
+    this.getUserMedia().then(() => {
+      setSessionStorage(`${STORAGE_PREFIX}-videoRFrameRate`, `${frameRate}`)
+    }).finally(() => {
+      this.grabbing = false;
+    })
+  }
+  get selectedVideoFrameRate() {
+    return this._selectedVideoFrameRate;
+  }
+
   _selectedAudioOutputDeviceId = getSessionStorage(`${STORAGE_PREFIX}-audioOutDeviceId`);
   set selectedAudioOutputDeviceId(id: string) {
     this._selectedAudioOutputDeviceId = id;
@@ -494,6 +546,11 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       for (const track of this.localMediaStream.getVideoTracks()) {
         if (typeof track.getCapabilities === 'function') {
           this.videoTrackCapabilities = track.getCapabilities();
+          // sort out possible resolutions
+          if (this.videoTrackCapabilities.height?.max) {
+            const max = this.videoTrackCapabilities.height?.max;
+            this.resolutions = RESOLUTIONS.filter((r) => r <= max)
+          }
         } else {
           if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
             console.warn(`${CNAME}|getCapabilities not supported by browser`)

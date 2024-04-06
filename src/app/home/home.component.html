@@ -2,7 +2,7 @@
     <div class="d-flex justify-content-center">
         <mat-form-field>
             <mat-label>Audio In</mat-label>
-            <mat-select [disabled]="grabbing" [(value)]="selectedAudioDeviceId" panelWidth="320px">
+            <mat-select [disabled]="grabbing" [(value)]="selectedAudioDeviceId" panelWidth="">
                 <!-- <mat-option>Default</mat-option> -->
                 @for (device of audioInMediaDevices; track device) {
                 <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
@@ -11,17 +11,31 @@
         </mat-form-field>
         <mat-form-field>
             <mat-label>Video In</mat-label>
-            <mat-select [disabled]="grabbing" [(value)]="selectedVideoDeviceId" panelWidth="320px">
-                <!-- <mat-option>Default</mat-option> -->
+            <mat-select [disabled]="grabbing" [(value)]="selectedVideoDeviceId" panelWidth="">
                 @for (device of videoInMediaDevices; track device) {
                 <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
                 }
             </mat-select>
         </mat-form-field>
         <mat-form-field>
+            <mat-label>Resolution</mat-label>
+            <mat-select [disabled]="grabbing" [(value)]="selectedVideoResolution" panelWidth="auto">
+                @for (r of resolutions; track r) {
+                <mat-option [value]="r">{{r}}p</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Frame rate</mat-label>
+            <mat-select [disabled]="grabbing" [(value)]="selectedVideoFrameRate" panelWidth="auto">
+                @for (fr of frameRates; track fr) {
+                <mat-option [value]="fr">{{fr}}i/s</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
             <mat-label>Audio Out</mat-label>
-            <mat-select [(value)]="selectedAudioOutputDeviceId" panelWidth="320px">
-                <!-- <mat-option>Default</mat-option> -->
+            <mat-select [(value)]="selectedAudioOutputDeviceId" panelWidth="">
                 @for (device of audioOutMediaDevices; track device) {
                 <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
                 }
@@ -37,7 +51,7 @@
             }
         </mat-form-field>
     </div>
-    <div>{{gstate.nickname}}</div>
+    <!-- <div>{{gstate.nickname}}</div> -->
     <!-- <div *ngFor="let kv of remoteStreamsByParticipant | keyvalue" class="row">
         <p>User {{kv.key.id}} </p>
         <span>kv.value.size = {{kv.value.size}}</span>
