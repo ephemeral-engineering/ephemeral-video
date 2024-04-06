@@ -93,8 +93,8 @@ export class StreamVideoComponent implements AfterViewInit { //implements AfterV
           console.debug(`${CNAME}|loadeddata`, { height, width }, videoElement, this._mediaStream);
         }
         const frameRate = this._mediaStream?.getVideoTracks()[0].getSettings().frameRate;
-        this.videoSize = `${width}x${height}, ${frameRate||'?'}i/s`;
-        this.contextService.recordNotification(`stream<${this._mediaStream?.id}> loaded-to:${width}x${height}, ${frameRate||'?'}i/s`)
+        this.videoSize = `${width}x${height}@${frameRate||'?'}i/s`;
+        this.contextService.recordNotification(`stream<${this._mediaStream?.id}> loaded-to:${width}x${height}@${frameRate||'?'}i/s`)
 
       }, false);
 
@@ -111,8 +111,8 @@ export class StreamVideoComponent implements AfterViewInit { //implements AfterV
         }
 
         const frameRate = this._mediaStream?.getVideoTracks()[0].getSettings().frameRate;
-        this.videoSize = `${width}x${height}, ${frameRate||'?'}i/s`;
-        this.contextService.recordNotification(`stream<${this._mediaStream?.id}> resized-to:${width}x${height}, ${frameRate||'?'}i/s`)
+        this.videoSize = `${width}x${height}@${frameRate||'?'}i/s`;
+        this.contextService.recordNotification(`stream<${this._mediaStream?.id}> resized-to:${width}x${height}@${frameRate||'?'}i/s`)
       }, false);
     }
   }

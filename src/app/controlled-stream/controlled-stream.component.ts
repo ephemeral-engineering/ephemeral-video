@@ -1,11 +1,11 @@
-import { KeyValuePipe, NgFor } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, HostBinding, Input, OnDestroy, ViewChild } from '@angular/core';
+import { JsonPipe, KeyValuePipe, NgFor } from '@angular/common';
+import { AfterViewInit, Component, ElementRef, HostBinding, Input, NgZone, OnDestroy, ViewChild } from '@angular/core';
 
 import { Stream } from 'ephemeral-webrtc';
 
 import { DATACHANNEL_POINTER_PATH } from '../constants';
 import { ContextService } from '../context.service';
-import { PointerComponent } from '../pointer/pointer.component';
+import { Pointer, PointerComponent } from '../pointer/pointer.component';
 import { StreamVideoComponent } from '../stream-video/stream-video.component';
 import { GLOBAL_STATE } from '../global-state';
 
@@ -14,7 +14,7 @@ const CNAME = 'ControlledStream';
 @Component({
   selector: 'app-controlled-stream',
   standalone: true,
-  imports: [NgFor, KeyValuePipe, StreamVideoComponent, PointerComponent],
+  imports: [JsonPipe, NgFor, KeyValuePipe, StreamVideoComponent, PointerComponent],
   templateUrl: './controlled-stream.component.html',
   styleUrl: './controlled-stream.component.css'
 })
@@ -22,7 +22,9 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 
   // store pointers dataChannels with corresponding nickname
   inBoundDataChannels: Set<RTCDataChannel> = new Set();
-  pointerChannels: Map<RTCDataChannel, string> = new Map();
+
+  pointerChannels: Map<RTCDataChannel, Pointer> = new Map();
+  pointers: Pointer[] = [];
 
   _stream: Stream;
   @Input({ required: true }) set stream(stream: Stream) {
@@ -33,25 +35,17 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       // DONE: how do we know this is for a pointer ? => path indicates the purpose
       // DONE: how do we know who is sending his pointer ? => first message contains nickname, next ones will be {top, left}
 
-      // Wait for first message with nickname info before adding in the Map
-      // This will trigger Pointer component creation that will override
-      // the onmessage, listening on pointer location update only.
-
       this.inBoundDataChannels.add(dataChannel);
 
-      dataChannel.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.nickname !== undefined) {
-          if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-            console.debug(`${CNAME}|dataChannel.onmessage received nickname`, data.nickname)
-          }
-          this.pointerChannels.set(dataChannel, data.nickname);
-        } else {
-          if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
-            console.warn(`${CNAME}|dataChannel.onmessage received`, data)
-          }
-        }
-      };
+      dataChannel.addEventListener('message', (event) => {
+        const data = JSON.parse(event.data) as Pointer;
+        const prev = this.pointerChannels.get(dataChannel);
+        this.pointerChannels.set(dataChannel, { ...(prev ? prev : {}), ...data });
+        this.ngZone.run(() => {
+          // update the data of the component
+          this.pointers = [...this.pointerChannels.values()];
+        });
+      });
       dataChannel.addEventListener('error', (error) => {
         console.error(`${CNAME}|dataChannel.onerror`, error)
         this.inBoundDataChannels.delete(dataChannel);
@@ -99,6 +93,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   private observer: ResizeObserver | undefined;
 
   constructor(private el: ElementRef,
+    private ngZone: NgZone,
     private contextService: ContextService
   ) { }
 
@@ -141,12 +136,6 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       }
 
       dataChannel.onopen = () => {
-        // send first message indicating the pointer location that will be sent next
-        // comes from the current user
-        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|broadcast dataChannel.onopen, sending nickname`, dataChannel.label, GLOBAL_STATE.nickname)
-        }
-        dataChannel.send(JSON.stringify({ nickname: GLOBAL_STATE.nickname }))
         this.openDataChannels.add(dataChannel);
       };
       dataChannel.onclose = () => {
@@ -165,6 +154,8 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       }
     }, { ordered: false })
   }
+
+  private moveCounter = 0;
 
   onPointerMove(event: PointerEvent) {
     // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
@@ -190,20 +181,14 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     const left = round2(x * 100 / (this.el.nativeElement.clientWidth || 100));
     const top = round2(y * 100 / (this.el.nativeElement.clientHeight || 100));
 
-    // if (this.dataChannel) {
-    this.openDataChannels.forEach((dataChannel) => {
+    this.moveCounter++;
 
-      // if (globalThis.logLevel.isDebugEnabled) {
-      //   console.log('onPointerMove', event,
-      //     this.el.nativeElement.offsetLeft, this.el.nativeElement.offsetTop,
-      //     this.el.nativeElement.clientWidth, this.el.nativeElement.clientHeight,
-      //     left, top)
-      // }
-      // console.log('SENDING', { left, top })
+    this.openDataChannels.forEach((dataChannel) => {
+      const pointer = { left, top, ...(this.moveCounter % 10 === 0 ? { nickname: GLOBAL_STATE.nickname } : {}) };
       if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-        console.debug(`${CNAME}|onPointerMove sending`, { left, top })
+        console.debug(`${CNAME}|onPointerMove sending`, pointer)
       }
-      dataChannel.send(JSON.stringify({ left, top }))
+      dataChannel.send(JSON.stringify(pointer))
     })
 
   }

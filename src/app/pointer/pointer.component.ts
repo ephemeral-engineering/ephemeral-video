@@ -1,6 +1,14 @@
 import { Component, ElementRef, Input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
+export type Pointer = {
+  nickname: string
+  top: number
+  left: number
+}
+
+const CNAME = 'Pointer';
+
 @Component({
   selector: 'app-pointer',
   standalone: true,
@@ -10,16 +18,15 @@ import { MatIconModule } from '@angular/material/icon';
 })
 export class PointerComponent {
 
-  @Input({ required: true }) nickname: string = "";
+  nickname = "";
 
-  _dataChannel: RTCDataChannel | undefined;
-  @Input({ required: true }) set dataChannel(dataChannel: RTCDataChannel) {
-    this._dataChannel = dataChannel;
-    dataChannel.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      this.el.nativeElement.style.left = `${data.left}%`;
-      this.el.nativeElement.style.top = `${data.top}%`
-    };
+  @Input({ required: true }) set pointer(data: Pointer) {
+    // if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+    //   console.debug(`${CNAME}|set pointer`, data)
+    // }
+    this.el.nativeElement.style.left = `${data.left}%`;
+    this.el.nativeElement.style.top = `${data.top}%`;
+    this.nickname = data.nickname;
   }
 
   constructor(private el: ElementRef) { }

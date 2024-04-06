@@ -3,6 +3,7 @@
     (pointerleave)="onPointerLeave($event)"></app-stream-video>
 <div class="pos-abs top-left" #label>
     <ng-content select="[label]"></ng-content>
+    {{pointers.length}}
 </div>
 <div class="pos-abs top-right" #status>
     <ng-content select="[status]"></ng-content>
@@ -10,4 +11,5 @@
 <div class="pos-abs bottom-right" #controls>
     <ng-content select="[controls]"></ng-content>
 </div>
-<app-pointer *ngFor="let kv of pointerChannels | keyvalue" [nickname]="kv.value" [dataChannel]="kv.key"></app-pointer>
+
+<app-pointer *ngFor="let pointer of pointers" [pointer]="pointer"></app-pointer>
