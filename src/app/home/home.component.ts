@@ -14,15 +14,15 @@ import { Conversation, ConversationOptions, LocalParticipant, LocalStream, Remot
 import { saveAs } from 'file-saver-es';
 
 import { LogLevelText, setLogLevel } from 'src/logLevel';
+import { getSessionStorage, setSessionStorage } from '../common';
+import { FRAME_RATES, RESOLUTIONS, STORAGE_PREFIX } from '../constants';
 import { ContextService } from '../context.service';
+import { FilterOutPipe } from '../filter-out.pipe';
+import { GLOBAL_STATE } from '../global-state';
 import { LocalStreamComponent } from '../local-stream/local-stream.component';
 import { MessageType, MessagesService } from '../messages.service';
 import { RemoteStreamComponent } from '../remote-stream/remote-stream.component';
 import { WINDOW } from '../windows-provider';
-import { getSessionStorage, setSessionStorage } from '../common';
-import { FRAME_RATES, RESOLUTIONS, STORAGE_PREFIX } from '../constants';
-import { FilterOutPipe } from '../filter-out.pipe';
-import { GLOBAL_STATE } from '../global-state';
 
 interface UserData {
   nickname: string
@@ -67,7 +67,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   get nickname() {
     //return this.localParticipant?.user.getUserData().nickname || getSessionStorage(`${STORAGE_PREFIX}-nickname`);
-    return this.gstate.nickname || ''
+    return this.gstate.nickname || '';
   }
   set nickname(value: string) {
     this.localParticipant?.user.setUserData({ ...this.localParticipant?.user.getUserData(), nickname: value })
@@ -356,7 +356,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       const audioConstraints = {
         echoCancellation: true,
         noiseSuppression: true,
-        ...this._selectedAudioDeviceId ? { deviceId: this._selectedAudioDeviceId } : {},
+        ...this.selectedAudioDeviceId ? { deviceId: this.selectedAudioDeviceId } : {},
       };
 
       const videoConstraints = {
@@ -370,7 +370,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         // aspectRatio: 1.777777778,
         ...supportedConstraints['frameRate'] ? { frameRate: this.selectedVideoFrameRate } : {}, //{ ideal: 30, max: 60 }
         // facingMode: { exact: "user" },
-        ...this._selectedVideoDeviceId ? { deviceId: this._selectedVideoDeviceId } : {},
+        ...this.selectedVideoDeviceId ? { deviceId: this.selectedVideoDeviceId } : {},
       };
 
       if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
@@ -408,10 +408,14 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   _selectedAudioDeviceId = getSessionStorage(`${STORAGE_PREFIX}-audioDeviceId`);
   set selectedAudioDeviceId(id: string) {
+
+    // For device change, need to go through getUserMedia
     this.grabbing = true;
     this._selectedAudioDeviceId = id;
     this.getUserMedia().then(() => {
       setSessionStorage(`${STORAGE_PREFIX}-audioDeviceId`, id)
+    }).catch(() => {
+      this._selectedAudioDeviceId = "";
     }).finally(() => {
       this.grabbing = false;
     })
@@ -425,10 +429,13 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
       console.debug(`${CNAME}|set selectedVideoDeviceId`, id)
     }
+    // For device change, need to go through getUserMedia
     this.grabbing = true;
     this._selectedVideoDeviceId = id;
     this.getUserMedia().then(() => {
-      setSessionStorage(`${STORAGE_PREFIX}-videoDeviceId`, id)
+      setSessionStorage(`${STORAGE_PREFIX}-videoDeviceId`, `${id}`)
+    }).catch(() => {
+      this._selectedVideoDeviceId = "";
     }).finally(() => {
       this.grabbing = false;
     })
@@ -447,15 +454,23 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     // On Chrome, this is better to first stop the video track
     // because if a lower resolution value was used initially, then it fails
     // to grab a higher one...
-    if (this.localMediaStream && navigator.userAgent.indexOf("Chrome") > -1
-      && this._selectedVideoResolution < resolution) {
-      const videoTrack = this.localMediaStream.getVideoTracks()[0];
-      videoTrack.stop()
-      // this.localMediaStream.removeTrack(videoTrack);
-    }
+    // if (this.localMediaStream && navigator.userAgent.indexOf("Chrome") > -1
+    //   && this._selectedVideoResolution < resolution) {
+    //   const videoTrack = this.localMediaStream.getVideoTracks()[0];
+    //   videoTrack.stop()
+    //   // this.localMediaStream.removeTrack(videoTrack);
+    // }
+    // => Not needed anymore as we now directly applyConstraints on the video track
+    // instead of going through getUserMedia again !
+
     this._selectedVideoResolution = resolution;
-    this.getUserMedia().then(() => {
+
+    // For resolution change, directly applyConstraints on track
+    this.localMediaStream?.getVideoTracks()[0].applyConstraints({
+      height: this.selectedVideoResolution
+    }).then(() => {
       setSessionStorage(`${STORAGE_PREFIX}-videoResolution`, `${resolution}`)
+      this.doGatherCapConstSettings()
     }).finally(() => {
       this.grabbing = false;
     })
@@ -471,8 +486,13 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     }
     this.grabbing = true;
     this._selectedVideoFrameRate = frameRate;
-    this.getUserMedia().then(() => {
-      setSessionStorage(`${STORAGE_PREFIX}-videoRFrameRate`, `${frameRate}`)
+
+    // For resolution change, directly applyConstraints on track
+    this.localMediaStream?.getVideoTracks()[0].applyConstraints({
+      frameRate: this.selectedVideoFrameRate
+    }).then(() => {
+      setSessionStorage(`${STORAGE_PREFIX}-videoFrameRate`, `${frameRate}`)
+      this.doGatherCapConstSettings()
     }).finally(() => {
       this.grabbing = false;
     })
@@ -549,7 +569,19 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           // sort out possible resolutions
           if (this.videoTrackCapabilities.height?.max) {
             const max = this.videoTrackCapabilities.height?.max;
-            this.resolutions = RESOLUTIONS.filter((r) => r <= max)
+            this.resolutions = RESOLUTIONS.filter((r) => r <= max);
+            const last = this.resolutions.slice(-1)[0] || -1;
+            if (last < max) {
+              this.resolutions.push(max);
+            }
+          }
+          if (this.videoTrackCapabilities.frameRate?.max) {
+            const max = this.videoTrackCapabilities.frameRate?.max;
+            this.frameRates = FRAME_RATES.filter((r) => r <= max);
+            const last = this.frameRates.slice(-1)[0] || -1;
+            if (last < max) {
+              this.frameRates.push(max);
+            }
           }
         } else {
           if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
@@ -734,25 +766,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       console.error(`${CNAME}|shareScreen`, error)
     });
   }
-
-  // goHd() {
-  //   if (this.localMediaStream) {
-  //     this.localMediaStream.getTracks().forEach(track => {
-  //       track.stop()
-  //     })
-  //   }
-
-  //   navigator.mediaDevices.getUserMedia({
-  //     video: { width: { exact: 1280 }, height: { exact: 720 } }
-  //   }).then(mediaStream => {
-  //     this.doStoreAndBindLocalMediaStream(mediaStream)
-  //     if (this.localStream) {
-  //       this.localStream.replaceMediaStream(mediaStream)
-  //     }
-  //   }).catch(error => {
-  //     console.error(`${CNAME}|goHd`, error)
-  //   });
-  // }
 
   doApplyAudioConstraint(constraintName: string, value: ConstrainULong | ConstrainDouble | ConstrainBoolean | ConstrainDOMString) {
     if (this.localMediaStream) {

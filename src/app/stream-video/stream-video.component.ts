@@ -84,36 +84,20 @@ export class StreamVideoComponent implements AfterViewInit { //implements AfterV
 
       const videoElement = this.videoRef.nativeElement;
 
-      // const { videoHeight: height, videoWidth: width } = videoElement;
-      // this.videoSize = `${width}x${height}`;
-
-      videoElement.addEventListener("loadeddata", () => {
+      const onLoadedData = (ev: Event) => {
         const { videoHeight: height, videoWidth: width } = videoElement;
         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|loadeddata`, { height, width }, videoElement, this._mediaStream);
+          console.debug(`${CNAME}|onLoadedData ${ev.type}`, { height, width }, videoElement, this._mediaStream);
         }
         const frameRate = this._mediaStream?.getVideoTracks()[0].getSettings().frameRate;
-        this.videoSize = `${width}x${height}@${frameRate||'?'}i/s`;
-        this.contextService.recordNotification(`stream<${this._mediaStream?.id}> loaded-to:${width}x${height}@${frameRate||'?'}i/s`)
+        this.videoSize = `${width}x${height}@${frameRate || '?'}i/s`;
+        this.contextService.recordNotification(`stream<${this._mediaStream?.id}> ${ev.type}:${width}x${height}@${frameRate || '?'}i/s`)
+      }
 
-      }, false);
-
-      // videoElement.addEventListener("loadedmetadata", (event) => {
-      //   if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-      //     console.debug(`${CNAME}|loadedmetadata`, event.target);
-      //   }
-      // });
-
-      videoElement.addEventListener("resize", () => {
-        const { videoHeight: height, videoWidth: width } = videoElement;
-        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|resize`, { height, width });
-        }
-
-        const frameRate = this._mediaStream?.getVideoTracks()[0].getSettings().frameRate;
-        this.videoSize = `${width}x${height}@${frameRate||'?'}i/s`;
-        this.contextService.recordNotification(`stream<${this._mediaStream?.id}> resized-to:${width}x${height}@${frameRate||'?'}i/s`)
-      }, false);
+      videoElement.addEventListener("loadeddata", onLoadedData);
+      videoElement.addEventListener("loadedmetadata", onLoadedData);
+      videoElement.addEventListener("ratechange", onLoadedData);
+      videoElement.addEventListener("resize", onLoadedData);
     }
   }
 
