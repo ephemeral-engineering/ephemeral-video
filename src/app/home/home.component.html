@@ -105,9 +105,10 @@
             </app-local-stream>
         </div> -->
         <div class="d-flex justify-content-center h-100">
-            <div *ngFor="let kv of remoteStreamsByParticipant | keyvalue" class="h-100" [ngStyle]="{width:_width}">
+            <!-- [ngStyle]="{width:_width}" -->
+            <div *ngFor="let kv of remoteStreamsByParticipant | keyvalue" class="flex-g-1 h-100">
                 <app-remote-stream *ngFor="let _stream of kv.value" [remoteStream]="_stream"
-                    [videoStyle]="{'height': '100%', width:'100%', objectFit:'cover'}"
+                    [videoStyle]="{height: '100%', width:'100%', objectFit:'cover'}"
                     (onSnapshot)="onSnapshot($event)"></app-remote-stream>
             </div>
         </div>

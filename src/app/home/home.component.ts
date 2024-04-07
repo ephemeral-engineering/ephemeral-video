@@ -94,9 +94,9 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   remoteStreamsByParticipant: Map<RemoteParticipant, Set<RemoteStream>> = new Map();
 
-  get _width() {
-    return `${Math.floor(100 / this.remoteStreamsByParticipant.size)}%`;
-  }
+  // get _width() {
+  //   return `${Math.floor(100 / this.remoteStreamsByParticipant.size)}%`;
+  // }
 
   isWaitingForAcceptance = false;
 
