@@ -15,7 +15,7 @@ import { saveAs } from 'file-saver-es';
 
 import { LogLevelText, setLogLevel } from 'src/logLevel';
 import { getSessionStorage, setSessionStorage } from '../common';
-import { FRAME_RATES, RESOLUTIONS, STORAGE_PREFIX } from '../constants';
+import { DATACHANNEL_MEDIASTREAMINFO_PATH, FRAME_RATES, RESOLUTIONS, STORAGE_PREFIX } from '../constants';
 import { ContextService } from '../context.service';
 import { FilterOutPipe } from '../filter-out.pipe';
 import { GLOBAL_STATE } from '../global-state';
@@ -80,17 +80,12 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   localParticipant: LocalParticipant | undefined;
 
-  localMediaStream: MediaStream | undefined;
+  localUserMediaStream: MediaStream | undefined;
   localStream: LocalStream | undefined;
 
-  audioTrackCapabilities: MediaTrackCapabilities | undefined;
-  audioTrackConstraints: MediaTrackConstraints | undefined;
-  audioTrackSettings: MediaTrackSettings | undefined;
-  videoTrackCapabilities: MediaTrackCapabilities | undefined;
-  videoTrackConstraints: MediaTrackConstraints | undefined;
-  videoTrackSettings: MediaTrackSettings | undefined;
-
   localDisplayMediaStream: MediaStream | undefined;
+
+  mediaStreamInfos: Map<MediaStream, any> = new Map();
 
   moderated: boolean = false;
   moderator: boolean = false;
@@ -252,6 +247,22 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           stream.subscribe()
           // or 
           //stream.subscribe({ audio: true, video: false })
+
+          // COMMENTED OUT:
+          // No need to try to get capabilites, contraints nor settings on a remote streams
+          // the return is always empty.
+          // Need to request the information to the origin peer through datachannel ?
+          stream.onMediaStream((mediaStream: MediaStream | undefined) => {
+            if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+              console.debug(`${CNAME}|onMediaStream`, mediaStream);
+            }
+            if (mediaStream) {
+              // setTimeout(() => {
+              //   this.localMediaStreamInfos.set(mediaStream, this.getCapConstSettings(mediaStream))
+              // }, 3000)
+              this.getRemoteMediaStreamInfo(stream)
+            }
+          })
         })
         participant.onStreamUnpublished((stream: RemoteStream) => {
           if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
@@ -326,6 +337,32 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     })
   }
 
+  getRemoteMediaStreamInfo(stream: RemoteStream) {
+    stream.singlecast(DATACHANNEL_MEDIASTREAMINFO_PATH, (dataChannel) => {
+      dataChannel.onmessage = (event) => {
+        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+          console.debug(`${CNAME}|dataChannel:onmessage`, DATACHANNEL_MEDIASTREAMINFO_PATH, event);
+        }
+        const info = JSON.parse(event.data);
+        const mediaStream = stream.getMediaStream();
+        if (mediaStream) {
+          this.mediaStreamInfos.set(mediaStream, info)
+        }
+      }
+
+      dataChannel.onclose = (event) => {
+        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+          console.debug(`${CNAME}|dataChannel:onclose`, DATACHANNEL_MEDIASTREAMINFO_PATH, event);
+        }
+      }
+      dataChannel.onerror = (event) => {
+        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+          console.debug(`${CNAME}|dataChannel:onerror`, DATACHANNEL_MEDIASTREAMINFO_PATH, event);
+        }
+      }
+    })
+  }
+
   grabbing: boolean = false;
   audioInMediaDevices: MediaDeviceInfo[];
   videoInMediaDevices: MediaDeviceInfo[];
@@ -382,7 +419,28 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
             console.debug(`${CNAME}|getUserMedia`, mediaStream)
           }
 
-          this.doStoreAndBindLocalMediaStream(mediaStream)
+          this.localUserMediaStream = mediaStream;
+
+          const mediaStreamInfo = this.getCapConstSettings(mediaStream);
+          this.mediaStreamInfos.set(mediaStream, mediaStreamInfo)
+
+          if (mediaStreamInfo.video?.capabilities?.height?.max) {
+            const max = mediaStreamInfo.video?.capabilities?.height?.max;
+            this.resolutions = RESOLUTIONS.filter((r) => r <= max);
+            const last = this.resolutions.slice(-1)[0] || -1;
+            if (last < max) {
+              this.resolutions.push(max);
+            }
+          }
+          if (mediaStreamInfo.video?.capabilities?.frameRate?.max) {
+            const max = mediaStreamInfo.video?.capabilities?.frameRate?.max;
+            this.frameRates = FRAME_RATES.filter((r) => r <= max);
+            const last = this.frameRates.slice(-1)[0] || -1;
+            if (last < max) {
+              this.frameRates.push(max);
+            }
+          }
+
           if (this.localStream) {
             this.localStream.replaceMediaStream(mediaStream)
           } else {
@@ -466,11 +524,13 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     this._selectedVideoResolution = resolution;
 
     // For resolution change, directly applyConstraints on track
-    this.localMediaStream?.getVideoTracks()[0].applyConstraints({
+    this.localUserMediaStream?.getVideoTracks()[0].applyConstraints({
       height: this.selectedVideoResolution
     }).then(() => {
       setSessionStorage(`${STORAGE_PREFIX}-videoResolution`, `${resolution}`)
-      this.doGatherCapConstSettings()
+      if (this.localUserMediaStream) {
+        this.mediaStreamInfos.set(this.localUserMediaStream, this.getCapConstSettings(this.localUserMediaStream))
+      }
     }).finally(() => {
       this.grabbing = false;
     })
@@ -488,11 +548,13 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     this._selectedVideoFrameRate = frameRate;
 
     // For resolution change, directly applyConstraints on track
-    this.localMediaStream?.getVideoTracks()[0].applyConstraints({
+    this.localUserMediaStream?.getVideoTracks()[0].applyConstraints({
       frameRate: this.selectedVideoFrameRate
     }).then(() => {
       setSessionStorage(`${STORAGE_PREFIX}-videoFrameRate`, `${frameRate}`)
-      this.doGatherCapConstSettings()
+      if (this.localUserMediaStream) {
+        this.mediaStreamInfos.set(this.localUserMediaStream, this.getCapConstSettings(this.localUserMediaStream))
+      }
     }).finally(() => {
       this.grabbing = false;
     })
@@ -529,82 +591,25 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     })
   }
 
-  doStoreAndBindLocalMediaStream(mediaStream: MediaStream) {
-    this.localMediaStream = mediaStream;
-    this.doGatherCapConstSettings()
-    //this.doListenToTracksEvents(mediaStream, "LOCAL:");
-  }
-
   echoCancellation = true;
 
-  doGatherCapConstSettings() {
-    if (this.localMediaStream) {
-      for (const track of this.localMediaStream.getAudioTracks()) {
-        if (typeof track.getCapabilities === 'function') {
-          this.audioTrackCapabilities = track.getCapabilities();
-        } else {
-          if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
-            console.warn(`${CNAME}|getCapabilities not supported by browser`)
-          }
-        }
-        if (typeof track.getConstraints === 'function') {
-          this.audioTrackConstraints = track.getConstraints();
-        } else {
-          if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
-            console.warn(`${CNAME}|getConstraints not supported by browser`)
-          }
-        }
-        if (typeof track.getSettings === 'function') {
-          this.audioTrackSettings = track.getSettings();
-        } else {
-          if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
-            console.warn(`${CNAME}|getSettings not supported by browser`)
-          }
-        }
-        break;
-      }
-      for (const track of this.localMediaStream.getVideoTracks()) {
-        if (typeof track.getCapabilities === 'function') {
-          this.videoTrackCapabilities = track.getCapabilities();
-          // sort out possible resolutions
-          if (this.videoTrackCapabilities.height?.max) {
-            const max = this.videoTrackCapabilities.height?.max;
-            this.resolutions = RESOLUTIONS.filter((r) => r <= max);
-            const last = this.resolutions.slice(-1)[0] || -1;
-            if (last < max) {
-              this.resolutions.push(max);
-            }
-          }
-          if (this.videoTrackCapabilities.frameRate?.max) {
-            const max = this.videoTrackCapabilities.frameRate?.max;
-            this.frameRates = FRAME_RATES.filter((r) => r <= max);
-            const last = this.frameRates.slice(-1)[0] || -1;
-            if (last < max) {
-              this.frameRates.push(max);
-            }
-          }
-        } else {
-          if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
-            console.warn(`${CNAME}|getCapabilities not supported by browser`)
-          }
-        }
-        if (typeof track.getConstraints === 'function') {
-          this.videoTrackConstraints = track.getConstraints();
-        } else {
-          if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
-            console.warn(`${CNAME}|getConstraints not supported by browser`)
-          }
-        }
-        if (typeof track.getSettings === 'function') {
-          this.videoTrackSettings = track.getSettings();
-        } else {
-          if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
-            console.warn(`${CNAME}|getSettings not supported by browser`)
-          }
-        }
-        break;
-      }
-    }
+  getCapConstSettings(mediaStream: MediaStream) {
+
+    const audioTrack = mediaStream.getAudioTracks()[0];
+    const videoTrack = mediaStream.getVideoTracks()[0];
+
+    return {
+      audio: audioTrack ? {
+        capabilities: (typeof audioTrack.getCapabilities === 'function') ? audioTrack.getCapabilities() : undefined,
+        constraints: (typeof audioTrack.getConstraints === 'function') ? audioTrack.getConstraints() : undefined,
+        settings: (typeof audioTrack.getSettings === 'function') ? audioTrack.getSettings() : undefined,
+      } : undefined,
+      video: videoTrack ? {
+        capabilities: (typeof videoTrack.getCapabilities === 'function') ? videoTrack.getCapabilities() : undefined,
+        constraints: (typeof videoTrack.getConstraints === 'function') ? videoTrack.getConstraints() : undefined,
+        settings: (typeof videoTrack.getSettings === 'function') ? videoTrack.getSettings() : undefined,
+      } : undefined
+    };
   }
 
   // doListenToTracksEvents(mediaStream: MediaStream, logPrefix: string) {
@@ -706,26 +711,41 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   // TODO : implement a sendPrivateMessage in the library ?
 
   publish() {
-    if (this.localMediaStream && this.localParticipant) {
-      this.localParticipant.publish(this.localMediaStream, { topic: 'webcam', audio: true }).then((localStream) => {
+    if (this.localUserMediaStream && this.localParticipant) {
+      this.localParticipant.publish(this.localUserMediaStream, { topic: 'webcam', audio: true }).then((localStream) => {
         this.localStream = localStream;
+
+        localStream.onDataChannel(DATACHANNEL_MEDIASTREAMINFO_PATH, (dataChannel: RTCDataChannel) => {
+          dataChannel.onopen = (event) => {
+            if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+              console.debug(`${CNAME}|dataChannel:onopen`, DATACHANNEL_MEDIASTREAMINFO_PATH, event)
+            }
+            if (this.localUserMediaStream) {
+              const infos = this.getCapConstSettings(this.localUserMediaStream);
+              dataChannel.send(JSON.stringify(infos))
+            }
+          };
+          dataChannel.onclose = (event) => {
+            if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+              console.debug(`${CNAME}|datachannel:onclose`, DATACHANNEL_MEDIASTREAMINFO_PATH, event)
+            }
+          };
+          dataChannel.onerror = (event) => {
+            if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+              console.debug(`${CNAME}|datachannel:onerror`, DATACHANNEL_MEDIASTREAMINFO_PATH, event)
+            }
+          };
+        })
+
       });
-
-      // const localStream = this.localStream;
-      // localStream.onSubscribed((peerId: string) => {
-      //   // localStream.setBandwidth(peerId, 256)
-      // })
-
-      // Or
-      //this.localParticipant.publish(this.localMediaStream, { type: 'webcam', foo: 'bar' });
     } else {
-      console.error(`${CNAME}|Cannot publish`, this.localMediaStream, this.localParticipant)
+      console.error(`${CNAME}|Cannot publish`, this.localUserMediaStream, this.localParticipant)
     }
   }
 
   unpublish() {
-    if (this.localMediaStream) {
-      this.localParticipant?.unpublish(this.localMediaStream)
+    if (this.localUserMediaStream) {
+      this.localParticipant?.unpublish(this.localUserMediaStream)
       this.localStream = undefined;
     }
   }
@@ -767,83 +787,17 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  doApplyAudioConstraint(constraintName: string, value: ConstrainULong | ConstrainDouble | ConstrainBoolean | ConstrainDOMString) {
-    if (this.localMediaStream) {
-      this.localMediaStream.getAudioTracks().forEach(track => {
-        const settings: MediaTrackSettings = track.getSettings();
-        const constraints: any = settings;
-        constraints[constraintName] = value;
-        track.applyConstraints(constraints).then(() => {
-          this.doGatherCapConstSettings()
-        })
-      })
-    }
-  }
-
-  goHDByApplyConstraints() {
-    //MediaStreamTrack should have method :
-    //Promise<undefined> applyConstraints(optional MediaTrackConstraints constraints = {});
-    if (this.localMediaStream) {
-      this.localMediaStream.getVideoTracks().forEach(track => {
-        const constraints: MediaTrackConstraints = { width: { exact: 1280 }, height: { exact: 720 } };
-        track.applyConstraints(constraints).then(() => {
-          if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-            console.debug(`${CNAME}|applyConstraints done`, this.localMediaStream, constraints)
-          }
-          this.doGatherCapConstSettings()
-        }).catch(error => {
-          console.error(`${CNAME}|track.applyConstraints error`, error)
-        })
-      })
-    }
-  }
-
-  frameRate24() {
-    //MediaStreamTrack shoud have method :
-    //Promise<undefined> applyConstraints(optional MediaTrackConstraints constraints = {});
-    if (this.localMediaStream) {
-      this.localMediaStream.getVideoTracks().forEach(track => {
-        const constraints: MediaTrackConstraints = { frameRate: 24 };
-        track.applyConstraints(constraints).then(() => {
-          if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-            console.debug(`${CNAME}|applyConstraints done`, this.localMediaStream, constraints)
-          }
-          this.doGatherCapConstSettings()
-        }).catch(error => {
-          console.error("applyConstraints error", error)
-        })
-      })
-    }
-  }
-
-  // applyMediaStreamConstraintsHD(remoteStream: RemoteStream) {
-  //   //const constraints: MediaStreamConstraints | any = ;
-  //   //const constraints: MediaStreamConstraints = { video: { height: { exact: 720 }, width: { exact: 1280 }, advanced: [{ zoom: 4 }] } };
-  //   //, advanced: [{ zoom: 2 }]
-  //   remoteStream.applyMediaStreamConstraints({ video: { height: { exact: 720 }, width: { exact: 1280 }, advanced: [{ torch: true }] } })
-  //     .then(() => {
-  //       if (globalThis.logLevel.isDebugEnabled) {
-  //         console.debug(`${CNAME}|applyMediaStreamConstraints done`);
-  //       }
+  // doApplyAudioConstraint(constraintName: string, value: ConstrainULong | ConstrainDouble | ConstrainBoolean | ConstrainDOMString) {
+  //   if (this.localMediaStream) {
+  //     this.localMediaStream.getAudioTracks().forEach(track => {
+  //       const settings: MediaTrackSettings = track.getSettings();
+  //       const constraints: any = settings;
+  //       constraints[constraintName] = value;
+  //       track.applyConstraints(constraints).then(() => {
+  //         this.doGatherCapConstSettings()
+  //       })
   //     })
-  //     .catch((error: any) => {
-  //       console.error(`${CNAME}|applyMediaStreamConstraints error`, error)
-  //     });
-  // }
-
-  // applyMediaStreamConstraintsVGA(remoteStream: RemoteStream) {
-  //   //const constraints: MediaStreamConstraints | any = ;
-  //   //{ video: { zoom: 4 } }
-  //   //{ video: { height: { exact: 480 }, width: { exact: 640 } } }
-  //   remoteStream.applyMediaStreamConstraints({ video: { height: { exact: 480 }, width: { exact: 640 }, advanced: [{ torch: false }] } })
-  //     .then(() => {
-  //       if (globalThis.logLevel.isDebugEnabled) {
-  //         console.debug(`${CNAME}|applyMediaStreamConstraints done`);
-  //       }
-  //     })
-  //     .catch((error: any) => {
-  //       console.error(`${CNAME}|applyMediaStreamConstraints error`, error)
-  //     });
+  //   }
   // }
 
   mediaRecorder: MediaRecorder | undefined;

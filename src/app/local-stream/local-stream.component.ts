@@ -2,7 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
-import { LocalStream, PublishOptions, sendByChunks, sendByChunksWithDelay, sendByChunksWithDelayPromise } from 'ephemeral-webrtc';
+import { LocalStream, PublishOptions, sendByChunksWithDelayPromise } from 'ephemeral-webrtc';
 
 import { MediaStreamHelper } from '../MediaStreamHelper';
 import { DATACHANNEL_SNAPSHOT_PATH } from '../constants';

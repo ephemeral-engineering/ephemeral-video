@@ -176,28 +176,30 @@
         Average: {{averageBandwidth}}
     </div>
 
-    <div class="mt-5 vw-100">
-        <h3>Capabilities</h3>
-        <div>
-            audio:
-            <pre>{{audioTrackCapabilities | filterOut:'deviceId':'groupId' | json}}</pre>
-        </div>
-        <div>video:
-            <pre>{{videoTrackCapabilities | filterOut:'deviceId':'groupId' | json}}</pre>
-        </div>
-        <h3>Constraints</h3>
-        <div>audio:
-            <pre>{{audioTrackConstraints | filterOut:'deviceId':'groupId' | json}}</pre>
-        </div>
-        <div>video:
-            <pre>{{videoTrackConstraints | filterOut:'deviceId':'groupId' | json}}</pre>
-        </div>
-        <h3>Settings</h3>
-        <div>audio:
-            <pre>{{audioTrackSettings | filterOut:'deviceId':'groupId' | json}}</pre>
-        </div>
-        <div>video:
-            <pre>{{videoTrackSettings | filterOut:'deviceId':'groupId' | json}}</pre>
+    <div class="mt-5 vw-100 d-flex align-items-center justify-content-center">
+        <div *ngFor="let kv of mediaStreamInfos | keyvalue">
+            <span>{{kv.key.id}}</span>
+            <h3>Capabilities</h3>
+            <div>
+                <pre>audio: {{kv.value.audio.capabilities | filterOut:'deviceId':'groupId' | json}}</pre>
+            </div>
+            <div>
+                <pre>video: {{kv.value.video.capabilities | filterOut:'deviceId':'groupId' | json}}</pre>
+            </div>
+            <h3>Constraints</h3>
+            <div>
+                <pre>audio: {{kv.value.audio.constraints | filterOut:'deviceId':'groupId' | json}}</pre>
+            </div>
+            <div>
+                <pre>video: {{kv.value.video.constraints | filterOut:'deviceId':'groupId' | json}}</pre>
+            </div>
+            <h3>Settings</h3>
+            <div>
+                <pre>audio: {{kv.value.audio.settings | filterOut:'deviceId':'groupId' | json}}</pre>
+            </div>
+            <div>
+                <pre>video: {{kv.value.video.settings | filterOut:'deviceId':'groupId' | json}}</pre>
+            </div>
         </div>
     </div>
 
