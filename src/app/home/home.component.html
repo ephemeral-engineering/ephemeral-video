@@ -64,46 +64,7 @@
             </div>
         </div>
     </div> -->
-    <!-- rowHeight="100px" -->
-    <!-- {{year}} -->
-    <!-- <mat-grid-list class="vw-100 vh-100" cols="1" rowHeight="fit" gutterSize="2px">
-        <mat-grid-tile>
-            <app-local-stream class="h-100" [mediaStream]="localMediaStream"
-                (onTracksStatusChanged)="localStream?.notifyTracksStatusChanged()"></app-local-stream>
-        </mat-grid-tile>
-    </mat-grid-list> -->
-    <!-- <div class="row" *ngIf="localStream&&remoteStreamsByParticipant.size===0">
-        <div class="col-6">
-            <app-local-stream class="h-100" [localStream]="localStream"></app-local-stream>
-        </div>
-    </div> -->
-
     <div class="pos-relative vh-100">
-        <!-- class="vw-100 vh-100" -->
-        <!-- <mat-grid-list cols="1" rowHeight="100vh">
-            <mat-grid-tile *ngFor="let kv of remoteStreamsByParticipant | keyvalue">
-                <mat-card class="h-100 w-auto" appearance="outlined">
-                    <mat-card-header>
-                        <mat-card-title>{{kv.key.user.userData?.nickname}}</mat-card-title>
-                        <mat-card-subtitle>{{kv.key.user.id}}</mat-card-subtitle>
-                        <div *ngIf="moderator">
-                            <button (click)="eject(kv.key)">Eject</button>
-                        </div>
-                    </mat-card-header>
-                    <mat-card-content class="h-100 w-auto">
-                        <div *ngFor="let _stream of kv.value" class="h-100 w-auto">
-                            <app-remote-stream [remoteStream]="_stream"
-                                (onSnapshot)="onSnapshot($event)"></app-remote-stream>
-                        </div>
-                    </mat-card-content>
-                </mat-card>
-            </mat-grid-tile>
-        </mat-grid-list> -->
-        <!-- <div class="col h-100">
-            <app-local-stream class="h-100 w-100" *ngIf="localStream" [localStream]="localStream"
-                [videoStyle]="{objectFit:'cover'}">
-            </app-local-stream>
-        </div> -->
         <div class="d-flex justify-content-center h-100">
             <!-- [ngStyle]="{width:_width}" -->
             <div *ngFor="let kv of remoteStreamsByParticipant | keyvalue" class="flex-g-1 h-100">
@@ -111,6 +72,10 @@
                     [videoStyle]="{height: '100%', width:'100%', objectFit:'cover'}"
                     (onSnapshot)="onSnapshot($event)"></app-remote-stream>
             </div>
+        </div>
+        <div *ngIf="localStream" class="pos-abs bottom-left" [ngStyle]="{height:'34%'}">
+            <app-local-stream [localStream]="localStream" [videoStyle]="{opacity:0.84, height:'100%', width:'auto'}">
+            </app-local-stream>
         </div>
         <!-- <div *ngIf="localStream" class="d-flex justify-content-center h-100">
             <app-local-stream [localStream]="localStream"
@@ -131,17 +96,9 @@
     max-width: 133.34vh; /* 16/9 = 1.333
     -->
         <!-- align-items-stretch -->
-        <!-- <div class="col d-flex justify-content-center" *ngIf="localStream">
-        <app-local-stream [localStream]="localStream" [videoStyle]="{}">
-        </app-local-stream>
-    </div> -->
         <!-- bottom-0 mb-1 start-0 ms-1 col-6 col-sm-6 col-md-5 col-lg-4 col-xl-3 col-xxl-2 -->
         <!-- <div class="d-flex flex-column-reverse "> -->
         <!-- <div class="row "> -->
-        <div *ngIf="localStream" class="pos-abs bottom-left" [ngStyle]="{height:'34%'}">
-            <app-local-stream [localStream]="localStream" [videoStyle]="{opacity:0.84, height:'100%', width:'auto'}">
-            </app-local-stream>
-        </div>
     </div>
 
     <div class="mt-5 d-flex justify-content-center">
@@ -210,21 +167,9 @@
         </div>
     </div> -->
 
-    <!-- <div>
-                                <button (click)="getMediaStreamConstraints(_stream)">getConstraints</button>
-                            </div>
-                            <div>
-                                <button (click)="applyMediaStreamConstraintsHD(_stream)">HD</button>
-                                <button (click)="applyMediaStreamConstraintsVGA(_stream)">VGA</button>
-                            </div> -->
-    <!-- <div *ngIf="moderator">
-                                <button *ngIf="!mediaRecorder"
-                                    (click)="record(kvj.value.mediaStream)">Record</button>
-                                <button *ngIf="mediaRecorder" (click)="stopRecording()">StopRecording</button>
-                            </div> -->
-
+    <!-- <button *ngIf="!mediaRecorder" (click)="record(kvj.value.mediaStream)">Record</button>
+    <button *ngIf="mediaRecorder" (click)="stopRecording()">StopRecording</button> -->
     <!-- 
-
     <div>
         <p *ngFor="let pair of messages">{{pair[0].nickname}}:{{pair[1]}}</p>
     </div>
@@ -274,6 +219,6 @@
     <a #dwnld style="display:none;" href></a>
     <span>remoteStreamsByParticipant.size = {{remoteStreamsByParticipant.size}}</span>
 
-    <p><a routerLink="/bye">Bye</a></p> -->
+    <p><a routerLink="/bye">Bye</a></p>  -->
 
 </div>

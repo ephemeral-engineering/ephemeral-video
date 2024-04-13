@@ -1,8 +1,20 @@
 import { NgClass, NgStyle } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, Input, ViewChild } from '@angular/core';
-import { ContextService } from '../context.service';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 
 export const VIDEO_ROUNDED_CORNERS = { borderRadius: '4px', overflow: 'hidden' };
+
+export type VideoInfo = {
+  element: {
+    aspectRatio: number,
+    width: number,
+    height: number
+  }
+  video: {
+    aspectRatio: number,
+    width: number,
+    height: number
+  }
+};
 
 const CNAME = 'StreamVideo';
 
@@ -67,11 +79,9 @@ export class StreamVideoComponent implements AfterViewInit { //implements AfterV
     }
   }
 
-  videoSize = "";
+  @Output() onInfo = new EventEmitter<VideoInfo>();
 
-  constructor(
-    private contextService: ContextService,
-  ) { }
+  constructor() { }
 
   ngAfterViewInit() {
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
@@ -89,9 +99,18 @@ export class StreamVideoComponent implements AfterViewInit { //implements AfterV
         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
           console.debug(`${CNAME}|onLoadedData ${ev.type}`, { height, width }, videoElement, this._mediaStream);
         }
-        const frameRate = this._mediaStream?.getVideoTracks()[0].getSettings().frameRate;
-        this.videoSize = `${width}x${height}@${frameRate || '?'}i/s`;
-        this.contextService.recordNotification(`stream<${this._mediaStream?.id}> ${ev.type}:${width}x${height}@${frameRate || '?'}i/s`)
+        // const frameRate = this._mediaStream?.getVideoTracks()[0].getSettings().frameRate;
+        // this.videoSize = `${width}x${height}@${frameRate || '?'}i/s`;
+        // this.contextService.recordNotification(`stream<${this._mediaStream?.id}> ${ev.type}:${width}x${height}@${frameRate || '?'}i/s`)
+
+        this.onInfo.emit({
+          element: {
+            aspectRatio: videoElement.clientWidth / videoElement.clientHeight,
+            width: videoElement.clientWidth,
+            height: videoElement.clientHeight
+          },
+          video: { aspectRatio: videoElement.videoWidth / videoElement.videoHeight, width, height }
+        })
       }
 
       videoElement.addEventListener("loadeddata", onLoadedData);

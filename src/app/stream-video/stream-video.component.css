@@ -11,9 +11,3 @@
     /* Firefox */
     -moz-transform: rotateY(180deg);
 }
-
-.bc-blue {
-    background-color: aliceblue;
-    opacity: 0.7;
-    padding: 2px;
-}

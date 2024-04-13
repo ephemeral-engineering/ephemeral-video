@@ -1,5 +1,5 @@
 <app-stream-video [mediaStream]="_mediaStream" [videoStyle]="_videoStyle" [muted]="_muted" [sinkId]="_sinkId"
-    (pointerenter)="onPointerEnter($event)" (pointermove)="onPointerMove($event)"
+    (onInfo)="onInfo($event)" (pointerenter)="onPointerEnter($event)" (pointermove)="onPointerMove($event)"
     (pointerleave)="onPointerLeave($event)"></app-stream-video>
 <div class="pos-abs top-left" #label>
     <ng-content select="[label]"></ng-content>
@@ -11,5 +11,7 @@
 <div class="pos-abs bottom-right" #controls>
     <ng-content select="[controls]"></ng-content>
 </div>
-
+<div class="pos-abs centered-axis-x bc-blue">
+    <span>{{videoSize}}</span>
+</div>
 <app-pointer *ngFor="let pointer of pointers" [pointer]="pointer"></app-pointer>

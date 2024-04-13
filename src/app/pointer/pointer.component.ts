@@ -24,8 +24,8 @@ export class PointerComponent {
     // if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
     //   console.debug(`${CNAME}|set pointer`, data)
     // }
-    this.el.nativeElement.style.left = `${data.left}%`;
-    this.el.nativeElement.style.top = `${data.top}%`;
+    this.el.nativeElement.style.left = `${data.left}px`;
+    this.el.nativeElement.style.top = `${data.top}px`;
     this.nickname = data.nickname;
   }
 
