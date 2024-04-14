@@ -25,7 +25,7 @@ const CNAME = 'StreamVideo';
   standalone: true,
   imports: [NgStyle, NgClass]
 })
-export class StreamVideoComponent implements AfterViewInit, OnDestroy { //implements AfterViewInit, OnDestroy
+export class StreamVideoComponent implements AfterViewInit, OnDestroy {
 
   @ViewChild("video") videoRef: ElementRef<HTMLVideoElement> | undefined;
 
@@ -84,6 +84,7 @@ export class StreamVideoComponent implements AfterViewInit, OnDestroy { //implem
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
       console.debug(`${CNAME}|ngAfterViewInit`, this.videoRef);
     }
+
     // remote stream is attached to DOM during ngAfterViewInit
     // @ViewChild is not bound before this stage
 

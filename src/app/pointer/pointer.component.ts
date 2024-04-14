@@ -6,7 +6,7 @@ export type Pointer = {
   n?: string
   t: number
   l: number
-}
+};
 
 const CNAME = 'Pointer';
 

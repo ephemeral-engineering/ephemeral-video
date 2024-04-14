@@ -28,9 +28,9 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     this._stream = stream;
 
     this._stream.onDataChannel(DATACHANNEL_POINTER_PATH, (dataChannel: RTCDataChannel) => {
-      // DONE create a pointer each datachannel
+      // DONE: create a pointer each datachannel
       // DONE: how do we know this is for a pointer ? => path indicates the purpose
-      // DONE: how do we know who is sending his pointer ? => first message contains nickname, next ones will be {top, left}
+      // DONE: how do we know who is sending his pointer ? => some messages contain nickname
 
       dataChannel.addEventListener('message', (event) => {
         const data = JSON.parse(event.data) as Pointer;
@@ -209,26 +209,15 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   onPointerMove(event: PointerEvent) {
     // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
 
-    // if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-    //   console.debug(`${CNAME}|onPointerMove`, event)
-    // }
-
-    // const x = event.clientX - (this.el.nativeElement.offsetLeft ?? 0);
-    // const y = event.clientY - (this.el.nativeElement.offsetTop ?? 0);
     const rect = this.el.nativeElement.getBoundingClientRect();
     const left = event.clientX - Math.round(rect.left); //x position within the element.
     const top = event.clientY - Math.round(rect.top);  //y position within the element.
-    // const left = `${Math.round(x * 100 / (this.el.nativeElement.clientWidth || 100))}%`;
-    // const top = `${Math.round(y * 100 / (this.el.nativeElement.clientHeight || 100))}%`;
 
     // Round with 2 decimal to reduce amount of data sent on the datachannel, still keeping enough accuracy
     // Math.round((num + Number.EPSILON) * 100) / 100
-    // console.log('onPointerMove', x, this.el.nativeElement.clientWidth)
     function round2(num: number) {
       return Math.round((num + Number.EPSILON) * 100) / 100
     }
-    // const left = round2(x * 100 / (this.el.nativeElement.clientWidth || 100));
-    // const top = round2(y * 100 / (this.el.nativeElement.clientHeight || 100));
 
     this.moveCounter++;
 
@@ -244,7 +233,6 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
         left: (left + offset) * factor,
         top: top * factor
       };
-      // const _left = Math.min(Math.max(0, n_left), this.videoInfo.element.width);
 
     } else {
       // then image is full in width but image will be reduced in height
@@ -260,7 +248,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       };
     }
 
-    // Traduce in %
+    // Convert in %
     // This overcomes the problem when the video may not be received in same resolution
     // it is sent. In such case working with pixels leads to wrong placement.
     // Rounding 2 digits after comma might be enough accuracy and prevent from sending
@@ -276,7 +264,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     };
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
       const array = Array.from(this.openDataChannels);
-      console.debug(`${CNAME}|onPointerMove sending`, { left, top }, pointer, array.map((elt) => elt.readyState))
+      console.debug(`${CNAME}|onPointerMove sending`, pointer, array.map((elt) => elt.readyState))
     }
 
     this.openDataChannels.forEach((dataChannel) => {
