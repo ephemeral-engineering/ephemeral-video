@@ -48,6 +48,8 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
         //   factor = this.videoInfo.video.width / this.videoInfo.element.width;
         // }
 
+        let target: Pointer;
+
         if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
           // then image is full in height but image will be reduced in width
           const factor = this.videoInfo.video.height / this.videoInfo.element.height;
@@ -57,9 +59,8 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 
           const top = data.top / factor;
           const n_left = (data.left / factor) - offset;
-          const left = Math.min(Math.max(n_left, 0), this.videoInfo.element.width);
-          data.top = top;
-          data.left = left;
+          const left = Math.min(Math.max(0, n_left), this.videoInfo.element.width);
+          target = { left, top }
         } else {
           // then image is full in width but image will be reduced in height
           const factor = this.videoInfo.video.width / this.videoInfo.element.width;
@@ -67,16 +68,20 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
           const n_height = this.videoInfo.video.height / factor;
           const offset = (n_height - this.videoInfo.element.height) / 2;
 
-          const top = (data.top / factor) - offset;
+          const top = Math.min(Math.max(0, (data.top / factor) - offset), this.videoInfo.element.height);
           const left = (data.left / factor);
-          data.top = top;
-          data.left = left;
+          target = { left, top }
         }
 
-        this.pointerChannels.set(dataChannel, { ...(prev ? prev : {}), ...data });
+
+
+        this.pointerChannels.set(dataChannel, { ...(prev ? prev : {}), ...target });
         this.ngZone.run(() => {
           // update the data of the component
           this.pointers = [...this.pointerChannels.values()];
+          if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+            console.debug(`${CNAME}|received`, data, target, this.videoInfo, this.pointers)
+          }
         });
       });
       dataChannel.addEventListener('error', (error) => {
@@ -222,8 +227,8 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     // const x = event.clientX - (this.el.nativeElement.offsetLeft ?? 0);
     // const y = event.clientY - (this.el.nativeElement.offsetTop ?? 0);
     const rect = this.el.nativeElement.getBoundingClientRect();
-    const x = event.clientX - Math.round(rect.left); //x position within the element.
-    const y = event.clientY - Math.round(rect.top);  //y position within the element.
+    const left = event.clientX - Math.round(rect.left); //x position within the element.
+    const top = event.clientY - Math.round(rect.top);  //y position within the element.
     // const left = `${Math.round(x * 100 / (this.el.nativeElement.clientWidth || 100))}%`;
     // const top = `${Math.round(y * 100 / (this.el.nativeElement.clientHeight || 100))}%`;
 
@@ -238,21 +243,22 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 
     this.moveCounter++;
 
-    const coordsInActualSize = { x, y };
+    // const coordsInActualSize = { x, y };
     let factor;
     if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
       factor = this.videoInfo.video.height / this.videoInfo.element.height;
     } else {
       factor = this.videoInfo.video.width / this.videoInfo.element.width;
     }
-    const coordsInNaturalSize = {
-      x: Math.round(factor * coordsInActualSize.x),
-      y: Math.round(factor * coordsInActualSize.y)
-    };
 
-    const pointer = { left: coordsInNaturalSize.x, top: coordsInNaturalSize.y, ...(this.moveCounter % 10 === 0 ? { nickname: GLOBAL_STATE.nickname } : {}) };
+    const pointer = {
+      left: Math.round(factor * left),
+      top: Math.round(factor * top),
+      ...(this.moveCounter % 10 === 0 ? { nickname: GLOBAL_STATE.nickname } : {})
+    };
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-      console.debug(`${CNAME}|onPointerMove sending`, pointer)
+      const array = Array.from(this.openDataChannels);
+      console.debug(`${CNAME}|onPointerMove sending`, { left, top }, pointer, array.map((elt) => elt.readyState))
     }
 
     this.openDataChannels.forEach((dataChannel) => {

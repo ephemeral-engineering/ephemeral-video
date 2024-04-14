@@ -1,17 +1,17 @@
 <app-stream-video [mediaStream]="_mediaStream" [videoStyle]="_videoStyle" [muted]="_muted" [sinkId]="_sinkId"
     (onInfo)="onInfo($event)" (pointerenter)="onPointerEnter($event)" (pointermove)="onPointerMove($event)"
     (pointerleave)="onPointerLeave($event)"></app-stream-video>
-<div class="pos-abs top-left" #label>
+<div class="pos-abs top-left pe-none" #label>
     <ng-content select="[label]"></ng-content>
     {{pointers.length}}
 </div>
-<div class="pos-abs top-right" #status>
+<div class="pos-abs top-right pe-none" #status>
     <ng-content select="[status]"></ng-content>
 </div>
 <div class="pos-abs bottom-right" #controls>
     <ng-content select="[controls]"></ng-content>
 </div>
-<div class="pos-abs centered-axis-x bc-blue">
+<div class="pos-abs centered-axis-x bc-blue pe-none">
     <span>{{videoSize}}</span>
 </div>
 <app-pointer *ngFor="let pointer of pointers" [pointer]="pointer"></app-pointer>

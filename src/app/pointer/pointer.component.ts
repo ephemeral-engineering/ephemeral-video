@@ -2,7 +2,7 @@ import { Component, ElementRef, Input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
 export type Pointer = {
-  nickname: string
+  nickname?: string
   top: number
   left: number
 }
@@ -26,7 +26,7 @@ export class PointerComponent {
     // }
     this.el.nativeElement.style.left = `${data.left}px`;
     this.el.nativeElement.style.top = `${data.top}px`;
-    this.nickname = data.nickname;
+    this.nickname = data.nickname || "";
   }
 
   constructor(private el: ElementRef) { }

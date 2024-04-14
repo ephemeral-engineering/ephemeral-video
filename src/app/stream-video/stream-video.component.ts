@@ -29,6 +29,9 @@ export class StreamVideoComponent implements AfterViewInit { //implements AfterV
 
   @ViewChild("video") videoRef: ElementRef<HTMLVideoElement> | undefined;
 
+  // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
+  private observer: ResizeObserver | undefined;
+
   _mediaStream: MediaStream | undefined;
   @Input() set mediaStream(mediaStream: MediaStream | undefined) {
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
@@ -94,15 +97,24 @@ export class StreamVideoComponent implements AfterViewInit { //implements AfterV
 
       const videoElement = this.videoRef.nativeElement;
 
+      this.observer = new ResizeObserver((_entries) => {
+        const { videoHeight: height, videoWidth: width } = videoElement;
+        this.onInfo.emit({
+          element: {
+            aspectRatio: videoElement.clientWidth / videoElement.clientHeight,
+            width: videoElement.clientWidth,
+            height: videoElement.clientHeight
+          },
+          video: { aspectRatio: videoElement.videoWidth / videoElement.videoHeight, width, height }
+        })
+      });
+      this.observer.observe(videoElement);
+
       const onLoadedData = (ev: Event) => {
         const { videoHeight: height, videoWidth: width } = videoElement;
         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
           console.debug(`${CNAME}|onLoadedData ${ev.type}`, { height, width }, videoElement, this._mediaStream);
         }
-        // const frameRate = this._mediaStream?.getVideoTracks()[0].getSettings().frameRate;
-        // this.videoSize = `${width}x${height}@${frameRate || '?'}i/s`;
-        // this.contextService.recordNotification(`stream<${this._mediaStream?.id}> ${ev.type}:${width}x${height}@${frameRate || '?'}i/s`)
-
         this.onInfo.emit({
           element: {
             aspectRatio: videoElement.clientWidth / videoElement.clientHeight,
