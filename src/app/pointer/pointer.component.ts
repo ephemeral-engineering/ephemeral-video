@@ -1,10 +1,11 @@
 import { Component, ElementRef, Input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
+// use one letter to reduce amount of exchanged data
 export type Pointer = {
-  nickname?: string
-  top: number
-  left: number
+  n?: string
+  t: number
+  l: number
 }
 
 const CNAME = 'Pointer';
@@ -24,9 +25,9 @@ export class PointerComponent {
     // if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
     //   console.debug(`${CNAME}|set pointer`, data)
     // }
-    this.el.nativeElement.style.left = `${data.left}px`;
-    this.el.nativeElement.style.top = `${data.top}px`;
-    this.nickname = data.nickname || "";
+    this.el.nativeElement.style.left = `${data.l}px`;
+    this.el.nativeElement.style.top = `${data.t}px`;
+    this.nickname = data.n || "";
   }
 
   constructor(private el: ElementRef) { }

@@ -36,6 +36,10 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
         const data = JSON.parse(event.data) as Pointer;
         const prev = this.pointerChannels.get(dataChannel);
 
+        // convert % of original video size to this video size
+        data.l = data.l * this.videoInfo.video.width / 100;
+        data.t = data.t * this.videoInfo.video.height / 100;
+
         let target: Pointer;
 
         if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
@@ -45,10 +49,10 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
           const n_width = this.videoInfo.video.width / factor;
           const offset = (n_width - this.videoInfo.element.width) / 2;
 
-          const top = data.top / factor;
-          const n_left = (data.left / factor) - offset;
-          const left = Math.min(Math.max(0, n_left), this.videoInfo.element.width);
-          target = { left, top }
+          const t = data.t / factor;
+          const n_left = (data.l / factor) - offset;
+          const l = Math.min(Math.max(0, n_left), this.videoInfo.element.width);
+          target = { l, t }
         } else {
           // then image is full in width but image will be reduced in height
           const factor = this.videoInfo.video.width / this.videoInfo.element.width;
@@ -56,9 +60,9 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
           const n_height = this.videoInfo.video.height / factor;
           const offset = (n_height - this.videoInfo.element.height) / 2;
 
-          const top = Math.min(Math.max(0, (data.top / factor) - offset), this.videoInfo.element.height);
-          const left = (data.left / factor);
-          target = { left, top }
+          const t = Math.min(Math.max(0, (data.t / factor) - offset), this.videoInfo.element.height);
+          const l = (data.l / factor);
+          target = { l, t }
         }
 
         this.pointerChannels.set(dataChannel, { ...(prev ? prev : {}), ...target });
@@ -160,7 +164,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       height: 1
     }
   };
-  
+
   onInfo(info: VideoInfo) {
     this.videoInfo = info;
     const frameRate = this._mediaStream?.getVideoTracks()[0].getSettings().frameRate;
@@ -256,9 +260,19 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       };
     }
 
-    const pointer = {
+    // Traduce in %
+    // This overcomes the problem when the video may not be received in same resolution
+    // it is sent. In such case working with pixels leads to wrong placement.
+    // Rounding 2 digits after comma might be enough accuracy and prevent from sending
+    // too large amount of data.
+    vCoord = {
+      l: round2(vCoord.left * 100 / this.videoInfo.video.width),
+      t: round2(vCoord.top * 100 / this.videoInfo.video.height)
+    }
+
+    const pointer: Pointer = {
       ...vCoord,
-      ...(this.moveCounter % 10 === 0 ? { nickname: GLOBAL_STATE.nickname } : {})
+      ...(this.moveCounter % 10 === 0 ? { n: GLOBAL_STATE.nickname } : {})
     };
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
       const array = Array.from(this.openDataChannels);
