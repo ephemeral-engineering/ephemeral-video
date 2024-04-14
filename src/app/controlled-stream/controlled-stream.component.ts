@@ -20,9 +20,6 @@ const CNAME = 'ControlledStream';
 })
 export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 
-  // store pointers dataChannels with corresponding nickname
-  inBoundDataChannels: Set<RTCDataChannel> = new Set();
-
   pointerChannels: Map<RTCDataChannel, Pointer> = new Map();
   pointers: Pointer[] = [];
 
@@ -35,18 +32,9 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       // DONE: how do we know this is for a pointer ? => path indicates the purpose
       // DONE: how do we know who is sending his pointer ? => first message contains nickname, next ones will be {top, left}
 
-      this.inBoundDataChannels.add(dataChannel);
-
       dataChannel.addEventListener('message', (event) => {
         const data = JSON.parse(event.data) as Pointer;
         const prev = this.pointerChannels.get(dataChannel);
-
-        // let factor;
-        // if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
-        //   factor = this.videoInfo.video.height / this.videoInfo.element.height;
-        // } else {
-        //   factor = this.videoInfo.video.width / this.videoInfo.element.width;
-        // }
 
         let target: Pointer;
 
@@ -73,8 +61,6 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
           target = { left, top }
         }
 
-
-
         this.pointerChannels.set(dataChannel, { ...(prev ? prev : {}), ...target });
         this.ngZone.run(() => {
           // update the data of the component
@@ -86,14 +72,12 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       });
       dataChannel.addEventListener('error', (error) => {
         console.error(`${CNAME}|dataChannel.onerror`, error)
-        this.inBoundDataChannels.delete(dataChannel);
         this.pointerChannels.delete(dataChannel);
       })
       dataChannel.addEventListener('close', () => {
         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
           console.debug(`${CNAME}|dataChannel.onclose`)
         }
-        this.inBoundDataChannels.delete(dataChannel);
         this.pointerChannels.delete(dataChannel);
       })
     })
@@ -176,6 +160,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       height: 1
     }
   };
+  
   onInfo(info: VideoInfo) {
     this.videoInfo = info;
     const frameRate = this._mediaStream?.getVideoTracks()[0].getSettings().frameRate;
@@ -243,17 +228,36 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 
     this.moveCounter++;
 
-    // const coordsInActualSize = { x, y };
-    let factor;
+    let vCoord;
     if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
-      factor = this.videoInfo.video.height / this.videoInfo.element.height;
+      // then image is full in height but is cropped in width
+      const factor = this.videoInfo.video.height / this.videoInfo.element.height;
+      // the width the video would take in element if it was not cropped
+      const elt_v_width = this.videoInfo.video.width / factor;
+      const offset = (elt_v_width - this.videoInfo.element.width) / 2;
+
+      vCoord = {
+        left: (left + offset) * factor,
+        top: top * factor
+      };
+      // const _left = Math.min(Math.max(0, n_left), this.videoInfo.element.width);
+
     } else {
-      factor = this.videoInfo.video.width / this.videoInfo.element.width;
+      // then image is full in width but image will be reduced in height
+      const factor = this.videoInfo.video.width / this.videoInfo.element.width;
+
+      // the height the video would take in element if it was not cropped
+      const elt_v_height = this.videoInfo.video.height / factor;
+      const offset = (elt_v_height - this.videoInfo.element.height) / 2;
+
+      vCoord = {
+        left: left * factor,
+        top: (top + offset) * factor
+      };
     }
 
     const pointer = {
-      left: Math.round(factor * left),
-      top: Math.round(factor * top),
+      ...vCoord,
       ...(this.moveCounter % 10 === 0 ? { nickname: GLOBAL_STATE.nickname } : {})
     };
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
@@ -270,9 +274,9 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   onPointerLeave(event: PointerEvent) {
     // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-      console.log(`${CNAME}|onPointerLeave`, event)
+      console.debug(`${CNAME}|onPointerLeave`, event)
     }
-    this.openDataChannels.forEach((dataChannel) => {
+    this.outboundDataChannels.forEach((dataChannel) => {
       dataChannel.close()
     })
     this.openDataChannels.clear()

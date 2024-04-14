@@ -1,5 +1,5 @@
 import { NgClass, NgStyle } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, Output, ViewChild } from '@angular/core';
 
 export const VIDEO_ROUNDED_CORNERS = { borderRadius: '4px', overflow: 'hidden' };
 
@@ -25,7 +25,7 @@ const CNAME = 'StreamVideo';
   standalone: true,
   imports: [NgStyle, NgClass]
 })
-export class StreamVideoComponent implements AfterViewInit { //implements AfterViewInit, OnDestroy
+export class StreamVideoComponent implements AfterViewInit, OnDestroy { //implements AfterViewInit, OnDestroy
 
   @ViewChild("video") videoRef: ElementRef<HTMLVideoElement> | undefined;
 
@@ -38,9 +38,6 @@ export class StreamVideoComponent implements AfterViewInit { //implements AfterV
       console.debug(`${CNAME}|mediaStream`, mediaStream, mediaStream?.getTracks().length);
     }
     this._mediaStream = mediaStream;
-    // if (this.videoRef) {
-    //   this.videoRef.nativeElement.srcObject = mediaStream;
-    // }
   }
 
   _videoStyle: { [klass: string]: any; } = {
@@ -57,9 +54,6 @@ export class StreamVideoComponent implements AfterViewInit { //implements AfterV
   _muted = false;
   @Input() set muted(muted: boolean) {
     this._muted = muted;
-    // if (this.videoRef) {
-    //   this.videoRef.nativeElement.muted = this._muted;
-    // }
   }
 
   _mirror = false;
@@ -90,31 +84,15 @@ export class StreamVideoComponent implements AfterViewInit { //implements AfterV
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
       console.debug(`${CNAME}|ngAfterViewInit`, this.videoRef);
     }
-    // remote stream is attached to DOM during ngAfterViewInit because @ViewChild is not bound before this stage
-    // this.doAttach();
+    // remote stream is attached to DOM during ngAfterViewInit
+    // @ViewChild is not bound before this stage
 
     if (this.videoRef) {
 
       const videoElement = this.videoRef.nativeElement;
 
-      this.observer = new ResizeObserver((_entries) => {
+      const emitInfo = () => {
         const { videoHeight: height, videoWidth: width } = videoElement;
-        this.onInfo.emit({
-          element: {
-            aspectRatio: videoElement.clientWidth / videoElement.clientHeight,
-            width: videoElement.clientWidth,
-            height: videoElement.clientHeight
-          },
-          video: { aspectRatio: videoElement.videoWidth / videoElement.videoHeight, width, height }
-        })
-      });
-      this.observer.observe(videoElement);
-
-      const onLoadedData = (ev: Event) => {
-        const { videoHeight: height, videoWidth: width } = videoElement;
-        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|onLoadedData ${ev.type}`, { height, width }, videoElement, this._mediaStream);
-        }
         this.onInfo.emit({
           element: {
             aspectRatio: videoElement.clientWidth / videoElement.clientHeight,
@@ -125,27 +103,29 @@ export class StreamVideoComponent implements AfterViewInit { //implements AfterV
         })
       }
 
-      videoElement.addEventListener("loadeddata", onLoadedData);
-      videoElement.addEventListener("loadedmetadata", onLoadedData);
-      videoElement.addEventListener("ratechange", onLoadedData);
+      this.observer = new ResizeObserver((_entries) => {
+        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+          console.debug(`${CNAME}|ResizeObserver runs`);
+        }
+        emitInfo()
+      });
+      this.observer.observe(videoElement);
+
+      const onLoadedData = (ev: Event) => {
+        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+          console.debug(`${CNAME}|onLoadedData ${ev.type}`);
+        }
+        emitInfo()
+      }
+
+      // videoElement.addEventListener("loadeddata", onLoadedData);
+      // videoElement.addEventListener("loadedmetadata", onLoadedData);
+      // videoElement.addEventListener("ratechange", onLoadedData);
       videoElement.addEventListener("resize", onLoadedData);
     }
   }
 
-  // ngOnDestroy(): void {
-  //   if (globalThis.logLevel.isDebugEnabled) {
-  //     console.debug(`${CNAME}|ngOnDestroy`, this.videoRef);
-  //   }
-  //   // throw new Error('Method not implemented.');
-  //   if (this.videoRef) {
-  //     this.videoRef.nativeElement.srcObject = undefined;
-  //   }
-  // }
-
-  // doAttach() {
-  //   if (this.videoRef) {
-  //     const video = this.videoRef.nativeElement;
-  //     video.srcObject = this._mediaStream;
-  //   }
-  // }
+  ngOnDestroy(): void {
+    this.observer?.disconnect()
+  }
 }

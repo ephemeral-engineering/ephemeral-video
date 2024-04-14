@@ -403,6 +403,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         // specifying directly the selected number seems to work better
         // { min: 480, ideal: this.selectedVideoResolution } 
         // { exact: this.selectedVideoResolution } make it fail if not possible
+        // ...supportedConstraints['width'] ? { width: this.selectedVideoResolution[0] } : {},
         ...supportedConstraints['height'] ? { height: this.selectedVideoResolution } : {},
         // aspectRatio: 1.777777778,
         ...supportedConstraints['frameRate'] ? { frameRate: this.selectedVideoFrameRate } : {}, //{ ideal: 30, max: 60 }
@@ -425,11 +426,12 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           this.mediaStreamInfos.set(mediaStream, mediaStreamInfo)
 
           if (mediaStreamInfo.video?.capabilities?.height?.max) {
-            const max = mediaStreamInfo.video?.capabilities?.height?.max;
-            this.resolutions = RESOLUTIONS.filter((r) => r <= max);
+            // const maxW = mediaStreamInfo.video?.capabilities?.width?.max;
+            const maxH = mediaStreamInfo.video?.capabilities?.height?.max;
+            this.resolutions = RESOLUTIONS.filter((r) => r <= maxH);
             const last = this.resolutions.slice(-1)[0] || -1;
-            if (last < max) {
-              this.resolutions.push(max);
+            if (last < maxH) {
+              this.resolutions.push(maxH);
             }
           }
           if (mediaStreamInfo.video?.capabilities?.frameRate?.max) {
@@ -502,7 +504,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     return this._selectedVideoDeviceId || "";
   }
 
-  _selectedVideoResolution = +(getSessionStorage(`${STORAGE_PREFIX}-videoResolution`) || "480");
+  _selectedVideoResolution: number = +(getSessionStorage(`${STORAGE_PREFIX}-videoResolution`) || "480");
   set selectedVideoResolution(resolution: number) {
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
       console.debug(`${CNAME}|set selectedVideoResolution`, resolution)
@@ -525,15 +527,22 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
     // For resolution change, directly applyConstraints on track
     this.localUserMediaStream?.getVideoTracks()[0].applyConstraints({
-      height: this.selectedVideoResolution
+      // width: this.selectedVideoResolution[0],
+      height: this.selectedVideoResolution,
     }).then(() => {
+      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+        console.debug(`${CNAME}|set selectedVideoResolution done`, resolution)
+      }
       setSessionStorage(`${STORAGE_PREFIX}-videoResolution`, `${resolution}`)
       if (this.localUserMediaStream) {
         this.mediaStreamInfos.set(this.localUserMediaStream, this.getCapConstSettings(this.localUserMediaStream))
       }
-    }).finally(() => {
-      this.grabbing = false;
+    }).catch((error) => {
+      console.error(`${CNAME}|set selectedVideoResolution`, error)
     })
+      .finally(() => {
+        this.grabbing = false;
+      })
   }
   get selectedVideoResolution() {
     return this._selectedVideoResolution;
