@@ -23,6 +23,23 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   pointerChannels: Map<RTCDataChannel, Pointer> = new Map();
   pointers: Pointer[] = [];
 
+  clickPointers: Pointer[] = [];
+  timeoutID: number;
+  startClickPointersTimer() {
+    this.timeoutID = window.setTimeout(() => {
+      const threshold = Date.now() - 3000;
+      this.clickPointers = this.clickPointers.filter((pointer) => (pointer.ts || 0) > threshold)
+      if (this.clickPointers.length > 0) {
+        this.startClickPointersTimer()
+      }
+    }, 1000);
+  }
+
+  addClickPointer(pointer: Pointer) {
+    this.clickPointers.push(pointer)
+    this.startClickPointersTimer()
+  }
+
   _stream: Stream;
   @Input({ required: true }) set stream(stream: Stream) {
     this._stream = stream;
@@ -40,7 +57,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
         data.l = data.l * this.videoInfo.video.width / 100;
         data.t = data.t * this.videoInfo.video.height / 100;
 
-        let target: Pointer;
+        let pointer: Pointer;
 
         if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
           // then image is full in height but image will be reduced in width
@@ -52,7 +69,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
           const t = data.t / factor;
           const n_left = (data.l / factor) - offset;
           const l = Math.min(Math.max(0, n_left), this.videoInfo.element.width);
-          target = { l, t }
+          pointer = { l, t };
         } else {
           // then image is full in width but image will be reduced in height
           const factor = this.videoInfo.video.width / this.videoInfo.element.width;
@@ -62,15 +79,24 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 
           const t = Math.min(Math.max(0, (data.t / factor) - offset), this.videoInfo.element.height);
           const l = (data.l / factor);
-          target = { l, t }
+          pointer = { l, t };
         }
 
-        this.pointerChannels.set(dataChannel, { ...(prev ? prev : {}), ...target });
+        if (data.n) {
+          pointer.n = data.n;
+        }
+
+        this.pointerChannels.set(dataChannel, { ...(prev ? prev : {}), ...pointer });
+
         this.ngZone.run(() => {
           // update the data of the component
           this.pointers = [...this.pointerChannels.values()];
+          if (data.ts) {
+            pointer.ts = data.ts;
+            this.addClickPointer(pointer)
+          }
           if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-            console.debug(`${CNAME}|received`, data, target, this.videoInfo, this.pointers)
+            console.debug(`${CNAME}|received`, data, pointer, this.videoInfo, this.pointers)
           }
         });
       });
@@ -139,6 +165,8 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+
+
   ngOnDestroy() {
     if (this.observer) {
       // disconnect() unobserves all observed Element targets of a particular observer.
@@ -206,20 +234,26 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 
   private moveCounter = 0;
 
-  onPointerMove(event: PointerEvent) {
-    // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
-
+  getLocalPointer(event: MouseEvent) {
     const rect = this.el.nativeElement.getBoundingClientRect();
-    const left = event.clientX - Math.round(rect.left); //x position within the element.
-    const top = event.clientY - Math.round(rect.top);  //y position within the element.
+    return {
+      l: event.clientX - Math.round(rect.left),
+      t: event.clientY - Math.round(rect.top)
+    }
+  }
+
+  translateToMediaPercentage(coords: { l: number, t: number }) {
+    // const rect = this.el.nativeElement.getBoundingClientRect();
+    // const left = event.clientX - Math.round(rect.left); //x position within the element.
+    // const top = event.clientY - Math.round(rect.top);  //y position within the element.
+
+    //const { l: left, t: top } = this.getLocalPointer(event);
 
     // Round with 2 decimal to reduce amount of data sent on the datachannel, still keeping enough accuracy
     // Math.round((num + Number.EPSILON) * 100) / 100
     function round2(num: number) {
       return Math.round((num + Number.EPSILON) * 100) / 100
     }
-
-    this.moveCounter++;
 
     let vCoord;
     if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
@@ -230,8 +264,8 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       const offset = (elt_v_width - this.videoInfo.element.width) / 2;
 
       vCoord = {
-        left: (left + offset) * factor,
-        top: top * factor
+        left: (coords.l + offset) * factor,
+        top: coords.t * factor
       };
 
     } else {
@@ -243,8 +277,8 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       const offset = (elt_v_height - this.videoInfo.element.height) / 2;
 
       vCoord = {
-        left: left * factor,
-        top: (top + offset) * factor
+        left: coords.l * factor,
+        top: (coords.t + offset) * factor
       };
     }
 
@@ -253,13 +287,18 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     // it is sent. In such case working with pixels leads to wrong placement.
     // Rounding 2 digits after comma might be enough accuracy and prevent from sending
     // too large amount of data.
-    vCoord = {
+    return {
       l: round2(vCoord.left * 100 / this.videoInfo.video.width),
       t: round2(vCoord.top * 100 / this.videoInfo.video.height)
     }
+  }
 
+  onPointerMove(event: PointerEvent) {
+    // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
+
+    this.moveCounter++;
     const pointer: Pointer = {
-      ...vCoord,
+      ...this.translateToMediaPercentage(this.getLocalPointer(event)),
       ...(this.moveCounter % 10 === 0 ? { n: GLOBAL_STATE.nickname } : {})
     };
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
@@ -270,7 +309,29 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     this.openDataChannels.forEach((dataChannel) => {
       dataChannel.send(JSON.stringify(pointer))
     })
+  }
 
+  onClick(event: MouseEvent) {
+    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+      console.debug(`${CNAME}|onClick`, event)
+    }
+
+    const local: Pointer = this.getLocalPointer(event);
+
+    this.addClickPointer({
+      ...local,
+      ts: Date.now()
+    })
+
+    const sendPointer = {
+      ...this.translateToMediaPercentage(local),
+      n: GLOBAL_STATE.nickname,
+      ts: Date.now()
+    }
+
+    this.openDataChannels.forEach((dataChannel) => {
+      dataChannel.send(JSON.stringify(sendPointer))
+    })
   }
 
   onPointerLeave(event: PointerEvent) {

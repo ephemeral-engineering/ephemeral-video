@@ -3,9 +3,14 @@ import { MatIconModule } from '@angular/material/icon';
 
 // use one letter to reduce amount of exchanged data
 export type Pointer = {
+  /** nickname */
   n?: string
+  /** top */
   t: number
+  /** left */
   l: number
+  /** timestamp */
+  ts?: number
 };
 
 const CNAME = 'Pointer';
