@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { LocalStream, PublishOptions, sendByChunksWithDelayPromise } from 'ephemeral-webrtc';
 
 import { MediaStreamHelper } from '../MediaStreamHelper';
-import { DATACHANNEL_SNAPSHOT_PATH } from '../constants';
+import { DATACHANNEL_CONSTRAINTS_PATH, DATACHANNEL_SNAPSHOT_PATH } from '../constants';
 import { ControlledStreamComponent } from '../controlled-stream/controlled-stream.component';
 
 const CNAME = 'LocalStream';
@@ -91,6 +91,32 @@ export class LocalStreamComponent implements OnInit {
           }
         };
       })
+
+      localStream.onDataChannel(DATACHANNEL_CONSTRAINTS_PATH, (dataChannel: RTCDataChannel) => {
+        dataChannel.onopen = (event) => {
+          if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+            console.debug(`${CNAME}|dataChannel:onopen`, DATACHANNEL_CONSTRAINTS_PATH, event)
+          }
+        };
+        dataChannel.onmessage = (event) => {
+          if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+            console.debug(`${CNAME}|dataChannel:onmessage`, DATACHANNEL_CONSTRAINTS_PATH, event)
+          }
+          const constraints = JSON.parse(event.data) as MediaStreamConstraints;
+          if (this._mediaStream) {
+            MediaStreamHelper.applyConstraints(this._mediaStream, constraints)
+          }
+          // closing datachannel now
+          // TODO think about a way to reuse datachannel, instead of
+          // this could be part of a generic development in ephemeral-webrtc.. ?
+          dataChannel.close()
+        };
+        dataChannel.onclose = (event) => {
+          if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+            console.debug(`${CNAME}|dataChannel:onclose`, DATACHANNEL_CONSTRAINTS_PATH, event)
+          }
+        };
+      })
     }
   }
 
@@ -134,6 +160,27 @@ export class LocalStreamComponent implements OnInit {
       this._localStream.updatePublishOptions({ video: !this._localStream.getPublishOptions().video })
         .then(() => { })
     }
+  }
+
+  torch = false;
+
+  toggleFlashlight() {
+    // TODO check capabilities
+    // https://www.oberhofer.co/mediastreamtrack-and-its-capabilities/ 
+    // TODO get intitial value according to current settings ?
+    // if (capabilities.torch) {
+    this.torch = !this.torch;
+    this._mediaStream?.getVideoTracks().forEach((track: MediaStreamTrack) => {
+      track.applyConstraints({
+        torch: this.torch,
+        advanced: [{ torch: this.torch }]
+      } as any)
+        .catch(event => {
+          if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
+            console.warn(`${CNAME}|toggleFlashlight error`, event)
+          }
+        });
+    })
   }
 
   // toggleAudio() {

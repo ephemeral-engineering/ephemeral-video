@@ -34,6 +34,13 @@
                 </mat-icon>
             </button>
         </div>
+        <div class="mt-1">
+            <button mat-mini-fab color="primary" aria-label="flashlight" title="flashlight"
+                (click)="toggleFlashlight()">
+                <mat-icon>{{torch ? 'flashlight_on':'flashlight_off'}}
+                </mat-icon>
+            </button>
+        </div>
         <!-- <div class="mt-1">
             <button mat-mini-fab aria-label="audio" color="basic" (click)="toggleAudio()">
                 <mat-icon>{{audioEnabled ? 'mic':'mic_off'}}</mat-icon>

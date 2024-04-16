@@ -1,6 +1,8 @@
 import { SelfieSegmentation } from '@mediapipe/selfie_segmentation'
 import { Camera } from '@mediapipe/camera_utils'
 
+const CNAME = 'MediaStreamHelper';
+
 export class MediaStreamHelper {
 
   // Audio
@@ -31,6 +33,31 @@ export class MediaStreamHelper {
       if (track.enabled) return true;
     }
     return false;
+  }
+
+  // TODO : maybe require to work as diff with currently applied constraints ?
+  // TODO : return a Promise ?
+  public static applyConstraints(mediaStream: MediaStream, constraints: MediaStreamConstraints) {
+    if (constraints.audio && typeof constraints.video === 'object') {
+      mediaStream.getAudioTracks().forEach((track: MediaStreamTrack) => {
+        track.applyConstraints(constraints.audio as any)
+          .catch(event => {
+            if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
+              console.warn(`${CNAME}|applyConstraints audio error`, event)
+            }
+          });
+      })
+    }
+    if (constraints.video && typeof constraints.video === 'object') {
+      mediaStream.getVideoTracks().forEach((track: MediaStreamTrack) => {
+        track.applyConstraints(constraints.video as any)
+          .catch(event => {
+            if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
+              console.warn(`${CNAME}|applyConstraints video error`, event)
+            }
+          });
+      })
+    }
   }
 
 

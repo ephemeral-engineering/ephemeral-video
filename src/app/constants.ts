@@ -1,5 +1,6 @@
 export const USERS = 'App_Users';
 
+export const DATACHANNEL_CONSTRAINTS_PATH = 'constraints';
 export const DATACHANNEL_MEDIASTREAMINFO_PATH = 'media-stream-info';
 export const DATACHANNEL_POINTER_PATH = 'pointer';
 export const DATACHANNEL_SNAPSHOT_PATH = 'snapshot';

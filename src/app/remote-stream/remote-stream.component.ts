@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { PublishOptions, RemoteStream, SubscribeOptions, receiveByChunks } from 'ephemeral-webrtc';
 
 import { MediaStreamHelper } from '../MediaStreamHelper';
-import { DATACHANNEL_SNAPSHOT_PATH } from '../constants';
+import { DATACHANNEL_CONSTRAINTS_PATH, DATACHANNEL_SNAPSHOT_PATH } from '../constants';
 import { ControlledStreamComponent } from '../controlled-stream/controlled-stream.component';
 import { ContextService } from '../context.service';
 
@@ -22,8 +22,6 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
 
   _publishOptions: PublishOptions = { audio: false, video: false };
   _subscribeOptions: SubscribeOptions = { audio: false, video: false };
-
-  // private snapshotDataChannels = new Set<RTCDataChannel>;
 
   _sinkId: string;
 
@@ -214,6 +212,45 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
 
   toggleSubscribeVideo() {
     this._remoteStream?.updateSubscribeOptions({ video: !this._remoteStream.getSubscribeOptions().video })
+  }
+
+  torch = false;
+
+  toggleFlashlight() {
+    // TODO check capabilities
+    // https://www.oberhofer.co/mediastreamtrack-and-its-capabilities/ 
+    // TODO get intitial value according to current settings ?
+    // if (capabilities.torch) {
+    this.torch = !this.torch;
+    this._remoteStream?.singlecast(DATACHANNEL_CONSTRAINTS_PATH, (dataChannel) => {
+      // TODO: should we find a way to communicate with only one channel instead of using
+      // different datachannel each time, for this feature nd for others ?
+      // Should we lay initialize a datachannel, and then use it and keep it for a while
+      // closing it if not used during some amount of time ?
+      //
+      dataChannel.onopen = (event) => {
+        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+          console.debug(`${CNAME}|dataChannel:onopen`, DATACHANNEL_CONSTRAINTS_PATH, event);
+        }
+        dataChannel.send(JSON.stringify({
+          video: {
+            torch: this.torch,
+            advanced: [{ torch: this.torch }]
+          }
+        } as any)) //MediaStreamConstraints but torch seems not recognized as a
+      };
+
+      dataChannel.onclose = (event) => {
+        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+          console.debug(`${CNAME}|dataChannel:onclose`, DATACHANNEL_CONSTRAINTS_PATH, event);
+        }
+      }
+      dataChannel.onerror = (event) => {
+        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+          console.debug(`${CNAME}|dataChannel:onerror`, DATACHANNEL_CONSTRAINTS_PATH, event);
+        }
+      }
+    })
   }
 
   // toggleAudio() {
