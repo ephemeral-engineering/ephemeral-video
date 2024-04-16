@@ -49,6 +49,13 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       // DONE: how do we know this is for a pointer ? => path indicates the purpose
       // DONE: how do we know who is sending his pointer ? => some messages contain nickname
 
+      const clearDataChannelPointers = () => {
+        this.pointerChannels.delete(dataChannel);
+        this.ngZone.run(() => {
+          this.pointers = [...this.pointerChannels.values()];
+        });
+      }
+
       dataChannel.addEventListener('message', (event) => {
         const data = JSON.parse(event.data) as Pointer;
         const prev = this.pointerChannels.get(dataChannel);
@@ -96,19 +103,19 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
             this.addClickPointer(pointer)
           }
           if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-            console.debug(`${CNAME}|received`, data, pointer, this.videoInfo, this.pointers)
+            console.debug(`${CNAME}|received pointer`, pointer)
           }
         });
       });
       dataChannel.addEventListener('error', (error) => {
         console.error(`${CNAME}|dataChannel.onerror`, error)
-        this.pointerChannels.delete(dataChannel);
+        clearDataChannelPointers()
       })
       dataChannel.addEventListener('close', () => {
         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
           console.debug(`${CNAME}|dataChannel.onclose`)
         }
-        this.pointerChannels.delete(dataChannel);
+        clearDataChannelPointers()
       })
     })
   }
