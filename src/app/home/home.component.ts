@@ -146,7 +146,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       setEphWebRtcLogLevel(logLevel)
     }
 
-    const hash = this.activatedRoute.snapshot.queryParamMap.get('hash') as string;
+    const hash = this.activatedRoute.snapshot.queryParamMap.get('hash') as string || undefined;
 
     // Register
     // this.contextService.nickname$.subscribe(value => {
@@ -186,7 +186,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       moderated: this.moderated
     };
 
-    Conversation.getOrCreate(conversationId, /^true$/i.test(hash), options).then((conversation: Conversation) => {
+    ///^true$/i.test(hash)
+    Conversation.getOrCreate(conversationId, hash, options).then((conversation: Conversation) => {
       if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
         console.log(`${CNAME}|Conversation`, conversation)
       }
