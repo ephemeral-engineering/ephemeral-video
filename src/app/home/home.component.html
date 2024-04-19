@@ -1,56 +1,5 @@
 <div class="">
-    <div class="d-flex justify-content-center">
-        <mat-form-field>
-            <mat-label>Audio In</mat-label>
-            <mat-select [disabled]="grabbing" [(value)]="selectedAudioDeviceId" panelWidth="">
-                <!-- <mat-option>Default</mat-option> -->
-                @for (device of audioInMediaDevices; track device) {
-                <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
-                }
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Video In</mat-label>
-            <mat-select [disabled]="grabbing" [(value)]="selectedVideoDeviceId" panelWidth="">
-                @for (device of videoInMediaDevices; track device) {
-                <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
-                }
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Resolution</mat-label>
-            <mat-select [disabled]="grabbing" [(value)]="selectedVideoResolution" panelWidth="auto">
-                @for (r of resolutions; track r) {
-                <mat-option [value]="r">{{r}}p</mat-option>
-                }
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Frame rate</mat-label>
-            <mat-select [disabled]="grabbing" [(value)]="selectedVideoFrameRate" panelWidth="auto">
-                @for (fr of frameRates; track fr) {
-                <mat-option [value]="fr">{{fr}}i/s</mat-option>
-                }
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Audio Out</mat-label>
-            <mat-select [(value)]="selectedAudioOutputDeviceId" panelWidth="">
-                @for (device of audioOutMediaDevices; track device) {
-                <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
-                }
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-            <mat-label>Nickname</mat-label>
-            <input matInput type="text" [(ngModel)]="nickname">
-            @if (nickname) {
-            <button matSuffix mat-icon-button aria-label="Clear" (click)="nickname=''">
-                <mat-icon>close</mat-icon>
-            </button>
-            }
-        </mat-form-field>
-    </div>
+
     <!-- <div>{{gstate.nickname}}</div> -->
     <!-- <div *ngFor="let kv of remoteStreamsByParticipant | keyvalue" class="row">
         <p>User {{kv.key.id}} </p>
@@ -72,8 +21,9 @@
             <!-- [ngStyle]="{width:_width}" -->
             <div *ngFor="let kv of remoteStreamsByParticipant | keyvalue" class="flex-g-1 h-100">
                 <app-remote-stream *ngFor="let _stream of kv.value" [remoteStream]="_stream"
-                    [videoStyle]="{height: '100%', width:'100%', objectFit:'cover'}"
+                    [videoStyle]="{height: '100%', width:'100%', objectFit:'contain'}"
                     (onSnapshot)="onSnapshot($event)"></app-remote-stream>
+                    <!-- , objectFit:'cover' -->
             </div>
         </div>
         <div *ngIf="localStream" class="pos-abs bottom-left" [ngStyle]="{height:'34%'}">
@@ -121,6 +71,68 @@
             <p>
                 <button (click)="toggleModeration()">toggleModeration</button>
             </p> -->
+    </div>
+
+    <!-- [ngClass]="{'flex-col': isHandsetPortrait}" -->
+    <div class="mt-5 d-flex flex-col justify-content-center">
+        <div class="d-flex justify-content-center">
+            <mat-form-field>
+                <mat-label>Nickname</mat-label>
+                <input matInput type="text" [(ngModel)]="nickname">
+                @if (nickname) {
+                <button matSuffix mat-icon-button aria-label="Clear" (click)="nickname=''">
+                    <mat-icon>close</mat-icon>
+                </button>
+                }
+            </mat-form-field>
+        </div>
+        <div class="d-flex justify-content-center">
+            <mat-form-field>
+                <mat-label>Audio In</mat-label>
+                <mat-select [disabled]="grabbing" [(value)]="selectedAudioDeviceId" panelWidth="">
+                    <!-- <mat-option>Default</mat-option> -->
+                    @for (device of audioInMediaDevices; track device) {
+                    <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field class="ml-2">
+                <mat-label>Video In</mat-label>
+                <mat-select [disabled]="grabbing" [(value)]="selectedVideoDeviceId" panelWidth="">
+                    @for (device of videoInMediaDevices; track device) {
+                    <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+        </div>
+        <div class="d-flex justify-content-center">
+            <mat-form-field>
+                <mat-label>Resolution</mat-label>
+                <mat-select [disabled]="grabbing" [(value)]="selectedVideoResolution" panelWidth="auto">
+                    @for (r of resolutions; track r) {
+                    <mat-option [value]="r">{{r}}p</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field class="ml-2">
+                <mat-label>Frame rate</mat-label>
+                <mat-select [disabled]="grabbing" [(value)]="selectedVideoFrameRate" panelWidth="auto">
+                    @for (fr of frameRates; track fr) {
+                    <mat-option [value]="fr">{{fr}}i/s</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+        </div>
+        <div class="d-flex justify-content-center">
+            <mat-form-field>
+                <mat-label>Audio Out</mat-label>
+                <mat-select [(value)]="selectedAudioOutputDeviceId" panelWidth="">
+                    @for (device of audioOutMediaDevices; track device) {
+                    <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+        </div>
     </div>
 
     <div class="mt-5">

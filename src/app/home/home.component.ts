@@ -1,5 +1,6 @@
 import { ClipboardModule } from '@angular/cdk/clipboard';
-import { JsonPipe, KeyValuePipe, NgFor, NgIf, NgStyle } from '@angular/common';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { JsonPipe, KeyValuePipe, NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, HostListener, Inject, OnDestroy, ViewChild } from '@angular/core';
 import { FormsModule, UntypedFormBuilder, UntypedFormControl, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,11 +10,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute } from "@angular/router";
 
-import { Conversation, ConversationOptions, LocalParticipant, LocalStream, RemoteParticipant, RemoteStream, User, setLogLevel as setEphWebRtcLogLevel } from 'ephemeral-webrtc';
+import { Conversation, ConversationOptions, LocalParticipant, LocalStream, RemoteParticipant, RemoteStream, Stream, User, setLogLevel as setEphWebRtcLogLevel } from 'ephemeral-webrtc';
 
 import { saveAs } from 'file-saver-es';
 
 import { LogLevelText, setLogLevel } from 'src/logLevel';
+import { MediaStreamHelper, MediaStreamInfo } from '../MediaStreamHelper';
+import { AlertComponent } from '../alert/alert.component';
 import { getSessionStorage, setSessionStorage } from '../common';
 import { DATACHANNEL_MEDIASTREAMINFO_PATH, FRAME_RATES, RESOLUTIONS, STORAGE_PREFIX } from '../constants';
 import { ContextService } from '../context.service';
@@ -23,8 +26,6 @@ import { LocalStreamComponent } from '../local-stream/local-stream.component';
 import { MessageType, MessagesService } from '../messages.service';
 import { RemoteStreamComponent } from '../remote-stream/remote-stream.component';
 import { WINDOW } from '../windows-provider';
-import { MediaStreamHelper, MediaStreamInfo } from '../MediaStreamHelper';
-import { AlertComponent } from '../alert/alert.component';
 
 interface UserData {
   nickname: string
@@ -42,7 +43,7 @@ const CNAME = 'Home';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
   standalone: true,
-  imports: [NgIf, NgFor, NgStyle, JsonPipe,
+  imports: [NgClass, NgIf, NgFor, NgStyle, JsonPipe,
     ClipboardModule,
     AlertComponent,
     LocalStreamComponent, RemoteStreamComponent,
@@ -90,7 +91,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   localDisplayMediaStream: MediaStream | undefined;
 
-  mediaStreamInfos: Map<MediaStream, MediaStreamInfo> = new Map();
+  mediaStreamInfos: Map<Stream, MediaStreamInfo> = new Map();
 
   moderated: boolean = false;
   moderator: boolean = false;
@@ -127,7 +128,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   beforeUnloadHandler(event: BeforeUnloadEvent) {
     event.preventDefault()
     this.doCleanUp()
-    event.returnValue = true;
+    // event.returnValue = true;
   }
 
   _notifications: string[] = new Array();
@@ -135,11 +136,14 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   bandwidthByPeerId: Map<string, number> = new Map();
   averageBandwidth: number = 0;
 
+  isHandsetPortrait = false;
+
   constructor(@Inject(WINDOW) public window: Window,
     private activatedRoute: ActivatedRoute,
     public contextService: ContextService,
     private messagesService: MessagesService,
     private fb: UntypedFormBuilder,
+    private responsive: BreakpointObserver
   ) { }
 
   gstate = GLOBAL_STATE;
@@ -150,6 +154,24 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       setLogLevel(logLevel)
       setEphWebRtcLogLevel(logLevel)
     }
+
+    this.responsive.observe([
+      Breakpoints.TabletPortrait,
+      Breakpoints.HandsetLandscape,
+      Breakpoints.HandsetPortrait])
+      .subscribe(result => {
+        const breakpoints = result.breakpoints;
+        this.isHandsetPortrait = false;
+        console.log("responsive subscribe", result);
+        if (breakpoints[Breakpoints.TabletPortrait]) {
+          console.log("screens matches TabletPortrait");
+        } else if (breakpoints[Breakpoints.HandsetLandscape]) {
+          console.log("screens matches HandsetLandscape");
+        } else if (breakpoints[Breakpoints.HandsetPortrait]) {
+          console.log("screens matches HandsetPortrait");
+          this.isHandsetPortrait = true;
+        }
+      });
 
     const hash = this.activatedRoute.snapshot.queryParamMap.get('hash') as string || undefined;
 
@@ -262,7 +284,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
               this.getRemoteMediaStreamInfo(stream).then((info) => {
                 const mediaStream = stream.getMediaStream();
                 if (mediaStream) {
-                  this.mediaStreamInfos.set(mediaStream, info)
+                  this.mediaStreamInfos.set(stream, info)
                 }
               }).catch((error) => {
                 if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
@@ -443,7 +465,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           this.localUserMediaStream = mediaStream;
 
           const mediaStreamInfo = MediaStreamHelper.getMediaStreamInfo(mediaStream);
-          this.mediaStreamInfos.set(mediaStream, mediaStreamInfo)
 
           if (mediaStreamInfo.video?.capabilities?.height?.max) {
             // const maxW = mediaStreamInfo.video?.capabilities?.width?.max;
@@ -557,8 +578,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       // sroe chosen videoResolution
       setSessionStorage(`${STORAGE_PREFIX}-videoResolution`, `${resolution}`)
       // and update stream info
-      if (this.localUserMediaStream) {
-        this.mediaStreamInfos.set(this.localUserMediaStream, MediaStreamHelper.getMediaStreamInfo(this.localUserMediaStream))
+      if (this.localStream) {
+        this.mediaStreamInfos.set(this.localStream, MediaStreamHelper.getMediaStreamInfo(this.localStream.getMediaStream()))
       }
     }).catch((error) => {
       console.error(`${CNAME}|set selectedVideoResolution`, error)
@@ -584,8 +605,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       frameRate: this.selectedVideoFrameRate
     }).then(() => {
       setSessionStorage(`${STORAGE_PREFIX}-videoFrameRate`, `${frameRate}`)
-      if (this.localUserMediaStream) {
-        this.mediaStreamInfos.set(this.localUserMediaStream, MediaStreamHelper.getMediaStreamInfo(this.localUserMediaStream))
+      if (this.localStream) {
+        this.mediaStreamInfos.set(this.localStream, MediaStreamHelper.getMediaStreamInfo(this.localStream.getMediaStream()))
       }
     }).finally(() => {
       this.grabbing = false;
@@ -727,6 +748,13 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     if (this.localUserMediaStream && this.localParticipant) {
       this.localParticipant.publish(this.localUserMediaStream, { topic: 'webcam', audio: true }).then((localStream) => {
         this.localStream = localStream;
+        this.mediaStreamInfos.set(localStream, MediaStreamHelper.getMediaStreamInfo(localStream.getMediaStream()))
+        localStream.onMediaStream((mediaStream) => {
+          if (mediaStream) {
+            this.mediaStreamInfos.set(localStream, MediaStreamHelper.getMediaStreamInfo(mediaStream))
+          }
+
+        })
 
         localStream.onDataChannel(DATACHANNEL_MEDIASTREAMINFO_PATH, (dataChannel: RTCDataChannel) => {
           dataChannel.onopen = (event) => {

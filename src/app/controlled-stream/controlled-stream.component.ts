@@ -66,27 +66,50 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 
         let pointer: Pointer;
 
-        if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
-          // then image is full in height but image will be reduced in width
-          const factor = this.videoInfo.video.height / this.videoInfo.element.height;
+        if (this._videoStyle['objectFit'] === 'cover') {
+          if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
+            // then image is full in height but image will be reduced in width
+            const factor = this.videoInfo.video.height / this.videoInfo.element.height;
 
-          const n_width = this.videoInfo.video.width / factor;
-          const offset = (n_width - this.videoInfo.element.width) / 2;
+            const n_width = this.videoInfo.video.width / factor;
+            const offset = (n_width - this.videoInfo.element.width) / 2;
 
-          const t = data.t / factor;
-          const n_left = (data.l / factor) - offset;
-          const l = Math.min(Math.max(0, n_left), this.videoInfo.element.width);
-          pointer = { l, t };
-        } else {
-          // then image is full in width but image will be reduced in height
-          const factor = this.videoInfo.video.width / this.videoInfo.element.width;
+            const t = data.t / factor;
+            const n_left = (data.l / factor) - offset;
+            const l = Math.min(Math.max(0, n_left), this.videoInfo.element.width);
+            pointer = { l, t };
+          } else {
+            // then image is full in width but image will be reduced in height
+            const factor = this.videoInfo.video.width / this.videoInfo.element.width;
 
-          const n_height = this.videoInfo.video.height / factor;
-          const offset = (n_height - this.videoInfo.element.height) / 2;
+            const n_height = this.videoInfo.video.height / factor;
+            const offset = (n_height - this.videoInfo.element.height) / 2;
 
-          const t = Math.min(Math.max(0, (data.t / factor) - offset), this.videoInfo.element.height);
-          const l = (data.l / factor);
-          pointer = { l, t };
+            const t = Math.min(Math.max(0, (data.t / factor) - offset), this.videoInfo.element.height);
+            const l = (data.l / factor);
+            pointer = { l, t };
+          }
+        } else { // manage the 'contain' case. TODO: need to manage it also on the origin side !
+          if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
+            const factor = this.videoInfo.video.width / this.videoInfo.element.width;
+
+            const n_height = this.videoInfo.video.height / factor;
+            const offset = (this.videoInfo.element.height - n_height) / 2;
+
+            const t = Math.min(Math.max(0, (data.t / factor) + offset), this.videoInfo.element.height);
+            const l = (data.l / factor);
+            pointer = { l, t };
+          } else {
+            const factor = this.videoInfo.video.height / this.videoInfo.element.height;
+
+            const n_width = this.videoInfo.video.width / factor;
+            const offset = (this.videoInfo.element.width - n_width) / 2;
+
+            const t = data.t / factor;
+            const n_left = (data.l / factor) + offset;
+            const l = Math.min(Math.max(0, n_left), this.videoInfo.element.width);
+            pointer = { l, t };
+          }
         }
 
         if (data.n) {
