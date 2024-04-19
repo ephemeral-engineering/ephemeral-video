@@ -1,10 +1,11 @@
+import { NgIf } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 import { LocalStream, PublishOptions, sendByChunksWithDelayPromise } from 'ephemeral-webrtc';
 
-import { MediaStreamHelper } from '../MediaStreamHelper';
+import { MediaStreamHelper, MediaStreamInfo } from '../MediaStreamHelper';
 import { DATACHANNEL_CONSTRAINTS_PATH, DATACHANNEL_SNAPSHOT_PATH } from '../constants';
 import { ControlledStreamComponent } from '../controlled-stream/controlled-stream.component';
 
@@ -15,7 +16,8 @@ const CNAME = 'LocalStream';
   templateUrl: './local-stream.component.html',
   styleUrls: ['./local-stream.component.css'],
   standalone: true,
-  imports: [ControlledStreamComponent, MatButtonModule, MatIconModule],
+  imports: [NgIf,
+    ControlledStreamComponent, MatButtonModule, MatIconModule],
 })
 export class LocalStreamComponent implements OnInit {
 
@@ -125,13 +127,20 @@ export class LocalStreamComponent implements OnInit {
     this._videoStyle = { ...this._videoStyle, ...style };
   }
 
+  // _hasTorchCapability: boolean;
+  // _torch = false;
+
+  _mediaStreamInfo: any;//MediaStreamInfo;
+  private doUpdateMediaStreamInfo() {
+    if (this._mediaStream) {
+      this._mediaStreamInfo = MediaStreamHelper.getMediaStreamInfo(this._mediaStream);
+    }
+  }
+
   _mediaStream: MediaStream | undefined;
   set mediaStream(mediaStream: MediaStream | undefined) {
     this._mediaStream = mediaStream;
-    // if (this._mediaStream) {
-    //   this.audioEnabled = MediaStreamHelper.isAudioEnabled(this._mediaStream);
-    //   this.videoEnabled = MediaStreamHelper.isVideoEnabled(this._mediaStream);
-    // }
+    this.doUpdateMediaStreamInfo()
   }
 
   constructor() { }
@@ -162,19 +171,17 @@ export class LocalStreamComponent implements OnInit {
     }
   }
 
-  torch = false;
-
   toggleFlashlight() {
-    // TODO check capabilities
     // https://www.oberhofer.co/mediastreamtrack-and-its-capabilities/ 
-    // TODO get intitial value according to current settings ?
-    // if (capabilities.torch) {
-    this.torch = !this.torch;
+    const l_torch = !this._mediaStreamInfo.video?.settings.torch;
     this._mediaStream?.getVideoTracks().forEach((track: MediaStreamTrack) => {
       track.applyConstraints({
-        torch: this.torch,
-        advanced: [{ torch: this.torch }]
+        torch: l_torch,
+        advanced: [{ torch: l_torch }]
       } as any)
+        .then(() => {
+          this.doUpdateMediaStreamInfo()
+        })
         .catch(event => {
           if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
             console.warn(`${CNAME}|toggleFlashlight error`, event)
