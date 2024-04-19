@@ -19,7 +19,7 @@ const routes: Routes = [
 // https://angular.io/guide/router#base-href
 // https://angular.io/api/common/APP_BASE_HREF
 @NgModule({
-  providers: [{ provide: APP_BASE_HREF, useValue: '/ephemeral-video' }],
+  providers: [], //{ provide: APP_BASE_HREF, useValue: '/ephemeral-video' }
   imports: [RouterModule.forRoot(routes, { useHash: false })], //useHash: true
   exports: [RouterModule]
 })

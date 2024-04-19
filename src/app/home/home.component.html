@@ -64,6 +64,9 @@
             </div>
         </div>
     </div> -->
+
+    <app-alert *ngIf="_error" [level]="'error'" [message]="_error"></app-alert>
+
     <div class="pos-relative vh-100">
         <div class="d-flex justify-content-center h-100">
             <!-- [ngStyle]="{width:_width}" -->

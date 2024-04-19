@@ -1,0 +1,22 @@
+.alert-error {
+    background-color: #f44336;
+}
+
+.alert-warning {
+    background-color: orange;
+}
+
+.alert-success {
+    background-color: #36f456;
+}
+
+.alert-info {
+    background-color: lightskyblue;
+}
+
+.alert {
+    padding: 20px;
+    color: white;
+    margin-bottom: 15px;
+    text-align: center;
+}

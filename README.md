@@ -25,6 +25,27 @@ src/app.config.json
 "ephemeralServerUrl": "https://ephemeral",
 OR
 "ephemeralServerUrl": "https://localhost:3077",
+"ephemeralServerUrl": "http://93.24.136.95:3077",
+
+
+## angular.json with baseHref
+
+```json
+{
+    "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+    "version": 1,
+    "newProjectRoot": "projects",
+    "projects": {
+        "ephemeral-video": {
+            ...
+            "architect": {
+                "build": {
+                    "builder": "@angular-devkit/build-angular:browser",
+                    "options": {
+                        "baseHref": "/ephemeral-video/",
+                        "OR": "OR",
+                        "baseHref": "/",
+```
 
 ## Run
 

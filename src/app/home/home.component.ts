@@ -24,6 +24,7 @@ import { MessageType, MessagesService } from '../messages.service';
 import { RemoteStreamComponent } from '../remote-stream/remote-stream.component';
 import { WINDOW } from '../windows-provider';
 import { MediaStreamHelper, MediaStreamInfo } from '../MediaStreamHelper';
+import { AlertComponent } from '../alert/alert.component';
 
 interface UserData {
   nickname: string
@@ -43,6 +44,7 @@ const CNAME = 'Home';
   standalone: true,
   imports: [NgIf, NgFor, NgStyle, JsonPipe,
     ClipboardModule,
+    AlertComponent,
     LocalStreamComponent, RemoteStreamComponent,
     MatButtonModule, MatIconModule,
     FormsModule, MatFormFieldModule, MatInputModule,
@@ -58,6 +60,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   readonly remoteCandidates: Set<User> = new Set();
   readonly remoteParticipants: Set<RemoteParticipant> = new Set();
+
+  _error: string;
 
   messageFormGroup = this.fb.group({
     message: this.fb.control('', [Validators.required])
@@ -338,6 +342,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       })
     }).catch((error: any) => {
       console.error(`${CNAME}|getOrCreate failed`, error)
+      this._error = error;
     })
   }
 
@@ -466,6 +471,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           resolve()
         }).catch((error) => {
           console.error(`${CNAME}|getUserMedia`, error)
+          this._error = error;
           reject()
         }).finally(() => {
           this.updateDeviceList()
