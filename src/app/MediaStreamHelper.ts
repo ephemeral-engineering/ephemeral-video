@@ -3,6 +3,19 @@ import { Camera } from '@mediapipe/camera_utils'
 
 const CNAME = 'MediaStreamHelper';
 
+export type MediaStreamInfo = {
+  audio?: {
+    capabilities: MediaTrackCapabilities,
+    constraints: MediaTrackConstraints,
+    settings: MediaTrackSettings
+  },
+  video?: {
+    capabilities: MediaTrackCapabilities,
+    constraints: MediaTrackConstraints,
+    settings: MediaTrackSettings
+  }
+}
+
 export class MediaStreamHelper {
 
   // Audio
@@ -35,6 +48,25 @@ export class MediaStreamHelper {
     return false;
   }
 
+  public static getMediaStreamInfo(mediaStream: MediaStream): MediaStreamInfo {
+
+    const audioTrack = mediaStream.getAudioTracks()[0];
+    const videoTrack = mediaStream.getVideoTracks()[0];
+
+    return {
+      audio: audioTrack ? {
+        capabilities: (typeof audioTrack.getCapabilities === 'function') ? audioTrack.getCapabilities() : {},
+        constraints: (typeof audioTrack.getConstraints === 'function') ? audioTrack.getConstraints() : {},
+        settings: (typeof audioTrack.getSettings === 'function') ? audioTrack.getSettings() : {},
+      } : undefined,
+      video: videoTrack ? {
+        capabilities: (typeof videoTrack.getCapabilities === 'function') ? videoTrack.getCapabilities() : {},
+        constraints: (typeof videoTrack.getConstraints === 'function') ? videoTrack.getConstraints() : {},
+        settings: (typeof videoTrack.getSettings === 'function') ? videoTrack.getSettings() : {},
+      } : undefined
+    };
+  }
+
   // TODO : maybe require to work as diff with currently applied constraints ?
   // TODO : return a Promise ?
   public static applyConstraints(mediaStream: MediaStream, constraints: MediaStreamConstraints) {
@@ -60,7 +92,6 @@ export class MediaStreamHelper {
     }
   }
 
-
   public static blur(mediaStream: MediaStream): MediaStream {
 
     const width = mediaStream.getVideoTracks()[0].getSettings().width;
@@ -72,7 +103,6 @@ export class MediaStreamHelper {
 
     const canvasElement = document.createElement('canvas');
     const canvasCtx = canvasElement.getContext('2d');
-    //function onResults(results: any) 
 
     const selfieSegmentation = new SelfieSegmentation({
       locateFile: (file: any) => {

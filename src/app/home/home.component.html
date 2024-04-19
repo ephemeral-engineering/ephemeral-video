@@ -138,24 +138,24 @@
         <div *ngFor="let kv of mediaStreamInfos | keyvalue">
             <span>{{kv.key.id}}</span>
             <h3>Capabilities</h3>
-            <div>
+            <div *ngIf="kv.value.audio">
                 <pre>audio: {{kv.value.audio.capabilities | filterOut:'deviceId':'groupId' | json}}</pre>
             </div>
-            <div>
+            <div *ngIf="kv.value.video">
                 <pre>video: {{kv.value.video.capabilities | filterOut:'deviceId':'groupId' | json}}</pre>
             </div>
             <h3>Constraints</h3>
-            <div>
+            <div *ngIf="kv.value.audio">
                 <pre>audio: {{kv.value.audio.constraints | filterOut:'deviceId':'groupId' | json}}</pre>
             </div>
-            <div>
+            <div *ngIf="kv.value.video">
                 <pre>video: {{kv.value.video.constraints | filterOut:'deviceId':'groupId' | json}}</pre>
             </div>
             <h3>Settings</h3>
-            <div>
+            <div *ngIf="kv.value.audio">
                 <pre>audio: {{kv.value.audio.settings | filterOut:'deviceId':'groupId' | json}}</pre>
             </div>
-            <div>
+            <div *ngIf="kv.value.video">
                 <pre>video: {{kv.value.video.settings | filterOut:'deviceId':'groupId' | json}}</pre>
             </div>
         </div>

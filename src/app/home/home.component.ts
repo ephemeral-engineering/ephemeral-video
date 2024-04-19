@@ -23,6 +23,7 @@ import { LocalStreamComponent } from '../local-stream/local-stream.component';
 import { MessageType, MessagesService } from '../messages.service';
 import { RemoteStreamComponent } from '../remote-stream/remote-stream.component';
 import { WINDOW } from '../windows-provider';
+import { MediaStreamHelper, MediaStreamInfo } from '../MediaStreamHelper';
 
 interface UserData {
   nickname: string
@@ -85,7 +86,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   localDisplayMediaStream: MediaStream | undefined;
 
-  mediaStreamInfos: Map<MediaStream, any> = new Map();
+  mediaStreamInfos: Map<MediaStream, MediaStreamInfo> = new Map();
 
   moderated: boolean = false;
   moderator: boolean = false;
@@ -249,19 +250,21 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           // or 
           //stream.subscribe({ audio: true, video: false })
 
-          // COMMENTED OUT:
-          // No need to try to get capabilites, contraints nor settings on a remote streams
-          // the return is always empty.
-          // Need to request the information to the origin peer through datachannel ?
           stream.onMediaStream((mediaStream: MediaStream | undefined) => {
             if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
               console.debug(`${CNAME}|onMediaStream`, mediaStream);
             }
             if (mediaStream) {
-              // setTimeout(() => {
-              //   this.localMediaStreamInfos.set(mediaStream, this.getCapConstSettings(mediaStream))
-              // }, 3000)
-              this.getRemoteMediaStreamInfo(stream)
+              this.getRemoteMediaStreamInfo(stream).then((info) => {
+                const mediaStream = stream.getMediaStream();
+                if (mediaStream) {
+                  this.mediaStreamInfos.set(mediaStream, info)
+                }
+              }).catch((error) => {
+                if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
+                  console.warn(`${CNAME}|getRemoteMediaStreamInfo error`, error);
+                }
+              })
             }
           })
         })
@@ -338,29 +341,40 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     })
   }
 
+  // TODO move this logic to library ?
   getRemoteMediaStreamInfo(stream: RemoteStream) {
-    stream.singlecast(DATACHANNEL_MEDIASTREAMINFO_PATH, (dataChannel) => {
-      dataChannel.onmessage = (event) => {
-        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|dataChannel:onmessage`, DATACHANNEL_MEDIASTREAMINFO_PATH, event);
-        }
-        const info = JSON.parse(event.data);
-        const mediaStream = stream.getMediaStream();
-        if (mediaStream) {
-          this.mediaStreamInfos.set(mediaStream, info)
-        }
-      }
+    return new Promise<MediaStreamInfo>((resolve, reject) => {
 
-      dataChannel.onclose = (event) => {
-        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|dataChannel:onclose`, DATACHANNEL_MEDIASTREAMINFO_PATH, event);
+      // DONE: manage a timeout to reject
+      const timeoutID = window.setTimeout(() => {
+        reject("timed-out");
+      }, 3000);
+
+      stream.singlecast(DATACHANNEL_MEDIASTREAMINFO_PATH, (dataChannel) => {
+        dataChannel.onmessage = (event) => {
+          if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+            console.debug(`${CNAME}|dataChannel:onmessage`, DATACHANNEL_MEDIASTREAMINFO_PATH, event);
+          }
+          const info = JSON.parse(event.data) as MediaStreamInfo;
+          resolve(info)
+          window.clearTimeout(timeoutID)
         }
-      }
-      dataChannel.onerror = (event) => {
-        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|dataChannel:onerror`, DATACHANNEL_MEDIASTREAMINFO_PATH, event);
+
+        dataChannel.onclose = (event) => {
+          if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+            console.debug(`${CNAME}|dataChannel:onclose`, DATACHANNEL_MEDIASTREAMINFO_PATH, event);
+          }
+          reject("datachannel-closed")
+          window.clearTimeout(timeoutID)
         }
-      }
+        dataChannel.onerror = (event) => {
+          if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+            console.debug(`${CNAME}|dataChannel:onerror`, DATACHANNEL_MEDIASTREAMINFO_PATH, event);
+          }
+          reject("datachannel-error")
+          window.clearTimeout(timeoutID)
+        }
+      })
     })
   }
 
@@ -423,7 +437,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
           this.localUserMediaStream = mediaStream;
 
-          const mediaStreamInfo = this.getCapConstSettings(mediaStream);
+          const mediaStreamInfo = MediaStreamHelper.getMediaStreamInfo(mediaStream);
           this.mediaStreamInfos.set(mediaStream, mediaStreamInfo)
 
           if (mediaStreamInfo.video?.capabilities?.height?.max) {
@@ -534,9 +548,11 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
         console.debug(`${CNAME}|set selectedVideoResolution done`, resolution)
       }
+      // sroe chosen videoResolution
       setSessionStorage(`${STORAGE_PREFIX}-videoResolution`, `${resolution}`)
+      // and update stream info
       if (this.localUserMediaStream) {
-        this.mediaStreamInfos.set(this.localUserMediaStream, this.getCapConstSettings(this.localUserMediaStream))
+        this.mediaStreamInfos.set(this.localUserMediaStream, MediaStreamHelper.getMediaStreamInfo(this.localUserMediaStream))
       }
     }).catch((error) => {
       console.error(`${CNAME}|set selectedVideoResolution`, error)
@@ -563,7 +579,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     }).then(() => {
       setSessionStorage(`${STORAGE_PREFIX}-videoFrameRate`, `${frameRate}`)
       if (this.localUserMediaStream) {
-        this.mediaStreamInfos.set(this.localUserMediaStream, this.getCapConstSettings(this.localUserMediaStream))
+        this.mediaStreamInfos.set(this.localUserMediaStream, MediaStreamHelper.getMediaStreamInfo(this.localUserMediaStream))
       }
     }).finally(() => {
       this.grabbing = false;
@@ -602,25 +618,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   }
 
   echoCancellation = true;
-
-  getCapConstSettings(mediaStream: MediaStream) {
-
-    const audioTrack = mediaStream.getAudioTracks()[0];
-    const videoTrack = mediaStream.getVideoTracks()[0];
-
-    return {
-      audio: audioTrack ? {
-        capabilities: (typeof audioTrack.getCapabilities === 'function') ? audioTrack.getCapabilities() : undefined,
-        constraints: (typeof audioTrack.getConstraints === 'function') ? audioTrack.getConstraints() : undefined,
-        settings: (typeof audioTrack.getSettings === 'function') ? audioTrack.getSettings() : undefined,
-      } : undefined,
-      video: videoTrack ? {
-        capabilities: (typeof videoTrack.getCapabilities === 'function') ? videoTrack.getCapabilities() : undefined,
-        constraints: (typeof videoTrack.getConstraints === 'function') ? videoTrack.getConstraints() : undefined,
-        settings: (typeof videoTrack.getSettings === 'function') ? videoTrack.getSettings() : undefined,
-      } : undefined
-    };
-  }
 
   // doListenToTracksEvents(mediaStream: MediaStream, logPrefix: string) {
   //   mediaStream.getTracks().forEach((track: MediaStreamTrack) => {
@@ -731,7 +728,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
               console.debug(`${CNAME}|dataChannel:onopen`, DATACHANNEL_MEDIASTREAMINFO_PATH, event)
             }
             if (this.localUserMediaStream) {
-              const infos = this.getCapConstSettings(this.localUserMediaStream);
+              const infos = MediaStreamHelper.getMediaStreamInfo(this.localUserMediaStream);
               dataChannel.send(JSON.stringify(infos))
             }
           };
