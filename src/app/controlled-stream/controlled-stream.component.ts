@@ -1,4 +1,4 @@
-import { JsonPipe, KeyValuePipe, NgFor } from '@angular/common';
+import { JsonPipe, KeyValuePipe, NgFor, NgStyle } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, HostBinding, Input, NgZone, OnDestroy, ViewChild } from '@angular/core';
 
 import { Stream } from 'ephemeral-webrtc';
@@ -8,13 +8,14 @@ import { ContextService } from '../context.service';
 import { GLOBAL_STATE } from '../global-state';
 import { Pointer, PointerComponent } from '../pointer/pointer.component';
 import { StreamVideoComponent, VideoInfo } from '../stream-video/stream-video.component';
+import { round2 } from '../common';
 
 const CNAME = 'ControlledStream';
 
 @Component({
   selector: 'app-controlled-stream',
   standalone: true,
-  imports: [JsonPipe, NgFor, KeyValuePipe, StreamVideoComponent, PointerComponent],
+  imports: [JsonPipe, NgFor, NgStyle, KeyValuePipe, StreamVideoComponent, PointerComponent],
   templateUrl: './controlled-stream.component.html',
   styleUrl: './controlled-stream.component.css'
 })
@@ -163,6 +164,21 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     this._sinkId = id;
   }
 
+  // @HostBinding("style.--height")
+  // private _height: string = '100%';
+  // @Input() set height(height: string) {
+  //   this._height = height;
+  // }
+
+  // @HostBinding("style.--width")
+  // private _width: string = '100%';
+  // @Input() set width(width: string) {
+  //   this._width = width;
+  // }
+
+  @HostBinding("style.--flex-direction")
+  private flexDirection: string = 'row';
+
   @HostBinding("style.--min-height")
   private minHeight: string = '50px';
   @HostBinding("style.--min-width")
@@ -172,7 +188,14 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   @ViewChild('controls') controls: ElementRef | undefined;
 
   // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
-  private observer: ResizeObserver | undefined;
+  private controlsObs: ResizeObserver | undefined;
+  private componentObs: ResizeObserver | undefined;
+
+  private aspectRatio: number = -1;
+  private videoAspectRatio: number = round2(640 / 480);
+
+  _containerHeight = '100%';
+  _containerWidth = 'auto';
 
   constructor(private el: ElementRef,
     private ngZone: NgZone,
@@ -181,7 +204,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit() {
     if (this.label && this.controls) {
-      this.observer = new ResizeObserver((entries) => {
+      this.controlsObs = new ResizeObserver((entries) => {
         let height = 0, width = 0;
         entries.forEach((entry) => {
           height = Math.max(height, entry.contentRect.height);
@@ -190,17 +213,38 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
         this.minHeight = `${height + 4 * 2}px`;
         this.minWidth = `${width + 4 * 2}px`;
       });
-      this.observer.observe(this.label.nativeElement);
-      this.observer.observe(this.controls.nativeElement);
+      this.controlsObs.observe(this.label.nativeElement);
+      this.controlsObs.observe(this.controls.nativeElement);
+    }
+
+    this.componentObs = new ResizeObserver((entries) => {
+      this.aspectRatio = round2(this.el.nativeElement.clientWidth / this.el.nativeElement.clientHeight);
+      //const videoAspectRatio = (this._mediaStream?.getVideoTracks()[0].getSettings().width || 0) / (this._mediaStream?.getVideoTracks()[0].getSettings().height || 1);
+      this.doCheckAspectRatios()
+    });
+    this.componentObs.observe(this.el.nativeElement);
+  }
+
+  doCheckAspectRatios() {
+
+    if (this.aspectRatio !== -1 && this.videoAspectRatio !== -1) {
+      console.log('doCheckAspectRatios', this.el.nativeElement.clientWidth, this.el.nativeElement.clientHeight, this.aspectRatio, this.videoAspectRatio)
+      if (this.aspectRatio > this.videoAspectRatio) {
+        this.flexDirection = 'row';
+        this._containerHeight = '100%';
+        this._containerWidth = 'auto';
+      } else {
+        this.flexDirection = 'column';
+        this._containerHeight = 'auto';
+        this._containerWidth = '100%';
+      }
     }
   }
 
-
-
   ngOnDestroy() {
-    if (this.observer) {
+    if (this.controlsObs) {
       // disconnect() unobserves all observed Element targets of a particular observer.
-      this.observer.disconnect();
+      this.controlsObs.disconnect();
     }
   }
 
@@ -213,13 +257,13 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   videoInfo: VideoInfo = {
     element: {
       aspectRatio: 1,
-      width: 1,
-      height: 1
+      height: 1,
+      width: 1
     },
     video: {
       aspectRatio: 1,
-      width: 1,
-      height: 1
+      height: 1,
+      width: 1
     }
   };
 
@@ -272,44 +316,39 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  translateToMediaPercentage(coords: { l: number, t: number }) {
-    // const rect = this.el.nativeElement.getBoundingClientRect();
-    // const left = event.clientX - Math.round(rect.left); //x position within the element.
-    // const top = event.clientY - Math.round(rect.top);  //y position within the element.
+  translateToMediaPercentage(pointer: { l: number, t: number }) {
 
-    //const { l: left, t: top } = this.getLocalPointer(event);
+    let l_pointer: { l: number, t: number };
+    if (this._videoStyle['objectFit'] === 'cover') {
+      if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
+        // then image is full in height but is cropped in width
+        const factor = this.videoInfo.video.height / this.videoInfo.element.height;
+        // the width the video would take in element if it was not cropped
+        const elt_v_width = this.videoInfo.video.width / factor;
+        const offset = (elt_v_width - this.videoInfo.element.width) / 2;
 
-    // Round with 2 decimal to reduce amount of data sent on the datachannel, still keeping enough accuracy
-    // Math.round((num + Number.EPSILON) * 100) / 100
-    function round2(num: number) {
-      return Math.round((num + Number.EPSILON) * 100) / 100
-    }
+        l_pointer = {
+          l: (pointer.l + offset) * factor,
+          t: pointer.t * factor
+        };
 
-    let vCoord;
-    if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
-      // then image is full in height but is cropped in width
-      const factor = this.videoInfo.video.height / this.videoInfo.element.height;
-      // the width the video would take in element if it was not cropped
-      const elt_v_width = this.videoInfo.video.width / factor;
-      const offset = (elt_v_width - this.videoInfo.element.width) / 2;
+      } else {
+        // then image is full in width but image will be reduced in height
+        const factor = this.videoInfo.video.width / this.videoInfo.element.width;
 
-      vCoord = {
-        left: (coords.l + offset) * factor,
-        top: coords.t * factor
-      };
+        // the height the video would take in element if it was not cropped
+        const elt_v_height = this.videoInfo.video.height / factor;
+        const offset = (elt_v_height - this.videoInfo.element.height) / 2;
 
+        l_pointer = {
+          l: pointer.l * factor,
+          t: (pointer.t + offset) * factor
+        };
+      }
     } else {
-      // then image is full in width but image will be reduced in height
-      const factor = this.videoInfo.video.width / this.videoInfo.element.width;
-
-      // the height the video would take in element if it was not cropped
-      const elt_v_height = this.videoInfo.video.height / factor;
-      const offset = (elt_v_height - this.videoInfo.element.height) / 2;
-
-      vCoord = {
-        left: coords.l * factor,
-        top: (coords.t + offset) * factor
-      };
+      // TODO: manage objectFit 'contain' properly ?
+      // or consider that if not cover the element and video shall fit
+      l_pointer = pointer;
     }
 
     // Convert in %
@@ -318,8 +357,8 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     // Rounding 2 digits after comma might be enough accuracy and prevent from sending
     // too large amount of data.
     return {
-      l: round2(vCoord.left * 100 / this.videoInfo.video.width),
-      t: round2(vCoord.top * 100 / this.videoInfo.video.height)
+      l: round2(l_pointer.l * 100 / this.videoInfo.video.width),
+      t: round2(l_pointer.t * 100 / this.videoInfo.video.height)
     }
   }
 

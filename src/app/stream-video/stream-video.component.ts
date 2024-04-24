@@ -1,18 +1,19 @@
 import { NgClass, NgStyle } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, Output, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, HostBinding, Input, OnDestroy, Output, ViewChild } from '@angular/core';
+import { round2 } from '../common';
 
 export const VIDEO_ROUNDED_CORNERS = { borderRadius: '4px', overflow: 'hidden' };
 
 export type VideoInfo = {
   element: {
     aspectRatio: number,
-    width: number,
     height: number
+    width: number,
   }
   video: {
     aspectRatio: number,
-    width: number,
     height: number
+    width: number,
   }
 };
 
@@ -44,7 +45,9 @@ export class StreamVideoComponent implements AfterViewInit, OnDestroy {
     // minHeight: '100%', minWidth: '100%',
     // width: '99vw', height: '75vw',
     //  maxWidth: '133.34vh', maxHeight: '100vh',
-    'object-fit': 'contain',
+    // 'object-fit': 'contain',
+    height: 'inherit',
+    width: 'inherit',
     ...VIDEO_ROUNDED_CORNERS
   };
   @Input() set videoStyle(style: { [klass: string]: any; }) {
@@ -78,7 +81,10 @@ export class StreamVideoComponent implements AfterViewInit, OnDestroy {
 
   @Output() onInfo = new EventEmitter<VideoInfo>();
 
-  constructor() { }
+  // video_height: string = 'auto';
+  // video_width: string = 'auto';
+
+  constructor(private el: ElementRef) { }
 
   ngAfterViewInit() {
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
@@ -92,31 +98,55 @@ export class StreamVideoComponent implements AfterViewInit, OnDestroy {
 
       const videoElement = this.videoRef.nativeElement;
 
-      const emitInfo = () => {
-        const { videoHeight: height, videoWidth: width } = videoElement;
-        this.onInfo.emit({
+      const getInfos = () => {
+        return {
           element: {
             aspectRatio: videoElement.clientWidth / videoElement.clientHeight,
-            width: videoElement.clientWidth,
-            height: videoElement.clientHeight
+            width: videoElement.clientWidth, height: videoElement.clientHeight
           },
-          video: { aspectRatio: videoElement.videoWidth / videoElement.videoHeight, width, height }
-        })
+          video: {
+            aspectRatio: videoElement.videoWidth / videoElement.videoHeight,
+            width: videoElement.videoWidth, height: videoElement.videoHeight
+          }
+        }
       }
+
+      const emitInfo = (infos: any) => {
+        this.onInfo.emit(infos)
+      };
 
       this.observer = new ResizeObserver((_entries) => {
         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
           console.debug(`${CNAME}|ResizeObserver runs`);
         }
-        emitInfo()
+
+        const infos = getInfos();
+
+        // const hostAspectRatio = round2(this.el.nativeElement.clientWidth / this.el.nativeElement.clientHeight);
+
+        // if (hostAspectRatio <= infos.video.aspectRatio) {
+        //   // this.video_height = '100%';
+        //   // this.video_width = 'auto';
+        //   this._videoStyle = { ...this._videoStyle, height: '100%', width: 'auto' };
+        //   console.log("AspectRatio AR <= VAR",this.el.nativeElement,  hostAspectRatio, infos.video.aspectRatio)
+        // } else {
+        //   // this.video_height = 'auto';
+        //   // this.video_width = '100%';
+        //   this._videoStyle = { ...this._videoStyle, height: 'auto', width: '100%' };
+        //   console.log("AspectRatio AR > VAR",this.el.nativeElement, hostAspectRatio, infos.video.aspectRatio)
+        // }
+
+        emitInfo(infos)
       });
+      this.observer.observe(this.el.nativeElement);
       this.observer.observe(videoElement);
 
       const onLoadedData = (ev: Event) => {
         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
           console.debug(`${CNAME}|onLoadedData ${ev.type}`);
         }
-        emitInfo()
+        const infos = getInfos();
+        emitInfo(infos)
       }
 
       // videoElement.addEventListener("loadeddata", onLoadedData);

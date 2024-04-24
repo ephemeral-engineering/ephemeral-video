@@ -1,7 +1,10 @@
 :host {
-    display: block;
+    display: flex;
+    flex-direction: var(--flex-direction);
+    justify-content: space-around;
     height: 100%;
-    position: relative;
+    width: 100%;
+    /* TODO? : mode to pos relative div inside the component ? well not sure, this can work like this too... */
     min-height: var(--min-height);
     min-width: var(--min-width);
 }

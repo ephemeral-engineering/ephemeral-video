@@ -1,5 +1,5 @@
-import { NgIf } from '@angular/common';
-import { Component, Input, OnInit } from '@angular/core';
+import { NgIf, NgStyle } from '@angular/common';
+import { Component, HostBinding, Input, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -16,7 +16,7 @@ const CNAME = 'LocalStream';
   templateUrl: './local-stream.component.html',
   styleUrls: ['./local-stream.component.css'],
   standalone: true,
-  imports: [NgIf,
+  imports: [NgIf, NgStyle,
     ControlledStreamComponent, MatButtonModule, MatIconModule],
 })
 export class LocalStreamComponent implements OnInit {

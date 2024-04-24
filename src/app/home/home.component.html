@@ -16,26 +16,80 @@
 
     <app-alert *ngIf="_error" [level]="'error'" [message]="_error"></app-alert>
 
-    <div class="pos-relative vh-100">
+    <!-- [ngStyle]="{width:_width}" -->
+
+    <!-- <div class="pos-relative vh-100">
         <div class="d-flex justify-content-center h-100">
-            <!-- [ngStyle]="{width:_width}" -->
             <div *ngFor="let kv of remoteStreamsByParticipant | keyvalue" class="flex-g-1 h-100">
                 <app-remote-stream *ngFor="let _stream of kv.value" [remoteStream]="_stream"
-                    [videoStyle]="{height: '100%', width:'100%', objectFit:'contain'}"
+                    [videoStyle]="{height: '100%', width:'100%', objectFit:'cover'}"
                     (onSnapshot)="onSnapshot($event)"></app-remote-stream>
-                    <!-- , objectFit:'cover' -->
             </div>
         </div>
-        <div *ngIf="localStream" class="pos-abs bottom-left" [ngStyle]="{height:'34%'}">
+        <div *ngIf="localStream" class="pos-abs bottom-left" [ngStyle]="{height:'80%'}">
             <app-local-stream [localStream]="localStream" [videoStyle]="{opacity:0.84, height:'100%', width:'auto'}">
             </app-local-stream>
         </div>
-        <!-- <div *ngIf="localStream" class="d-flex justify-content-center h-100">
+    </div> -->
+    <!-- 
+    {height:'100%', width:'fit-content'}
+    {height:'100%', width:'100%'}
+    {height:'fit-content', width:'100%'} -->
+
+    <!-- <div class="pos-relative vh-100">
+        <div class="d-flex h-100" [ngStyle]="{justifyContent:'space-around'}">
+            <app-local-stream *ngIf="localStream" [localStream]="localStream"
+                [ngStyle]="{height:'100%', width:'fit-content'}" [videoStyle]="{height:'100%', width:'auto'}">
+            </app-local-stream>
+        </div>
+        <div *ngIf="localStream" class="pos-abs bottom-left" [ngStyle]="{height:'34%',maxWidth:'50%'}">
+            <app-local-stream [localStream]="localStream" [ngStyle]="{height:'100%'}"
+                [videoStyle]="{opacity:0.84, height:'100%', width:'auto'}">
+            </app-local-stream>
+        </div>
+    </div> -->
+
+    <!-- videoStyle {height:'100%', width:'auto'} -->
+    <!-- videoStyle {height:'100%', width:'100%', objectFit:'cover' } -->
+    <!-- [videoStyle]="{height:'100%', width:'100%', objectFit:'cover'}" -->
+    <!-- [videoStyle]="{height:'100%', width:'auto'}"  -->
+    <!-- [ngStyle]="{height:'100%', width:'100%'}" -->
+    <!-- , boxSizing:'content-box' -->
+    <div class="d-flex pos-relative vh-100" [ngStyle]="{justifyContent:'space-around'}">
+        <app-local-stream *ngIf="localStream" [localStream]="localStream">
+
+        </app-local-stream>
+        <!-- <div > -->
+            <app-local-stream *ngIf="localStream" class="pos-abs bottom-left" [ngStyle]="{height:'34%'}" [localStream]="localStream"
+                [videoStyle]="{opacity:0.84}">
+            </app-local-stream>
+        <!-- </div> -->
+    </div>
+    <!--  -->
+
+    <!-- <div class="d-flex flex-col pos-relative vh-100" [ngStyle]="{justifyContent:'space-around'}">
+        <app-local-stream *ngIf="localStream" [localStream]="localStream"
+            [ngStyle]="{height:'fit-content', width:'100%'}" [videoStyle]="{height:'auto', width:'100%'}">
+        </app-local-stream>
+    </div> -->
+
+    <!-- <div class="pos-relative vh-100">
+        <div class="d-flex justify-content-center h-100">
+            <app-local-stream *ngIf="localStream" [localStream]="localStream"
+                [videoStyle]="{height:'auto', width:'100%'}">
+            </app-local-stream>
+        </div>
+        <div *ngIf="localStream" class="pos-abs bottom-left" [ngStyle]="{height:'80%'}">
+            <app-local-stream [localStream]="localStream" [videoStyle]="{opacity:0.84, height:'100%', width:'auto'}">
+            </app-local-stream>
+        </div>
+    </div> -->
+    <!-- <div *ngIf="localStream" class="d-flex justify-content-center h-100">
             <app-local-stream [localStream]="localStream"
                 [videoStyle]="{'height': '100%', width:'100%', objectFit:'cover'}">
             </app-local-stream>
         </div> -->
-        <!-- 
+    <!-- 
         https://stackoverflow.com/questions/20590239/maintain-aspect-ratio-of-div-but-fill-screen-width-and-height-in-css
         16:9
     width: 100vw; 
@@ -48,11 +102,11 @@
     max-height: 100vh;
     max-width: 133.34vh; /* 16/9 = 1.333
     -->
-        <!-- align-items-stretch -->
-        <!-- bottom-0 mb-1 start-0 ms-1 col-6 col-sm-6 col-md-5 col-lg-4 col-xl-3 col-xxl-2 -->
-        <!-- <div class="d-flex flex-column-reverse "> -->
-        <!-- <div class="row "> -->
-    </div>
+    <!-- align-items-stretch -->
+    <!-- bottom-0 mb-1 start-0 ms-1 col-6 col-sm-6 col-md-5 col-lg-4 col-xl-3 col-xxl-2 -->
+    <!-- <div class="d-flex flex-column-reverse "> -->
+    <!-- <div class="row "> -->
+
 
     <div class="mt-5 d-flex justify-content-center">
         <!-- <p>Conversation id : {{conversation?.id}}</p>
