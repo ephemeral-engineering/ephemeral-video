@@ -285,7 +285,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
           this._containerWidth = '100%';
         }
       }
-      this._objectFitSwitch = Math.abs(this.aspectRatio - this.videoAspectRatio) > 0.01;
+      this._objectFitSwitch = Math.abs(this.aspectRatio - this.videoAspectRatio) > 0.02; // 0.01 is sometimes not enough for localstream even in auto to not detect an unsignificant difference
     }
   }
 
