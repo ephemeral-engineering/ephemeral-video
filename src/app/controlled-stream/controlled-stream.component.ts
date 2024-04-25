@@ -1,6 +1,8 @@
 import { JsonPipe, KeyValuePipe, NgFor, NgStyle } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, HostBinding, Input, NgZone, OnDestroy, ViewChild } from '@angular/core';
 
+import { MatIconModule } from '@angular/material/icon';
+
 import { Stream } from 'ephemeral-webrtc';
 
 import { DATACHANNEL_POINTER_PATH } from '../constants';
@@ -15,11 +17,15 @@ const CNAME = 'ControlledStream';
 @Component({
   selector: 'app-controlled-stream',
   standalone: true,
-  imports: [JsonPipe, NgFor, NgStyle, KeyValuePipe, StreamVideoComponent, PointerComponent],
+  imports: [JsonPipe, MatIconModule, NgFor, NgStyle, KeyValuePipe, StreamVideoComponent, PointerComponent],
   templateUrl: './controlled-stream.component.html',
   styleUrl: './controlled-stream.component.css'
 })
 export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
+
+  _objectFit: 'cover' | undefined = 'cover';
+  _containerHeight = '100%'; // must be 100% by default if _objectFit is 'cover' by default
+  _containerWidth = '100%'; // must be 100% by default if _objectFit is 'cover' by default
 
   pointerChannels: Map<RTCDataChannel, Pointer> = new Map();
   pointers: Pointer[] = [];
@@ -67,7 +73,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 
         let pointer: Pointer;
 
-        if (this._videoStyle['objectFit'] === 'cover') {
+        if (this._objectFit === 'cover') {
           if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
             // then image is full in height but image will be reduced in width
             const factor = this.videoInfo.video.height / this.videoInfo.element.height;
@@ -90,27 +96,30 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
             const l = (data.l / factor);
             pointer = { l, t };
           }
-        } else { // manage the 'contain' case. TODO: need to manage it also on the origin side !
-          if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
-            const factor = this.videoInfo.video.width / this.videoInfo.element.width;
+        } else {
+          // manage the 'contain' case.
+          // if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
+          //   const factor = this.videoInfo.video.width / this.videoInfo.element.width;
+          //   const n_height = this.videoInfo.video.height / factor;
+          //   const offset = (this.videoInfo.element.height - n_height) / 2;
+          //   const t = Math.min(Math.max(0, (data.t / factor) + offset), this.videoInfo.element.height);
+          //   const l = (data.l / factor);
+          //   pointer = { l, t };
+          // } else {
+          //   const factor = this.videoInfo.video.height / this.videoInfo.element.height;
+          //   const n_width = this.videoInfo.video.width / factor;
+          //   const offset = (this.videoInfo.element.width - n_width) / 2;
+          //   const t = data.t / factor;
+          //   const n_left = (data.l / factor) + offset;
+          //   const l = Math.min(Math.max(0, n_left), this.videoInfo.element.width);
+          //   pointer = { l, t };
+          // }
 
-            const n_height = this.videoInfo.video.height / factor;
-            const offset = (this.videoInfo.element.height - n_height) / 2;
-
-            const t = Math.min(Math.max(0, (data.t / factor) + offset), this.videoInfo.element.height);
-            const l = (data.l / factor);
-            pointer = { l, t };
-          } else {
-            const factor = this.videoInfo.video.height / this.videoInfo.element.height;
-
-            const n_width = this.videoInfo.video.width / factor;
-            const offset = (this.videoInfo.element.width - n_width) / 2;
-
-            const t = data.t / factor;
-            const n_left = (data.l / factor) + offset;
-            const l = Math.min(Math.max(0, n_left), this.videoInfo.element.width);
-            pointer = { l, t };
-          }
+          // If not 'cover', then undefined, 
+          // the video must have kept its aspectRatio and should exactly be fitted into its parent element
+          // so we shall just apply the factor
+          const factor = this.videoInfo.video.width / this.videoInfo.element.width;
+          pointer = { l: data.l / factor, t: data.t / factor };
         }
 
         if (data.n) {
@@ -151,7 +160,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 
   _videoStyle: { [klass: string]: any; } = {};
   @Input() set videoStyle(style: { [klass: string]: any; }) {
-    this._videoStyle = { ...this._videoStyle, ...style };
+    this._videoStyle = { ...this._videoStyle, ...style, objectFit: this._objectFit };
   }
 
   _muted = false;
@@ -164,18 +173,6 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     this._sinkId = id;
   }
 
-  // @HostBinding("style.--height")
-  // private _height: string = '100%';
-  // @Input() set height(height: string) {
-  //   this._height = height;
-  // }
-
-  // @HostBinding("style.--width")
-  // private _width: string = '100%';
-  // @Input() set width(width: string) {
-  //   this._width = width;
-  // }
-
   @HostBinding("style.--flex-direction")
   private flexDirection: string = 'row';
 
@@ -184,8 +181,11 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   @HostBinding("style.--min-width")
   private minWidth: string = '50px';
 
+  @ViewChild('container') container: ElementRef | undefined;
   @ViewChild('label') label: ElementRef | undefined;
   @ViewChild('controls') controls: ElementRef | undefined;
+  @ViewChild('objectFit') objectFit: ElementRef | undefined;
+  @ViewChild('status') status: ElementRef | undefined;
 
   // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
   private controlsObs: ResizeObserver | undefined;
@@ -194,49 +194,52 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   private aspectRatio: number = -1;
   private videoAspectRatio: number = round2(640 / 480);
 
-  _containerHeight = '100%';
-  _containerWidth = 'auto';
-
   constructor(private el: ElementRef,
     private ngZone: NgZone,
     private contextService: ContextService,
   ) { }
 
   ngAfterViewInit() {
-    if (this.label && this.controls) {
-      this.controlsObs = new ResizeObserver((entries) => {
-        let height = 0, width = 0;
-        entries.forEach((entry) => {
-          height = Math.max(height, entry.contentRect.height);
-          width = Math.max(width, entry.contentRect.width);
-        })
-        this.minHeight = `${height + 4 * 2}px`;
-        this.minWidth = `${width + 4 * 2}px`;
-      });
-      this.controlsObs.observe(this.label.nativeElement);
-      this.controlsObs.observe(this.controls.nativeElement);
-    }
+    this.controlsObs = new ResizeObserver((entries) => {
+      //let height = 0, width = 0;
+      // entries.forEach((entry) => {
+      //   height = Math.max(height, entry.contentRect.height);
+      //   width = Math.max(width, entry.contentRect.width);
+      // })
+      const height = Math.max((this.controls?.nativeElement.height || 0) + (this.objectFit?.nativeElement.height || 0),
+        (this.label?.nativeElement.height || 0) + (this.status?.nativeElement.height || 0)
+      );
+      const width = Math.max((this.controls?.nativeElement.width || 0), (this.status?.nativeElement.height || 0),
+        (this.label?.nativeElement.height || 0) + (this.objectFit?.nativeElement.height || 0)
+      );
+
+      this.minHeight = `${height + 4 * 2}px`;
+      this.minWidth = `${width + 4 * 2}px`;
+    });
+    this.controlsObs.observe(this.controls?.nativeElement);
+    this.controlsObs.observe(this.label?.nativeElement);
+    this.controlsObs.observe(this.objectFit?.nativeElement);
+    this.controlsObs.observe(this.status?.nativeElement);
 
     this.componentObs = new ResizeObserver((entries) => {
       this.aspectRatio = round2(this.el.nativeElement.clientWidth / this.el.nativeElement.clientHeight);
-      //const videoAspectRatio = (this._mediaStream?.getVideoTracks()[0].getSettings().width || 0) / (this._mediaStream?.getVideoTracks()[0].getSettings().height || 1);
       this.doCheckAspectRatios()
     });
     this.componentObs.observe(this.el.nativeElement);
   }
 
   doCheckAspectRatios() {
-
     if (this.aspectRatio !== -1 && this.videoAspectRatio !== -1) {
-      console.log('doCheckAspectRatios', this.el.nativeElement.clientWidth, this.el.nativeElement.clientHeight, this.aspectRatio, this.videoAspectRatio)
-      if (this.aspectRatio > this.videoAspectRatio) {
-        this.flexDirection = 'row';
-        this._containerHeight = '100%';
-        this._containerWidth = 'auto';
-      } else {
-        this.flexDirection = 'column';
-        this._containerHeight = 'auto';
-        this._containerWidth = '100%';
+      if (this._objectFit !== 'cover') {
+        if (this.aspectRatio > this.videoAspectRatio) {
+          this.flexDirection = 'row';
+          this._containerHeight = '100%';
+          this._containerWidth = 'auto';
+        } else {
+          this.flexDirection = 'column';
+          this._containerHeight = 'auto';
+          this._containerWidth = '100%';
+        }
       }
     }
   }
@@ -245,6 +248,17 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     if (this.controlsObs) {
       // disconnect() unobserves all observed Element targets of a particular observer.
       this.controlsObs.disconnect();
+    }
+  }
+
+  toggleObjectFit() {
+    this._objectFit = this._objectFit === undefined ? 'cover' : undefined;
+    this._videoStyle = { ...this._videoStyle, objectFit: this._objectFit };
+    if (this._objectFit === 'cover') {
+      this._containerHeight = '100%';
+      this._containerWidth = '100%';
+    } else {
+      this.doCheckAspectRatios()
     }
   }
 
@@ -309,7 +323,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   private moveCounter = 0;
 
   getLocalPointer(event: MouseEvent) {
-    const rect = this.el.nativeElement.getBoundingClientRect();
+    const rect = this.container?.nativeElement.getBoundingClientRect();
     return {
       l: event.clientX - Math.round(rect.left),
       t: event.clientY - Math.round(rect.top)
@@ -319,7 +333,8 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   translateToMediaPercentage(pointer: { l: number, t: number }) {
 
     let l_pointer: { l: number, t: number };
-    if (this._videoStyle['objectFit'] === 'cover') {
+    // if (this._videoStyle['objectFit'] === 'cover') {
+    if (this._objectFit === 'cover') {
       if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
         // then image is full in height but is cropped in width
         const factor = this.videoInfo.video.height / this.videoInfo.element.height;
@@ -346,9 +361,12 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
         };
       }
     } else {
-      // TODO: manage objectFit 'contain' properly ?
-      // or consider that if not cover the element and video shall fit
-      l_pointer = pointer;
+      // The video is just adapted to the parent element
+      const factor = this.videoInfo.video.width / this.videoInfo.element.width;
+      l_pointer = {
+        l: (pointer.l) * factor,
+        t: pointer.t * factor
+      };
     }
 
     // Convert in %

@@ -99,6 +99,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   url: string | undefined;
 
   remoteStreamsByParticipant: Map<RemoteParticipant, Set<RemoteStream>> = new Map();
+  remoteStreams: Set<RemoteStream> = new Set();
 
   // get _width() {
   //   return `${Math.floor(100 / this.remoteStreamsByParticipant.size)}%`;
@@ -753,7 +754,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           if (mediaStream) {
             this.mediaStreamInfos.set(localStream, MediaStreamHelper.getMediaStreamInfo(mediaStream))
           }
-
         })
 
         localStream.onDataChannel(DATACHANNEL_MEDIASTREAMINFO_PATH, (dataChannel: RTCDataChannel) => {
@@ -793,24 +793,28 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   private doStoreRemoteStreamByParticipant(participant: RemoteParticipant, stream: RemoteStream) {
     if (!this.remoteStreamsByParticipant.has(participant)) {
-      this.remoteStreamsByParticipant.set(participant, new Set());
+      this.remoteStreamsByParticipant.set(participant, new Set())
     }
-    this.remoteStreamsByParticipant.get(participant)?.add(stream);
+    this.remoteStreamsByParticipant.get(participant)?.add(stream)
+    this.remoteStreams.add(stream)
   }
 
   private doRemoveMediaStream(participant: RemoteParticipant, stream: RemoteStream) {
     const deleted = this.remoteStreamsByParticipant.get(participant)?.delete(stream);
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-      console.debug(`${CNAME}|doRemoveMediaStream`, participant, stream, deleted);
+      console.debug(`${CNAME}|doRemoveMediaStream`, participant, stream, deleted)
     }
+    this.remoteStreams.delete(stream)
   }
 
   private doRemoveRemoteParticipant(participant: RemoteParticipant) {
     this.remoteParticipants.delete(participant);
+    const participantStreams = this.remoteStreamsByParticipant.get(participant);
     const deleted = this.remoteStreamsByParticipant.delete(participant);
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-      console.debug(`${CNAME}|doRemoveRemoteParticipant`, participant, deleted, this.remoteStreamsByParticipant.size);
+      console.debug(`${CNAME}|doRemoveRemoteParticipant`, participant, deleted, this.remoteStreamsByParticipant.size)
     }
+    participantStreams?.forEach((stream) => { this.remoteStreams.delete(stream) })
   }
 
   shareScreen() {

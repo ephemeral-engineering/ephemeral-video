@@ -5,10 +5,10 @@ import { MatIconModule } from '@angular/material/icon';
 export type Pointer = {
   /** nickname */
   n?: string
-  /** top */
-  t: number
   /** left */
   l: number
+  /** top */
+  t: number
   /** timestamp */
   ts?: number
 };

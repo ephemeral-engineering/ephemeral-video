@@ -1,6 +1,5 @@
 import { NgClass, NgStyle } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, EventEmitter, HostBinding, Input, OnDestroy, Output, ViewChild } from '@angular/core';
-import { round2 } from '../common';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, Output, ViewChild } from '@angular/core';
 
 export const VIDEO_ROUNDED_CORNERS = { borderRadius: '4px', overflow: 'hidden' };
 
@@ -42,10 +41,6 @@ export class StreamVideoComponent implements AfterViewInit, OnDestroy {
   }
 
   _videoStyle: { [klass: string]: any; } = {
-    // minHeight: '100%', minWidth: '100%',
-    // width: '99vw', height: '75vw',
-    //  maxWidth: '133.34vh', maxHeight: '100vh',
-    // 'object-fit': 'contain',
     height: 'inherit',
     width: 'inherit',
     ...VIDEO_ROUNDED_CORNERS
@@ -80,9 +75,6 @@ export class StreamVideoComponent implements AfterViewInit, OnDestroy {
   }
 
   @Output() onInfo = new EventEmitter<VideoInfo>();
-
-  // video_height: string = 'auto';
-  // video_width: string = 'auto';
 
   constructor(private el: ElementRef) { }
 
@@ -121,21 +113,6 @@ export class StreamVideoComponent implements AfterViewInit, OnDestroy {
         }
 
         const infos = getInfos();
-
-        // const hostAspectRatio = round2(this.el.nativeElement.clientWidth / this.el.nativeElement.clientHeight);
-
-        // if (hostAspectRatio <= infos.video.aspectRatio) {
-        //   // this.video_height = '100%';
-        //   // this.video_width = 'auto';
-        //   this._videoStyle = { ...this._videoStyle, height: '100%', width: 'auto' };
-        //   console.log("AspectRatio AR <= VAR",this.el.nativeElement,  hostAspectRatio, infos.video.aspectRatio)
-        // } else {
-        //   // this.video_height = 'auto';
-        //   // this.video_width = '100%';
-        //   this._videoStyle = { ...this._videoStyle, height: 'auto', width: '100%' };
-        //   console.log("AspectRatio AR > VAR",this.el.nativeElement, hostAspectRatio, infos.video.aspectRatio)
-        // }
-
         emitInfo(infos)
       });
       this.observer.observe(this.el.nativeElement);

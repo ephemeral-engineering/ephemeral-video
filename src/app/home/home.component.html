@@ -49,46 +49,25 @@
         </div>
     </div> -->
 
-    <!-- videoStyle {height:'100%', width:'auto'} -->
-    <!-- videoStyle {height:'100%', width:'100%', objectFit:'cover' } -->
-    <!-- [videoStyle]="{height:'100%', width:'100%', objectFit:'cover'}" -->
-    <!-- [videoStyle]="{height:'100%', width:'auto'}"  -->
-    <!-- [ngStyle]="{height:'100%', width:'100%'}" -->
-    <!-- , boxSizing:'content-box' -->
-    <div class="d-flex pos-relative vh-100" [ngStyle]="{justifyContent:'space-around'}">
+    <!-- <div class="d-flex pos-relative vh-100" [ngStyle]="{justifyContent:'space-around'}">
         <app-local-stream *ngIf="localStream" [localStream]="localStream">
-
         </app-local-stream>
-        <!-- <div > -->
-            <app-local-stream *ngIf="localStream" class="pos-abs bottom-left" [ngStyle]="{height:'34%'}" [localStream]="localStream"
-                [videoStyle]="{opacity:0.84}">
+        <div class="pos-abs bottom-left d-flex flex-row" [ngStyle]="{height:'34%', width:'34%'}">
+            <app-local-stream *ngIf="localStream" [localStream]="localStream" [videoStyle]="{opacity:0.84}">
             </app-local-stream>
-        <!-- </div> -->
+        </div>
+    </div> -->
+
+    <div class="pos-relative vh-100 d-flex" [ngStyle]="{justifyContent:'space-around'}">
+        <app-remote-stream *ngFor="let _stream of remoteStreams" class="flex-g-1" [remoteStream]="_stream"
+            (onSnapshot)="onSnapshot($event)"></app-remote-stream>
+        <div class="pos-abs bottom-left d-flex flex-row" [ngStyle]="{height:'34%', width:'34%'}">
+            <app-local-stream *ngIf="localStream" [localStream]="localStream" [videoStyle]="{opacity:0.8}">
+            </app-local-stream>
+        </div>
     </div>
     <!--  -->
 
-    <!-- <div class="d-flex flex-col pos-relative vh-100" [ngStyle]="{justifyContent:'space-around'}">
-        <app-local-stream *ngIf="localStream" [localStream]="localStream"
-            [ngStyle]="{height:'fit-content', width:'100%'}" [videoStyle]="{height:'auto', width:'100%'}">
-        </app-local-stream>
-    </div> -->
-
-    <!-- <div class="pos-relative vh-100">
-        <div class="d-flex justify-content-center h-100">
-            <app-local-stream *ngIf="localStream" [localStream]="localStream"
-                [videoStyle]="{height:'auto', width:'100%'}">
-            </app-local-stream>
-        </div>
-        <div *ngIf="localStream" class="pos-abs bottom-left" [ngStyle]="{height:'80%'}">
-            <app-local-stream [localStream]="localStream" [videoStyle]="{opacity:0.84, height:'100%', width:'auto'}">
-            </app-local-stream>
-        </div>
-    </div> -->
-    <!-- <div *ngIf="localStream" class="d-flex justify-content-center h-100">
-            <app-local-stream [localStream]="localStream"
-                [videoStyle]="{'height': '100%', width:'100%', objectFit:'cover'}">
-            </app-local-stream>
-        </div> -->
     <!-- 
         https://stackoverflow.com/questions/20590239/maintain-aspect-ratio-of-div-but-fill-screen-width-and-height-in-css
         16:9
