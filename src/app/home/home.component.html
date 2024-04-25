@@ -1,7 +1,5 @@
-<div class="">
-
-    <!-- <div>{{gstate.nickname}}</div> -->
-    <!-- <div *ngFor="let kv of remoteStreamsByParticipant | keyvalue" class="row">
+<!-- <div>{{gstate.nickname}}</div> -->
+<!-- <div *ngFor="let kv of remoteStreamsByParticipant | keyvalue" class="row">
         <p>User {{kv.key.id}} </p>
         <span>kv.value.size = {{kv.value.size}}</span>
         <div *ngFor="let kvj of kv.value | keyvalue" class="col">
@@ -14,11 +12,9 @@
         </div>
     </div> -->
 
-    <app-alert *ngIf="_error" [level]="'error'" [message]="_error"></app-alert>
+<app-alert *ngIf="_error" [level]="'error'" [message]="_error"></app-alert>
 
-    <!-- [ngStyle]="{width:_width}" -->
-
-    <!-- <div class="pos-relative vh-100">
+<!-- <div class="pos-relative vh-100">
         <div class="d-flex justify-content-center h-100">
             <div *ngFor="let kv of remoteStreamsByParticipant | keyvalue" class="flex-g-1 h-100">
                 <app-remote-stream *ngFor="let _stream of kv.value" [remoteStream]="_stream"
@@ -31,12 +27,8 @@
             </app-local-stream>
         </div>
     </div> -->
-    <!-- 
-    {height:'100%', width:'fit-content'}
-    {height:'100%', width:'100%'}
-    {height:'fit-content', width:'100%'} -->
 
-    <!-- <div class="pos-relative vh-100">
+<!-- <div class="pos-relative vh-100">
         <div class="d-flex h-100" [ngStyle]="{justifyContent:'space-around'}">
             <app-local-stream *ngIf="localStream" [localStream]="localStream"
                 [ngStyle]="{height:'100%', width:'fit-content'}" [videoStyle]="{height:'100%', width:'auto'}">
@@ -49,26 +41,16 @@
         </div>
     </div> -->
 
-    <!-- <div class="d-flex pos-relative vh-100" [ngStyle]="{justifyContent:'space-around'}">
-        <app-local-stream *ngIf="localStream" [localStream]="localStream">
+<div class="pos-relative dvh-100 d-flex" [ngStyle]="{justifyContent:'space-around'}">
+    <app-remote-stream *ngFor="let _stream of remoteStreams" class="flex-g-1" [remoteStream]="_stream"
+        (onSnapshot)="onSnapshot($event)"></app-remote-stream>
+    <div class="pos-abs bottom-left d-flex flex-row" [ngStyle]="{height:'34%', width:'34%'}">
+        <app-local-stream *ngIf="localStream" [localStream]="localStream" [videoStyle]="{opacity:0.8}">
         </app-local-stream>
-        <div class="pos-abs bottom-left d-flex flex-row" [ngStyle]="{height:'34%', width:'34%'}">
-            <app-local-stream *ngIf="localStream" [localStream]="localStream" [videoStyle]="{opacity:0.84}">
-            </app-local-stream>
-        </div>
-    </div> -->
-
-    <div class="pos-relative vh-100 d-flex" [ngStyle]="{justifyContent:'space-around'}">
-        <app-remote-stream *ngFor="let _stream of remoteStreams" class="flex-g-1" [remoteStream]="_stream"
-            (onSnapshot)="onSnapshot($event)"></app-remote-stream>
-        <div class="pos-abs bottom-left d-flex flex-row" [ngStyle]="{height:'34%', width:'34%'}">
-            <app-local-stream *ngIf="localStream" [localStream]="localStream" [videoStyle]="{opacity:0.8}">
-            </app-local-stream>
-        </div>
     </div>
-    <!--  -->
+</div>
 
-    <!-- 
+<!-- 
         https://stackoverflow.com/questions/20590239/maintain-aspect-ratio-of-div-but-fill-screen-width-and-height-in-css
         16:9
     width: 100vw; 
@@ -81,143 +63,142 @@
     max-height: 100vh;
     max-width: 133.34vh; /* 16/9 = 1.333
     -->
-    <!-- align-items-stretch -->
-    <!-- bottom-0 mb-1 start-0 ms-1 col-6 col-sm-6 col-md-5 col-lg-4 col-xl-3 col-xxl-2 -->
-    <!-- <div class="d-flex flex-column-reverse "> -->
-    <!-- <div class="row "> -->
+<!-- align-items-stretch -->
+<!-- bottom-0 mb-1 start-0 ms-1 col-6 col-sm-6 col-md-5 col-lg-4 col-xl-3 col-xxl-2 -->
+<!-- <div class="d-flex flex-column-reverse "> -->
+<!-- <div class="row "> -->
 
-
-    <div class="mt-5 d-flex justify-content-center">
-        <!-- <p>Conversation id : {{conversation?.id}}</p>
+<div class="mt-5 d-flex justify-content-center">
+    <!-- <p>Conversation id : {{conversation?.id}}</p>
             <p>User id : {{localParticipant?.user?.id}}</p>
             <p>User nickname : {{localParticipantData?.nickname}}</p>
             <p>User moderator : {{moderator}}</p>
             <p>Others can join at url
                 <a href="{{url}}" target="_blank" rel="noopener">{{url}}</a>
             </p> -->
-        <button *ngIf="url" mat-fab extended color="primary" [cdkCopyToClipboard]="url">
-            <mat-icon>link</mat-icon>
-            Copy link
-        </button>
-        <!-- 
+    <button *ngIf="url" mat-fab extended color="primary" [cdkCopyToClipboard]="url">
+        <mat-icon>link</mat-icon>
+        Copy link
+    </button>
+    <!-- 
             <p>Conversation moderated : {{moderated}}</p>
             <p>
                 <button (click)="toggleModeration()">toggleModeration</button>
             </p> -->
-    </div>
+</div>
 
-    <!-- [ngClass]="{'flex-col': isHandsetPortrait}" -->
-    <div class="mt-5 d-flex flex-col justify-content-center">
-        <div class="d-flex justify-content-center">
-            <mat-form-field>
-                <mat-label>Nickname</mat-label>
-                <input matInput type="text" [(ngModel)]="nickname">
-                @if (nickname) {
-                <button matSuffix mat-icon-button aria-label="Clear" (click)="nickname=''">
-                    <mat-icon>close</mat-icon>
-                </button>
+<!-- [ngClass]="{'flex-col': isHandsetPortrait}" -->
+<div class="mt-5 d-flex flex-col justify-content-center">
+    <div class="d-flex justify-content-center">
+        <mat-form-field>
+            <mat-label>Nickname</mat-label>
+            <input matInput type="text" [(ngModel)]="nickname">
+            @if (nickname) {
+            <button matSuffix mat-icon-button aria-label="Clear" (click)="nickname=''">
+                <mat-icon>close</mat-icon>
+            </button>
+            }
+        </mat-form-field>
+    </div>
+    <div class="d-flex justify-content-center">
+        <mat-form-field>
+            <mat-label>Audio In</mat-label>
+            <mat-select [disabled]="grabbing" [(value)]="selectedAudioDeviceId" panelWidth="">
+                <!-- <mat-option>Default</mat-option> -->
+                @for (device of audioInMediaDevices; track device) {
+                <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
                 }
-            </mat-form-field>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field class="ml-2">
+            <mat-label>Video In</mat-label>
+            <mat-select [disabled]="grabbing" [(value)]="selectedVideoDeviceId" panelWidth="">
+                @for (device of videoInMediaDevices; track device) {
+                <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+    </div>
+    <div class="d-flex justify-content-center">
+        <mat-form-field>
+            <mat-label>Resolution</mat-label>
+            <mat-select [disabled]="grabbing" [(value)]="selectedVideoResolution" panelWidth="auto">
+                @for (r of resolutions; track r) {
+                <mat-option [value]="r">{{r}}p</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field class="ml-2">
+            <mat-label>Frame rate</mat-label>
+            <mat-select [disabled]="grabbing" [(value)]="selectedVideoFrameRate" panelWidth="auto">
+                @for (fr of frameRates; track fr) {
+                <mat-option [value]="fr">{{fr}}i/s</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+    </div>
+    <div class="d-flex justify-content-center">
+        <mat-form-field>
+            <mat-label>Audio Out</mat-label>
+            <mat-select [(value)]="selectedAudioOutputDeviceId" panelWidth="">
+                @for (device of audioOutMediaDevices; track device) {
+                <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+    </div>
+</div>
+
+<!-- <div class="mt-5">
+    <div *ngFor="let msg of _notifications">
+        <span>{{msg}}</span>
+    </div>
+</div>
+
+<div class="mt-5">
+    Bandwidth
+    <div *ngFor="let kv of bandwidthByPeerId | keyvalue">
+        <span>{{kv.key}}->{{kv.value}}</span>
+    </div>
+    Average: {{averageBandwidth}}
+</div> -->
+
+<!-- <div class="mt-5 vw-100 d-flex align-items-center justify-content-center">
+    <div *ngFor="let kv of mediaStreamInfos | keyvalue">
+        <span>{{kv.key.id}}</span>
+        <h3>Capabilities</h3>
+        <div *ngIf="kv.value.audio">
+            <pre>audio: {{kv.value.audio.capabilities | filterOut:'deviceId':'groupId' | json}}</pre>
         </div>
-        <div class="d-flex justify-content-center">
-            <mat-form-field>
-                <mat-label>Audio In</mat-label>
-                <mat-select [disabled]="grabbing" [(value)]="selectedAudioDeviceId" panelWidth="">
-                    <!-- <mat-option>Default</mat-option> -->
-                    @for (device of audioInMediaDevices; track device) {
-                    <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
-            <mat-form-field class="ml-2">
-                <mat-label>Video In</mat-label>
-                <mat-select [disabled]="grabbing" [(value)]="selectedVideoDeviceId" panelWidth="">
-                    @for (device of videoInMediaDevices; track device) {
-                    <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
+        <div *ngIf="kv.value.video">
+            <pre>video: {{kv.value.video.capabilities | filterOut:'deviceId':'groupId' | json}}</pre>
         </div>
-        <div class="d-flex justify-content-center">
-            <mat-form-field>
-                <mat-label>Resolution</mat-label>
-                <mat-select [disabled]="grabbing" [(value)]="selectedVideoResolution" panelWidth="auto">
-                    @for (r of resolutions; track r) {
-                    <mat-option [value]="r">{{r}}p</mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
-            <mat-form-field class="ml-2">
-                <mat-label>Frame rate</mat-label>
-                <mat-select [disabled]="grabbing" [(value)]="selectedVideoFrameRate" panelWidth="auto">
-                    @for (fr of frameRates; track fr) {
-                    <mat-option [value]="fr">{{fr}}i/s</mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
+        <h3>Constraints</h3>
+        <div *ngIf="kv.value.audio">
+            <pre>audio: {{kv.value.audio.constraints | filterOut:'deviceId':'groupId' | json}}</pre>
         </div>
-        <div class="d-flex justify-content-center">
-            <mat-form-field>
-                <mat-label>Audio Out</mat-label>
-                <mat-select [(value)]="selectedAudioOutputDeviceId" panelWidth="">
-                    @for (device of audioOutMediaDevices; track device) {
-                    <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
+        <div *ngIf="kv.value.video">
+            <pre>video: {{kv.value.video.constraints | filterOut:'deviceId':'groupId' | json}}</pre>
+        </div>
+        <h3>Settings</h3>
+        <div *ngIf="kv.value.audio">
+            <pre>audio: {{kv.value.audio.settings | filterOut:'deviceId':'groupId' | json}}</pre>
+        </div>
+        <div *ngIf="kv.value.video">
+            <pre>video: {{kv.value.video.settings | filterOut:'deviceId':'groupId' | json}}</pre>
         </div>
     </div>
+</div> -->
 
-    <div class="mt-5">
-        <div *ngFor="let msg of _notifications">
-            <span>{{msg}}</span>
-        </div>
-    </div>
-
-    <div class="mt-5">
-        Bandwidth
-        <div *ngFor="let kv of bandwidthByPeerId | keyvalue">
-            <span>{{kv.key}}->{{kv.value}}</span>
-        </div>
-        Average: {{averageBandwidth}}
-    </div>
-
-    <div class="mt-5 vw-100 d-flex align-items-center justify-content-center">
-        <div *ngFor="let kv of mediaStreamInfos | keyvalue">
-            <span>{{kv.key.id}}</span>
-            <h3>Capabilities</h3>
-            <div *ngIf="kv.value.audio">
-                <pre>audio: {{kv.value.audio.capabilities | filterOut:'deviceId':'groupId' | json}}</pre>
-            </div>
-            <div *ngIf="kv.value.video">
-                <pre>video: {{kv.value.video.capabilities | filterOut:'deviceId':'groupId' | json}}</pre>
-            </div>
-            <h3>Constraints</h3>
-            <div *ngIf="kv.value.audio">
-                <pre>audio: {{kv.value.audio.constraints | filterOut:'deviceId':'groupId' | json}}</pre>
-            </div>
-            <div *ngIf="kv.value.video">
-                <pre>video: {{kv.value.video.constraints | filterOut:'deviceId':'groupId' | json}}</pre>
-            </div>
-            <h3>Settings</h3>
-            <div *ngIf="kv.value.audio">
-                <pre>audio: {{kv.value.audio.settings | filterOut:'deviceId':'groupId' | json}}</pre>
-            </div>
-            <div *ngIf="kv.value.video">
-                <pre>video: {{kv.value.video.settings | filterOut:'deviceId':'groupId' | json}}</pre>
-            </div>
-        </div>
-    </div>
-
-    <!-- <div class="row">
+<!-- <div class="row">
         <div class="col">
             <img [src]="snapshotSrc" />
         </div>
     </div> -->
 
-    <!-- <button *ngIf="!mediaRecorder" (click)="record(kvj.value.mediaStream)">Record</button>
+<!-- <button *ngIf="!mediaRecorder" (click)="record(kvj.value.mediaStream)">Record</button>
     <button *ngIf="mediaRecorder" (click)="stopRecording()">StopRecording</button> -->
-    <!-- 
+<!-- 
     <div>
         <p *ngFor="let pair of messages">{{pair[0].nickname}}:{{pair[1]}}</p>
     </div>
@@ -268,5 +249,3 @@
     <span>remoteStreamsByParticipant.size = {{remoteStreamsByParticipant.size}}</span>
 
     <p><a routerLink="/bye">Bye</a></p>  -->
-
-</div>

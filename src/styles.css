@@ -80,6 +80,10 @@ body {
   margin-right: 4px;
 }
 
+.dvh-100 {
+  height: 100dvh;
+}
+
 .vh-100 {
   height: 100vh;
 }
