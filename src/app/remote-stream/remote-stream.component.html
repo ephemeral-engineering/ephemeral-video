@@ -4,39 +4,35 @@
     <span status>{{_onlineStatus}}</span>
     <div controls>
         <div>
-            <button mat-mini-fab color="primary" aria-label="snapshot" title="snapshot" (click)="snapshot()">
+            <button mat-mini-fab aria-label="snapshot" title="snapshot" (click)="snapshot()">
                 <mat-icon>photo_camera</mat-icon>
             </button>
         </div>
         <div class="mt-1">
-            <button mat-mini-fab color="primary" aria-label="publish-audio" title="publish audio"
-                (click)="togglePublishAudio()">
+            <button mat-mini-fab aria-label="publish-audio" title="publish audio" (click)="togglePublishAudio()">
                 <mat-icon>{{_publishOptions.audio ? 'mic':'mic_off'}}</mat-icon>
             </button>
         </div>
         <!-- <div class="mt-1">
-            <button mat-mini-fab color="accent" aria-label="publish-video" title="publish video"
+            <button mat-mini-fab color="primary" aria-label="publish-video" title="publish video"
                 (click)="togglePublishVideo()">
                 <mat-icon>{{_publishOptions.video ? 'videocam':'videocam_off'}}
                 </mat-icon>
             </button>
         </div> -->
         <div class="mt-1">
-            <button mat-mini-fab color="primary" aria-label="subscribe-audio" title="subscribe audio"
-                (click)="toggleSubscribeAudio()">
+            <button mat-mini-fab aria-label="subscribe-audio" title="subscribe audio" (click)="toggleSubscribeAudio()">
                 <mat-icon>{{_subscribeOptions.audio && audioEnabled ? 'volume_up':'volume_off'}}</mat-icon>
             </button>
         </div>
         <div class="mt-1">
-            <button mat-mini-fab color="primary" aria-label="subscribe-video" title="subscribe video"
-                (click)="toggleSubscribeVideo()">
+            <button mat-mini-fab aria-label="subscribe-video" title="subscribe video" (click)="toggleSubscribeVideo()">
                 <mat-icon>{{_subscribeOptions.video && videoEnabled ? 'videocam':'videocam_off'}}
                 </mat-icon>
             </button>
         </div>
         <div class="mt-1">
-            <button mat-mini-fab color="primary" aria-label="flashlight" title="flashlight"
-                (click)="toggleFlashlight()">
+            <button mat-mini-fab aria-label="flashlight" title="flashlight" (click)="toggleFlashlight()">
                 <mat-icon>{{torch ? 'flashlight_on':'flashlight_off'}}
                 </mat-icon>
             </button>

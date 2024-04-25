@@ -41,10 +41,10 @@
         </div>
     </div> -->
 
-<div class="pos-relative dvh-100 d-flex" [ngStyle]="{justifyContent:'space-around'}">
+<div class="room pos-relative dvh-100 d-flex" [ngStyle]="{justifyContent:'space-around'}">
     <app-remote-stream *ngFor="let _stream of remoteStreams" class="flex-g-1" [remoteStream]="_stream"
         (onSnapshot)="onSnapshot($event)"></app-remote-stream>
-    <div class="pos-abs bottom-left d-flex flex-row" [ngStyle]="{height:'34%', width:'34%'}">
+    <div class="pos-abs bottom-left d-flex flex-row" [ngStyle]="{height:'34%', width:'auto'}">
         <app-local-stream *ngIf="localStream" [localStream]="localStream" [videoStyle]="{opacity:0.8}">
         </app-local-stream>
     </div>
@@ -76,7 +76,7 @@
             <p>Others can join at url
                 <a href="{{url}}" target="_blank" rel="noopener">{{url}}</a>
             </p> -->
-    <button *ngIf="url" mat-fab extended color="primary" [cdkCopyToClipboard]="url">
+    <button *ngIf="url" mat-fab extended [cdkCopyToClipboard]="url">
         <mat-icon>link</mat-icon>
         Copy link
     </button>

@@ -3,20 +3,20 @@
     <span label>{{_publishOptions.topic}}</span>
     <div controls>
         <div>
-            <button mat-mini-fab color="primary" aria-label="publish-audio" title="publish audio"
+            <button mat-mini-fab aria-label="publish-audio" title="publish audio"
                 (click)="togglePublishAudio()">
                 <mat-icon>{{_publishOptions.audio ? 'mic':'mic_off'}}</mat-icon>
             </button>
         </div>
         <div class="mt-1">
-            <button mat-mini-fab color="primary" aria-label="publish-video" title="publish video"
+            <button mat-mini-fab aria-label="publish-video" title="publish video"
                 (click)="togglePublishVideo()">
                 <mat-icon>{{_publishOptions.video ? 'videocam':'videocam_off'}}
                 </mat-icon>
             </button>
         </div>
         <div class="mt-1" *ngIf="_mediaStreamInfo.video?.capabilities.torch">
-            <button mat-mini-fab color="primary" aria-label="flashlight" title="flashlight"
+            <button mat-mini-fab aria-label="flashlight" title="flashlight"
                 (click)="toggleFlashlight()">
                 <mat-icon>{{_mediaStreamInfo.video?.settings.torch ? 'flashlight_on':'flashlight_off'}}
                 </mat-icon>

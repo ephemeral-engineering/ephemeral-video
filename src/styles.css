@@ -9,7 +9,7 @@ body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
   /* scrollbar-width: none; NOT WORKING */
-  /* background-color: black; */
+  background-color: rgb(77, 77, 77);
 }
 
 .material-symbols-outlined {
@@ -98,6 +98,10 @@ body {
 
 .w-100 {
   width: 100%;
+}
+
+.mt-1 {
+  margin-top: 4px;
 }
 
 .mt-2 {

@@ -1,28 +1,31 @@
-import { JsonPipe, KeyValuePipe, NgFor, NgStyle } from '@angular/common';
+import { JsonPipe, KeyValuePipe, NgFor, NgIf, NgStyle } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, HostBinding, Input, NgZone, OnDestroy, ViewChild } from '@angular/core';
 
+import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 import { Stream } from 'ephemeral-webrtc';
 
+import { round2 } from '../common';
 import { DATACHANNEL_POINTER_PATH } from '../constants';
 import { ContextService } from '../context.service';
 import { GLOBAL_STATE } from '../global-state';
 import { Pointer, PointerComponent } from '../pointer/pointer.component';
 import { StreamVideoComponent, VideoInfo } from '../stream-video/stream-video.component';
-import { round2 } from '../common';
+
 
 const CNAME = 'ControlledStream';
 
 @Component({
   selector: 'app-controlled-stream',
   standalone: true,
-  imports: [JsonPipe, MatIconModule, NgFor, NgStyle, KeyValuePipe, StreamVideoComponent, PointerComponent],
+  imports: [JsonPipe, MatButtonModule, MatIconModule, NgFor, NgIf, NgStyle, KeyValuePipe, StreamVideoComponent, PointerComponent],
   templateUrl: './controlled-stream.component.html',
   styleUrl: './controlled-stream.component.css'
 })
 export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 
+  _objectFitSwitch = false;
   _objectFit: 'cover' | undefined = 'cover';
   _containerHeight = '100%'; // must be 100% by default if _objectFit is 'cover' by default
   _containerWidth = '100%'; // must be 100% by default if _objectFit is 'cover' by default
@@ -192,35 +195,76 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   private componentObs: ResizeObserver | undefined;
 
   private aspectRatio: number = -1;
-  private videoAspectRatio: number = round2(640 / 480);
+  private videoAspectRatio: number = -1;
 
   constructor(private el: ElementRef,
     private ngZone: NgZone,
     private contextService: ContextService,
   ) { }
 
+  doCalcMinHeightWidth() {
+    const height = Math.max((this.controls?.nativeElement.height || 0) + (this.objectFit?.nativeElement.height || 0),
+      (this.label?.nativeElement.height || 0) + (this.status?.nativeElement.height || 0)
+    );
+    const width = Math.max((this.controls?.nativeElement.width || 0), (this.status?.nativeElement.width || 0),
+      (this.label?.nativeElement.width || 0) + (this.objectFit?.nativeElement.width || 0)
+    );
+
+    this.minHeight = `${height + 4 * 2}px`;
+    this.minWidth = `${width + 4 * 2}px`;
+  }
+
   ngAfterViewInit() {
-    this.controlsObs = new ResizeObserver((entries) => {
-      //let height = 0, width = 0;
-      // entries.forEach((entry) => {
-      //   height = Math.max(height, entry.contentRect.height);
-      //   width = Math.max(width, entry.contentRect.width);
-      // })
-      const height = Math.max((this.controls?.nativeElement.height || 0) + (this.objectFit?.nativeElement.height || 0),
-        (this.label?.nativeElement.height || 0) + (this.status?.nativeElement.height || 0)
+
+    let controlsEntry: ResizeObserverEntry | undefined = undefined;
+    let labelEntry: ResizeObserverEntry | undefined = undefined;
+    let objectFitEntry: ResizeObserverEntry | undefined = undefined;
+    let statusEntry: ResizeObserverEntry | undefined = undefined;
+
+    const doCalc = () => {
+      const height = Math.max((controlsEntry?.contentRect.height || 0) + (objectFitEntry?.contentRect.height || 0),
+        (labelEntry?.contentRect.height || 0) + (this.status?.nativeElement.height || 0)
       );
-      const width = Math.max((this.controls?.nativeElement.width || 0), (this.status?.nativeElement.height || 0),
-        (this.label?.nativeElement.height || 0) + (this.objectFit?.nativeElement.height || 0)
+      const width = Math.max((controlsEntry?.contentRect.width || 0), (statusEntry?.contentRect.width || 0),
+        (labelEntry?.contentRect.width || 0) + (objectFitEntry?.contentRect.width || 0)
       );
 
-      this.minHeight = `${height + 4 * 2}px`;
-      this.minWidth = `${width + 4 * 2}px`;
+      console.log("controlsObs", controlsEntry)
+      this.minHeight = `${height + 8}px`;
+      this.minWidth = `${width + 8}px`;
+    }
+
+    this.controlsObs = new ResizeObserver((entries) => {
+
+      entries.forEach((entry) => {
+        switch (entry.target) {
+          case this.controls?.nativeElement:
+            controlsEntry = entry;
+            break;
+          case this.objectFit?.nativeElement:
+            objectFitEntry = entry;
+            break;
+          case this.label?.nativeElement:
+            labelEntry = entry;
+            break;
+          case this.status?.nativeElement:
+            statusEntry = entry;
+            break;
+          default:
+            break;
+        }
+
+      })
+
+      doCalc()
+
     });
     this.controlsObs.observe(this.controls?.nativeElement);
     this.controlsObs.observe(this.label?.nativeElement);
     this.controlsObs.observe(this.objectFit?.nativeElement);
     this.controlsObs.observe(this.status?.nativeElement);
 
+    //this.aspectRatio = round2(this.el.nativeElement.clientWidth / this.el.nativeElement.clientHeight);
     this.componentObs = new ResizeObserver((entries) => {
       this.aspectRatio = round2(this.el.nativeElement.clientWidth / this.el.nativeElement.clientHeight);
       this.doCheckAspectRatios()
@@ -241,6 +285,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
           this._containerWidth = '100%';
         }
       }
+      this._objectFitSwitch = Math.abs(this.aspectRatio - this.videoAspectRatio) > 0.01;
     }
   }
 
@@ -286,6 +331,8 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     const frameRate = this._mediaStream?.getVideoTracks()[0].getSettings().frameRate;
     this.videoSize = `${info.video.width}x${info.video.height}@${frameRate || '?'}i/s`;
     this.contextService.recordNotification(`stream<${this._mediaStream?.id}> ${this.videoSize}`)
+    this.videoAspectRatio = round2(info.video.width / info.video.height);
+    this.doCheckAspectRatios()
   }
 
   onPointerEnter(event: PointerEvent) {
