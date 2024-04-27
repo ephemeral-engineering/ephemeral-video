@@ -6,8 +6,9 @@ import { PublishOptions, RemoteStream, SubscribeOptions, receiveByChunks } from 
 
 import { MediaStreamHelper } from '../MediaStreamHelper';
 import { DATACHANNEL_CONSTRAINTS_PATH, DATACHANNEL_SNAPSHOT_PATH } from '../constants';
-import { ControlledStreamComponent } from '../controlled-stream/controlled-stream.component';
 import { ContextService } from '../context.service';
+import { ControlledStreamComponent } from '../controlled-stream/controlled-stream.component';
+import { NgIf } from '@angular/common';
 
 const CNAME = 'RemoteStream';
 
@@ -16,7 +17,7 @@ const CNAME = 'RemoteStream';
   templateUrl: './remote-stream.component.html',
   styleUrls: ['./remote-stream.component.css'],
   standalone: true,
-  imports: [ControlledStreamComponent, MatButtonModule, MatIconModule]
+  imports: [NgIf, ControlledStreamComponent, MatButtonModule, MatIconModule]
 })
 export class RemoteStreamComponent implements OnInit, OnDestroy {
 
@@ -98,6 +99,11 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
     this._remoteStream.onPeerConnectionStateChanged(on_connectionStateChanged)
   }
 
+  _mediaStreamInfo: any;//MediaStreamInfo;
+  @Input() set mediaStreamInfo(info: any) {
+    this._mediaStreamInfo = info;
+  }
+
   _videoStyle: { [klass: string]: any; } = {};
   @Input() set videoStyle(style: { [klass: string]: any; }) {
     this._videoStyle = { ...this._videoStyle, ...style };
@@ -107,11 +113,6 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
   @Input() set mirror(mirror: boolean) {
     this._mirror = mirror;
   }
-
-  // _fullscreen = false;
-  // @Input() set fullscreen(fullscreen: boolean) {
-  //   this._fullscreen = fullscreen;
-  // }
 
   @Output() onSnapshot = new EventEmitter<string>();
 

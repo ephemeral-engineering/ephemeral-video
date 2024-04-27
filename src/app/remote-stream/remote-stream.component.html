@@ -9,43 +9,32 @@
             </button>
         </div>
         <div class="mt-1">
-            <button mat-mini-fab aria-label="publish-audio" title="publish audio" (click)="togglePublishAudio()">
+            <button mat-mini-fab aria-label="publish-audio" title="on/off" (click)="togglePublishAudio()">
                 <mat-icon>{{_publishOptions.audio ? 'mic':'mic_off'}}</mat-icon>
             </button>
         </div>
-        <!-- <div class="mt-1">
-            <button mat-mini-fab color="primary" aria-label="publish-video" title="publish video"
-                (click)="togglePublishVideo()">
+        <div class="mt-1">
+            <button mat-mini-fab aria-label="publish-video" title="on/off" (click)="togglePublishVideo()">
                 <mat-icon>{{_publishOptions.video ? 'videocam':'videocam_off'}}
                 </mat-icon>
             </button>
-        </div> -->
+        </div>
         <div class="mt-1">
-            <button mat-mini-fab aria-label="subscribe-audio" title="subscribe audio" (click)="toggleSubscribeAudio()">
+            <button mat-mini-fab aria-label="subscribe-audio" title="mute/unmute" (click)="toggleSubscribeAudio()">
                 <mat-icon>{{_subscribeOptions.audio && audioEnabled ? 'volume_up':'volume_off'}}</mat-icon>
             </button>
         </div>
         <div class="mt-1">
-            <button mat-mini-fab aria-label="subscribe-video" title="subscribe video" (click)="toggleSubscribeVideo()">
-                <mat-icon>{{_subscribeOptions.video && videoEnabled ? 'videocam':'videocam_off'}}
+            <button mat-mini-fab aria-label="subscribe-video" title="play/pause" (click)="toggleSubscribeVideo()">
+                <mat-icon>{{_subscribeOptions.video && videoEnabled ? 'play_arrow':'pause'}}
                 </mat-icon>
             </button>
         </div>
-        <div class="mt-1">
+        <div class="mt-1" *ngIf="_mediaStreamInfo.video?.capabilities.torch">
             <button mat-mini-fab aria-label="flashlight" title="flashlight" (click)="toggleFlashlight()">
                 <mat-icon>{{torch ? 'flashlight_on':'flashlight_off'}}
                 </mat-icon>
             </button>
         </div>
-        <!-- <div class="mt-1">
-            <button mat-mini-fab aria-label="audio" color="basic" (click)="toggleAudio()">
-                <mat-icon>{{audioEnabled ? 'mic':'mic_off'}}</mat-icon>
-            </button>
-        </div>
-        <div class="mt-1">
-            <button mat-mini-fab aria-label="video" color="basic" (click)="toggleVideo()">
-                <mat-icon>{{videoEnabled ? 'videocam':'videocam_off'}}</mat-icon>
-            </button>
-        </div> -->
     </div>
 </app-controlled-stream>

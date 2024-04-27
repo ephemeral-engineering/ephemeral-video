@@ -10,7 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute } from "@angular/router";
 
-import { Conversation, ConversationOptions, LocalParticipant, LocalStream, RemoteParticipant, RemoteStream, Stream, User, setLogLevel as setEphWebRtcLogLevel } from 'ephemeral-webrtc';
+import { Conversation, ConversationOptions, LocalParticipant, LocalStream, RemoteParticipant, RemoteStream, Stream, User, sendByChunksWithDelayPromise, setLogLevel as setEphWebRtcLogLevel } from 'ephemeral-webrtc';
 
 import { saveAs } from 'file-saver-es';
 
@@ -18,7 +18,7 @@ import { LogLevelText, setLogLevel } from 'src/logLevel';
 import { MediaStreamHelper, MediaStreamInfo } from '../MediaStreamHelper';
 import { AlertComponent } from '../alert/alert.component';
 import { getSessionStorage, setSessionStorage } from '../common';
-import { DATACHANNEL_MEDIASTREAMINFO_PATH, FRAME_RATES, RESOLUTIONS, STORAGE_PREFIX } from '../constants';
+import { DATACHANNEL_CONSTRAINTS_PATH, DATACHANNEL_MEDIASTREAMINFO_PATH, DATACHANNEL_SNAPSHOT_PATH, FRAME_RATES, RESOLUTIONS, STORAGE_PREFIX } from '../constants';
 import { ContextService } from '../context.service';
 import { FilterOutPipe } from '../filter-out.pipe';
 import { GLOBAL_STATE } from '../global-state';
@@ -778,10 +778,114 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           };
         })
 
+        localStream.onDataChannel(DATACHANNEL_SNAPSHOT_PATH, (dataChannel: RTCDataChannel) => {
+
+          // Store to keep a reference, otherwise the instance might be garbage collected
+          // I had some weird issues with snapshots not always working, I suspected garbage collection.
+          // I tried to store references in a set, and it seems to fix the issue. Let's see if the problem
+          // is really fixed.
+          // Actually it was, but by encapsulating the recursive sendByChunksWithDelay in a Promise the problem
+          // is also fixed and there is no need for a Set to keep references.
+          //this.snapshotDataChannels.add(dataChannel)
+
+          dataChannel.onopen = (event) => {
+            if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+              console.debug(`${CNAME}|dataChannel:onopen`, DATACHANNEL_SNAPSHOT_PATH, event)
+            }
+            localStream.snapshot().then((dataUrl: string) => {
+              // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Using_data_channels
+              // Error with:
+              // dataChannel.send(dataUrl) // TypeError: RTCDataChannel.send: Message size (534010) exceeds maxMessageSize
+              // Divide dataUrl in chunks and send them one by one.
+              // let start = 0;
+              // while (start < dataUrl.length) {
+              //   const end = Math.min(dataUrl.length, start + DATACHANNEL_SNAPSHOT_CHUNK_SIZE);
+              //   dataChannel.send(dataUrl.slice(start, end))
+              //   start = end;
+              // }
+              // dataChannel.send(DATACHANNEL_SNAPSHOT_END)
+              if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+                console.debug(`${CNAME}|datachannel sending snapshot`, dataUrl)
+              }
+
+              // sendByChunks(dataChannel, dataUrl) // works
+              // sendByChunksWithDelay(dataChannel, dataUrl) // recursive function that triggers dataChannel garbage collection issues 
+              // Promise version is the most reliable
+              sendByChunksWithDelayPromise(dataChannel, dataUrl).then(() => {
+                if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+                  console.debug(`${CNAME}|datachannel snapshot sent`)
+                }
+              })
+            })
+          };
+          dataChannel.onclose = (event) => {
+            if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+              console.debug(`${CNAME}|datachannel:onclose`, DATACHANNEL_SNAPSHOT_PATH, event)
+            }
+          };
+          dataChannel.onerror = (event) => {
+            if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+              console.debug(`${CNAME}|datachannel:onerror`, DATACHANNEL_SNAPSHOT_PATH, event)
+            }
+          };
+        })
+
+        localStream.onDataChannel(DATACHANNEL_CONSTRAINTS_PATH, (dataChannel: RTCDataChannel) => {
+          dataChannel.onopen = (event) => {
+            if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+              console.debug(`${CNAME}|dataChannel:onopen`, DATACHANNEL_CONSTRAINTS_PATH, event)
+            }
+          };
+          dataChannel.onmessage = (event) => {
+            if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+              console.debug(`${CNAME}|dataChannel:onmessage`, DATACHANNEL_CONSTRAINTS_PATH, event)
+            }
+            const constraints = JSON.parse(event.data) as MediaStreamConstraints;
+            const mediaStream = localStream.getMediaStream();
+            if (mediaStream) {
+              MediaStreamHelper.applyConstraints(mediaStream, constraints)
+              this.mediaStreamInfos.set(localStream, MediaStreamHelper.getMediaStreamInfo(mediaStream))
+              // TODO: broadcast new MediaStreamInfo to all subscribers ?
+            }
+            // closing datachannel now
+            // TODO think about a way to reuse datachannel, instead of
+            // this could be part of a generic development in ephemeral-webrtc.. ?
+            dataChannel.close()
+          };
+          dataChannel.onclose = (event) => {
+            if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+              console.debug(`${CNAME}|dataChannel:onclose`, DATACHANNEL_CONSTRAINTS_PATH, event)
+            }
+          };
+        })
+
       });
     } else {
       console.error(`${CNAME}|Cannot publish`, this.localUserMediaStream, this.localParticipant)
     }
+  }
+
+  toggleFlashlight(stream: LocalStream) {
+    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+      console.debug(`${CNAME}|toggleFlashlight on stream<${stream.id}`, stream, this.mediaStreamInfos.get(stream))
+    }
+    // https://www.oberhofer.co/mediastreamtrack-and-its-capabilities/ 
+    const l_torch = !(this.mediaStreamInfos.get(stream)?.video?.settings as any).torch;
+    stream.getMediaStream().getVideoTracks().forEach((track: MediaStreamTrack) => {
+      track.applyConstraints({
+        torch: l_torch,
+        advanced: [{ torch: l_torch }]
+      } as any)
+        .then(() => {
+          this.mediaStreamInfos.set(stream, MediaStreamHelper.getMediaStreamInfo(stream.getMediaStream()))
+          // TODO: broadcast new MediaStreamInfo to all subscribers ?
+        })
+        .catch(event => {
+          if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
+            console.warn(`${CNAME}|toggleFlashlight error`, event)
+          }
+        });
+    })
   }
 
   unpublish() {
@@ -831,19 +935,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       console.error(`${CNAME}|shareScreen`, error)
     });
   }
-
-  // doApplyAudioConstraint(constraintName: string, value: ConstrainULong | ConstrainDouble | ConstrainBoolean | ConstrainDOMString) {
-  //   if (this.localMediaStream) {
-  //     this.localMediaStream.getAudioTracks().forEach(track => {
-  //       const settings: MediaTrackSettings = track.getSettings();
-  //       const constraints: any = settings;
-  //       constraints[constraintName] = value;
-  //       track.applyConstraints(constraints).then(() => {
-  //         this.doGatherCapConstSettings()
-  //       })
-  //     })
-  //   }
-  // }
 
   mediaRecorder: MediaRecorder | undefined;
   recordedBlobs: Array<Blob> = new Array();

@@ -24,6 +24,12 @@ body {
   display: flex;
 }
 
+.d-grid {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  grid-template-rows: 50% 50%;
+}
+
 .flex-row {
   flex-direction: row;
 }

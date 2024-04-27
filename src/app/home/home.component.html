@@ -40,12 +40,15 @@
             </app-local-stream>
         </div>
     </div> -->
-
+<!-- ,'flex-wrap':'wrap' -->
+<!-- {justifyContent:'space-around','flex-wrap':'wrap','gap':'4px'} -->
 <div class="room pos-relative dvh-100 d-flex" [ngStyle]="{justifyContent:'space-around'}">
-    <app-remote-stream *ngFor="let _stream of remoteStreams" class="flex-g-1" [remoteStream]="_stream"
-        (onSnapshot)="onSnapshot($event)"></app-remote-stream>
+    <!-- class="flex-g-1" -->
+    <app-remote-stream *ngFor="let _stream of remoteStreams" [remoteStream]="_stream"
+        [mediaStreamInfo]="mediaStreamInfos.get(_stream)" (onSnapshot)="onSnapshot($event)"></app-remote-stream>
     <div class="pos-abs bottom-left d-flex flex-row" [ngStyle]="{height:'34%', width:'auto'}">
-        <app-local-stream *ngIf="localStream" [localStream]="localStream" [videoStyle]="{opacity:0.8}">
+        <app-local-stream *ngIf="localStream" [localStream]="localStream" [videoStyle]="{opacity:0.8}"
+            [mediaStreamInfo]="mediaStreamInfos.get(localStream)" (onToggleFlashlight)="toggleFlashlight(localStream)">
         </app-local-stream>
     </div>
 </div>
