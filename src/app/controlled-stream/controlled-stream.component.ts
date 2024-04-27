@@ -218,15 +218,19 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 
     let controlsEntry: ResizeObserverEntry | undefined = undefined;
     let labelEntry: ResizeObserverEntry | undefined = undefined;
-    let objectFitEntry: ResizeObserverEntry | undefined = undefined;
+    // let objectFitEntry: ResizeObserverEntry | undefined = undefined;
     let statusEntry: ResizeObserverEntry | undefined = undefined;
 
     const doCalc = () => {
-      const height = Math.max((controlsEntry?.contentRect.height || 0) + (objectFitEntry?.contentRect.height || 0),
+      // objectFitEntry is actually a fixed button of 48px
+      // It can be displayed of not but the problem is that it appears according to ascpect ratio,
+      // which can be modified when minHeght/minWidth kick in. It then enters a resizing loop that never ends growing and shrinking.
+      // To prevent that, consider objectFitEntry is always 48px
+      const height = Math.max((controlsEntry?.contentRect.height || 0) + 48, //(objectFitEntry?.contentRect.height || 0)
         (labelEntry?.contentRect.height || 0) + (this.status?.nativeElement.height || 0)
       );
       const width = Math.max((controlsEntry?.contentRect.width || 0), (statusEntry?.contentRect.width || 0),
-        (labelEntry?.contentRect.width || 0) + (objectFitEntry?.contentRect.width || 0)
+        (labelEntry?.contentRect.width || 0) + 48//(objectFitEntry?.contentRect.width || 0)
       );
 
       console.log("controlsObs", controlsEntry)
@@ -241,9 +245,9 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
           case this.controls?.nativeElement:
             controlsEntry = entry;
             break;
-          case this.objectFit?.nativeElement:
-            objectFitEntry = entry;
-            break;
+          // case this.objectFit?.nativeElement:
+          //   objectFitEntry = entry;
+          //   break;
           case this.label?.nativeElement:
             labelEntry = entry;
             break;
@@ -261,7 +265,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     });
     this.controlsObs.observe(this.controls?.nativeElement);
     this.controlsObs.observe(this.label?.nativeElement);
-    this.controlsObs.observe(this.objectFit?.nativeElement);
+    // this.controlsObs.observe(this.objectFit?.nativeElement);
     this.controlsObs.observe(this.status?.nativeElement);
 
     //this.aspectRatio = round2(this.el.nativeElement.clientWidth / this.el.nativeElement.clientHeight);
