@@ -70,26 +70,33 @@ export class MediaStreamHelper {
   // TODO : maybe require to work as diff with currently applied constraints ?
   // TODO : return a Promise ?
   public static applyConstraints(mediaStream: MediaStream, constraints: MediaStreamConstraints) {
+    // return new Promise<MediaStreamInfo>((resolve, reject) => {
+    const promises: Array<Promise<void>> = [];
+
     if (constraints.audio && typeof constraints.video === 'object') {
       mediaStream.getAudioTracks().forEach((track: MediaStreamTrack) => {
-        track.applyConstraints(constraints.audio as any)
-          .catch(event => {
-            if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
-              console.warn(`${CNAME}|applyConstraints audio error`, event)
-            }
-          });
+        promises.push(track.applyConstraints(constraints.audio as any))
+        // track.applyConstraints(constraints.audio as any)
+        // .catch(event => {
+        //   if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
+        //     console.warn(`${CNAME}|applyConstraints audio error`, event)
+        //   }
+        // });
       })
     }
     if (constraints.video && typeof constraints.video === 'object') {
       mediaStream.getVideoTracks().forEach((track: MediaStreamTrack) => {
-        track.applyConstraints(constraints.video as any)
-          .catch(event => {
-            if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
-              console.warn(`${CNAME}|applyConstraints video error`, event)
-            }
-          });
+        // track.applyConstraints(constraints.video as any)
+        //   .catch(event => {
+        //     if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
+        //       console.warn(`${CNAME}|applyConstraints video error`, event)
+        //     }
+        //   });
+        promises.push(track.applyConstraints(constraints.video as any))
       })
     }
+    // })
+    return Promise.all(promises);
   }
 
   public static blur(mediaStream: MediaStream): MediaStream {

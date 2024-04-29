@@ -36,6 +36,9 @@ export class LocalStreamComponent implements OnInit {
 
     if (localStream) {
       this._publishOptions = localStream.getPublishOptions();
+      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+        console.debug(`${CNAME}|set _localStream`, localStream.getPublishOptions())
+      }
 
       localStream.onPublishOptionsUpdate(() => {
         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
@@ -75,19 +78,12 @@ export class LocalStreamComponent implements OnInit {
     this._videoStyle = { ...this._videoStyle, ...style };
   }
 
-  // _mediaStreamInfo: any;//MediaStreamInfo;
-  // private doUpdateMediaStreamInfo() {
-  //   if (this._mediaStream) {
-  //     this._mediaStreamInfo = MediaStreamHelper.getMediaStreamInfo(this._mediaStream);
-  //   }
-  // }
-
   @Output() onToggleFlashlight = new EventEmitter<void>();
 
   _mediaStream: MediaStream | undefined;
   set mediaStream(mediaStream: MediaStream | undefined) {
     this._mediaStream = mediaStream;
-    //this.doUpdateMediaStreamInfo()
+    this.doUpdateStates()
   }
 
   constructor() { }
