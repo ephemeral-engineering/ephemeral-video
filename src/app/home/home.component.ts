@@ -18,7 +18,7 @@ import { LogLevelText, setLogLevel } from 'src/logLevel';
 import { MediaStreamHelper, MediaStreamInfo } from '../MediaStreamHelper';
 import { AlertComponent } from '../alert/alert.component';
 import { getSessionStorage, setSessionStorage } from '../common';
-import { DATACHANNEL_CONSTRAINTS_PATH, DATACHANNEL_MEDIASTREAMINFO_PATH, DATACHANNEL_SNAPSHOT_PATH, FRAME_RATES, RESOLUTIONS, STORAGE_PREFIX } from '../constants';
+import { DATACHANNEL_MEDIASTREAMSETTINGS_PATH, DATACHANNEL_SNAPSHOT_PATH, FRAME_RATES, RESOLUTIONS, STORAGE_PREFIX } from '../constants';
 import { ContextService } from '../context.service';
 import { FilterOutPipe } from '../filter-out.pipe';
 import { GLOBAL_STATE } from '../global-state';
@@ -176,21 +176,11 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
     const hash = this.activatedRoute.snapshot.queryParamMap.get('hash') as string || undefined;
 
-    // Register
-    // this.contextService.nickname$.subscribe(value => {
-    //   if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-    //     console.debug(`${CNAME}|ngOnInit nickname$.subscribe`, value, this.contextService.nickname)
-    //   }
-    //   this.localParticipant?.user.setUserData({ ...this.localParticipant.user.getUserData(), nickname: value })
-    // });
-
     this.contextService.notifications$.subscribe(status => {
       this._notifications.push(`${new Date().toLocaleTimeString()}: ${status}`)
     });
 
-    // this.moderator = !this.authService.user?.isAnonymous;
-
-    // Get conversation name and base url from current path (pattern : "/path/to/<conversationid>")
+    // Get conversation name and base url from current path (pattern : "/path/to/<conversationId>")
     //
     const conversationId = this.activatedRoute.snapshot.paramMap.get("id") || undefined;
 
@@ -226,7 +216,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
       // Listen to Conversation events
       //
-
       conversation.onConnectionStatus = (status: string) => {
         this._notifications.push(`${new Date().toLocaleTimeString()}: Server ${status}`);
       }
@@ -277,26 +266,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           // or 
           //stream.subscribe({ audio: true, video: false })
 
-          // and also 'subscribe' to MediaStreamInfo changes
-          this.registerToRemoteMediaStreamInfo(stream)
-
-          // stream.onMediaStream((mediaStream: MediaStream | undefined) => {
-          //   if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          //     console.debug(`${CNAME}|onMediaStream`, mediaStream);
-          //   }
-          //   if (mediaStream) {
-          //     this.getRemoteMediaStreamInfo(stream).then((info) => {
-          //       const mediaStream = stream.getMediaStream();
-          //       if (mediaStream) {
-          //         this.mediaStreamInfos.set(stream, info)
-          //       }
-          //     }).catch((error) => {
-          //       if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
-          //         console.warn(`${CNAME}|getRemoteMediaStreamInfo error`, error);
-          //       }
-          //     })
-          //   }
-          // })
+          // and also setup channel for 'subscribing' to MediaStreamInfo changes and change settings (using constraints)
+          this.setupRemoteStreamSettingsDataChannel(stream)
         })
         participant.onStreamUnpublished((stream: RemoteStream) => {
           if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
@@ -319,13 +290,9 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         }
       };
 
-      // conversation.onMessage((participant: User, message: Message) => {
-      //   this.messages.push([participant.userData as UserData, message])
-      // })
-
       // Enter the conversation
       const userData: UserData = {
-        nickname: this.gstate.nickname,//this.contextService.nickname, //this.conversation.peerId, //this.authService.user?.displayName ||
+        nickname: this.gstate.nickname,
         isModerator: this.moderator
       };
       if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
@@ -346,14 +313,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
             console.log(`${CNAME}|onUserDataUpdate`, this.localParticipant, userData)
           }
         })
-
-        // if (this.localParticipant.user.getUserData().nickname !== this.contextService.nickname) {
-        //   if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
-        //     console.log(`${CNAME}|adjusting nickname`, participant)
-        //   }
-        //   this.localParticipant.user.setUserData({ ...this.localParticipant.user.getUserData(), nickname: this.contextService.nickname })
-        // }
-
       }).catch((error: any) => {
         if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
           console.warn(`${CNAME}|addParticipant failed`, error)
@@ -372,71 +331,52 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     })
   }
 
-  // TODO move this logic to library ?
-  // getRemoteMediaStreamInfo(stream: RemoteStream) {
-  //   return new Promise<MediaStreamInfo>((resolve, reject) => {
+  settingsDataChannelByRemoteStreams: Map<RemoteStream, RTCDataChannel> = new Map();
 
-  //     // DONE: manage a timeout to reject
-  //     const timeoutID = window.setTimeout(() => {
-  //       reject("timed-out");
-  //     }, 3000);
-
-  //     stream.singlecast(DATACHANNEL_MEDIASTREAMINFO_PATH, (dataChannel) => {
-  //       dataChannel.onmessage = (event) => {
-  //         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-  //           console.debug(`${CNAME}|dataChannel:onmessage`, DATACHANNEL_MEDIASTREAMINFO_PATH, event);
-  //         }
-  //         const info = JSON.parse(event.data) as MediaStreamInfo;
-  //         resolve(info)
-  //         window.clearTimeout(timeoutID)
-  //       }
-
-  //       dataChannel.onclose = (event) => {
-  //         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-  //           console.debug(`${CNAME}|dataChannel:onclose`, DATACHANNEL_MEDIASTREAMINFO_PATH, event);
-  //         }
-  //         reject("datachannel-closed")
-  //         window.clearTimeout(timeoutID)
-  //       }
-  //       dataChannel.onerror = (event) => {
-  //         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-  //           console.debug(`${CNAME}|dataChannel:onerror`, DATACHANNEL_MEDIASTREAMINFO_PATH, event);
-  //         }
-  //         reject("datachannel-error")
-  //         window.clearTimeout(timeoutID)
-  //       }
-  //     })
-  //   })
-  // }
-
-  registerToRemoteMediaStreamInfo(stream: RemoteStream) {
-    stream.singlecast(DATACHANNEL_MEDIASTREAMINFO_PATH, (dataChannel) => {
+  // Sets up a channel to both receive MediaStreamInfo from RemoteStream publisher,
+  // and send 'constraints' to RemoteStream publisher in order to remote control its MediaStream settings.
+  setupRemoteStreamSettingsDataChannel(stream: RemoteStream) {
+    stream.singlecast(DATACHANNEL_MEDIASTREAMSETTINGS_PATH, (dataChannel) => {
+      dataChannel.onopen = (event) => {
+        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+          console.debug(`${CNAME}|dataChannel:onopen`, DATACHANNEL_MEDIASTREAMSETTINGS_PATH, event);
+        }
+        // store datachannel for push message
+        this.settingsDataChannelByRemoteStreams.set(stream, dataChannel)
+      };
       dataChannel.onmessage = (event) => {
         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|dataChannel:onmessage`, DATACHANNEL_MEDIASTREAMINFO_PATH, event);
+          console.debug(`${CNAME}|dataChannel:onmessage`, DATACHANNEL_MEDIASTREAMSETTINGS_PATH, event);
         }
         const info = JSON.parse(event.data) as MediaStreamInfo;
         this.mediaStreamInfos.set(stream, info)
-      }
+      };
       dataChannel.onclose = (event) => {
         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|dataChannel:onclose`, DATACHANNEL_MEDIASTREAMINFO_PATH, event);
+          console.debug(`${CNAME}|dataChannel:onclose`, DATACHANNEL_MEDIASTREAMSETTINGS_PATH, event);
         }
+        this.settingsDataChannelByRemoteStreams.delete(stream)
       }
       dataChannel.onerror = (event) => {
         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|dataChannel:onerror`, DATACHANNEL_MEDIASTREAMINFO_PATH, event);
+          console.debug(`${CNAME}|dataChannel:onerror`, DATACHANNEL_MEDIASTREAMSETTINGS_PATH, event);
         }
-      }
+      };
     })
   }
 
-  mediaStreamInfosDatachannels: Map<LocalStream, Set<RTCDataChannel>> = new Map();
+  settingsDataChannelsByLocalStreams: Map<LocalStream, Set<RTCDataChannel>> = new Map();
 
-  notify(stream: LocalStream, infos: MediaStreamInfo) {
-    this.mediaStreamInfosDatachannels.get(stream)?.forEach((dataChannel) => {
+  notifyMediaStreamInfoChanged(stream: LocalStream, infos: MediaStreamInfo) {
+    this.settingsDataChannelsByLocalStreams.get(stream)?.forEach((dataChannel) => {
       dataChannel.send(JSON.stringify(infos))
     })
+  }
+
+  updateMediaStreamInfo(stream: LocalStream) {
+    const infos = MediaStreamHelper.getMediaStreamInfo(stream.getMediaStream());
+    this.mediaStreamInfos.set(stream, infos)
+    this.notifyMediaStreamInfoChanged(stream, infos)
   }
 
   grabbing: boolean = false;
@@ -544,7 +484,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   _selectedAudioDeviceId = getSessionStorage(`${STORAGE_PREFIX}-audioDeviceId`);
   set selectedAudioDeviceId(id: string) {
-
     // For device change, need to go through getUserMedia
     this.grabbing = true;
     this._selectedAudioDeviceId = id;
@@ -613,11 +552,8 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       setSessionStorage(`${STORAGE_PREFIX}-videoResolution`, `${resolution}`)
       // and update stream info
       if (this.localStream) {
-        const infos = MediaStreamHelper.getMediaStreamInfo(this.localStream.getMediaStream());
-        this.mediaStreamInfos.set(this.localStream, infos)
-        this.notify(this.localStream, infos)
+        this.updateMediaStreamInfo(this.localStream)
       }
-
     }).catch((error) => {
       console.error(`${CNAME}|set selectedVideoResolution`, error)
     }).finally(() => {
@@ -642,9 +578,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     }).then(() => {
       setSessionStorage(`${STORAGE_PREFIX}-videoFrameRate`, `${frameRate}`)
       if (this.localStream) {
-        const infos = MediaStreamHelper.getMediaStreamInfo(this.localStream.getMediaStream());
-        this.mediaStreamInfos.set(this.localStream, infos)
-        this.notify(this.localStream, infos)
+        this.updateMediaStreamInfo(this.localStream)
       }
     }).finally(() => {
       this.grabbing = false;
@@ -682,72 +616,9 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     })
   }
 
-  echoCancellation = true;
-
-  // doListenToTracksEvents(mediaStream: MediaStream, logPrefix: string) {
-  //   mediaStream.getTracks().forEach((track: MediaStreamTrack) => {
-  //     track.onmute = (event) => {
-  //       console.log(logPrefix + "onmute", mediaStream, track, event)
-  //       if (this.localStream && (this.localStream.getMediaStream() === mediaStream)) {
-  //         this.localStream.notifyTracksStatusChanged();
-  //       }
-  //     }
-  //     track.onunmute = (event) => {
-  //       console.log(logPrefix + "onunmute", mediaStream, track, event)
-  //       if (this.localStream && (this.localStream.getMediaStream() === mediaStream)) {
-  //         this.localStream.notifyTracksStatusChanged();
-  //       }
-  //     }
-  //     track.onended = (event) => {
-  //       console.log(logPrefix + "onended", mediaStream, track, event)
-  //     }
-  //   })
-  // }
-
-  blurredMediaStream: MediaStream | undefined;
-
-  // blur() {
-  //   if (this.localStream && this.localMediaStream) {
-  //     this.blurredMediaStream = this.localMediaStream;
-  //     this.localMediaStream = MediaStreamHelper.blur(this.localMediaStream);
-  //     this.localStream.replaceMediaStream(this.localMediaStream)
-  //   }
-  // }
-
   ngOnDestroy(): void {
     this.doCleanUp()
   }
-
-  // public signOut() {
-  //   if (this.conversation) {
-  //     this.conversation.close().then(() => {
-  //       this.conversation = undefined;
-  //       if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
-  //         console.info(`${CNAME}|Conversation closed`)
-  //       }
-  //     }).catch((error: any) => {
-  //       console.error(`${CNAME}|Conversation closing error`, error)
-  //     }).finally(() => {
-  //       this.doSignOut()
-  //     })
-  //   } else {
-  //     this.doSignOut()
-  //   }
-  // }
-
-  // private doSignOut() {
-  //   // TODO: migrate !
-  //   // firebase.auth().signOut().then(() => {
-  //   //   if (globalThis.logLevel.isInfoEnabled) {
-  //   //     console.info(`${CNAME}|signed Out`);
-  //   //   }
-  //   //   this.router.navigate(['/login']);
-  //   // }).catch(error => {
-  //   //   console.error(`${CNAME}|doSignOut`, error)
-  //   // });
-  // }
-
-  // --------------------------------------------------------------------------
 
   private doCleanUp() {
     if (this.conversation) {
@@ -756,77 +627,14 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // toggleModeration() {
-  //   this.conversation?.setModerated(!this.moderated);
-  // }
-
-  // accept(candidate: User) {
-  //   this.conversation?.acceptCandidate(candidate);
-  // }
-
-  // reject(candidate: User) {
-  //   this.conversation?.rejectCandidate(candidate);
-  // }
-
-  // eject(participant: RemoteParticipant) {
-  //   this.conversation?.removeParticipant(participant);
-  // }
-
-  // sendMessage() {
-  //   if (this.localParticipant) {
-  //     this.localParticipant.sendMessage(this.messageFc.value);
-  //   } else {
-  //     console.error(`${CNAME}|Cannot sendMessage`, this.localParticipant)
-  //   }
-  // }
-
-  // TODO : implement a sendPrivateMessage in the library ?
-
   publish() {
     if (this.localUserMediaStream && this.localParticipant) {
       this.localParticipant.publish(this.localUserMediaStream, { topic: 'webcam', audio: true }).then((localStream) => {
         this.localStream = localStream;
-        const infos = MediaStreamHelper.getMediaStreamInfo(localStream.getMediaStream());
-        this.mediaStreamInfos.set(localStream, infos)
-        //this.notify(localStream, infos)
-        localStream.onMediaStream((mediaStream) => {
-          if (mediaStream) {
-            const infos = MediaStreamHelper.getMediaStreamInfo(localStream.getMediaStream());
-            this.mediaStreamInfos.set(localStream, infos)
-            this.notify(localStream, infos)
-          }
-        })
+        this.updateMediaStreamInfo(localStream)
 
-        localStream.onDataChannel(DATACHANNEL_MEDIASTREAMINFO_PATH, (dataChannel: RTCDataChannel) => {
-          dataChannel.onopen = (event) => {
-            if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-              console.debug(`${CNAME}|dataChannel:onopen`, DATACHANNEL_MEDIASTREAMINFO_PATH, event)
-            }
-            // if (this.localUserMediaStream) {
-            //   const infos = MediaStreamHelper.getMediaStreamInfo(this.localUserMediaStream);
-            //   dataChannel.send(JSON.stringify(infos))
-            // }
-            // store datachannel for push notifications
-            if (!this.mediaStreamInfosDatachannels.has(localStream)) {
-              this.mediaStreamInfosDatachannels.set(localStream, new Set())
-            }
-            this.mediaStreamInfosDatachannels.get(localStream)?.add(dataChannel)
-
-            const infos = MediaStreamHelper.getMediaStreamInfo(localStream.getMediaStream());
-            this.mediaStreamInfos.set(localStream, infos)
-            this.notify(localStream, infos)
-          };
-          dataChannel.onclose = (event) => {
-            if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-              console.debug(`${CNAME}|datachannel:onclose`, DATACHANNEL_MEDIASTREAMINFO_PATH, event)
-            }
-            this.mediaStreamInfosDatachannels.get(localStream)?.delete(dataChannel)
-          };
-          dataChannel.onerror = (event) => {
-            if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-              console.debug(`${CNAME}|datachannel:onerror`, DATACHANNEL_MEDIASTREAMINFO_PATH, event)
-            }
-          };
+        localStream.onMediaStream((_mediaStream) => {
+          this.updateMediaStreamInfo(localStream)
         })
 
         localStream.onDataChannel(DATACHANNEL_SNAPSHOT_PATH, (dataChannel: RTCDataChannel) => {
@@ -881,62 +689,67 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           };
         })
 
-        localStream.onDataChannel(DATACHANNEL_CONSTRAINTS_PATH, (dataChannel: RTCDataChannel) => {
+        // Handle channel to both send MediaStreamInfo from subscribers,
+        // and receive 'constraints' from subscriber in order to apply them.
+        localStream.onDataChannel(DATACHANNEL_MEDIASTREAMSETTINGS_PATH, (dataChannel: RTCDataChannel) => {
           dataChannel.onopen = (event) => {
             if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-              console.debug(`${CNAME}|dataChannel:onopen`, DATACHANNEL_CONSTRAINTS_PATH, event)
+              console.debug(`${CNAME}|dataChannel:onopen`, DATACHANNEL_MEDIASTREAMSETTINGS_PATH, event)
             }
+
+            // store datachannel for push notifications
+            if (!this.settingsDataChannelsByLocalStreams.has(localStream)) {
+              this.settingsDataChannelsByLocalStreams.set(localStream, new Set())
+            }
+            this.settingsDataChannelsByLocalStreams.get(localStream)?.add(dataChannel)
+
+            // and immediately push
+            this.updateMediaStreamInfo(localStream)
           };
           dataChannel.onmessage = (event) => {
             if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-              console.debug(`${CNAME}|dataChannel:onmessage`, DATACHANNEL_CONSTRAINTS_PATH, event)
+              console.debug(`${CNAME}|dataChannel:onmessage`, DATACHANNEL_MEDIASTREAMSETTINGS_PATH, event)
             }
             const constraints = JSON.parse(event.data) as MediaStreamConstraints;
             const mediaStream = localStream.getMediaStream();
             if (mediaStream) {
               MediaStreamHelper.applyConstraints(mediaStream, constraints).finally(() => {
-                // this.mediaStreamInfos.set(localStream, MediaStreamHelper.getMediaStreamInfo(mediaStream))
-                // notify
-                const infos = MediaStreamHelper.getMediaStreamInfo(localStream.getMediaStream());
-                this.mediaStreamInfos.set(localStream, infos)
-                this.notify(localStream, infos)
+                this.updateMediaStreamInfo(localStream)
               })
             }
-            // closing datachannel now
-            // TODO think about a way to reuse datachannel, instead of
-            // this could be part of a generic development in ephemeral-webrtc.. ?
-            dataChannel.close()
           };
           dataChannel.onclose = (event) => {
             if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-              console.debug(`${CNAME}|dataChannel:onclose`, DATACHANNEL_CONSTRAINTS_PATH, event)
+              console.debug(`${CNAME}|datachannel:onclose`, DATACHANNEL_MEDIASTREAMSETTINGS_PATH, event)
+            }
+            this.settingsDataChannelsByLocalStreams.get(localStream)?.delete(dataChannel)
+          };
+          dataChannel.onerror = (event) => {
+            if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+              console.debug(`${CNAME}|datachannel:onerror`, DATACHANNEL_MEDIASTREAMSETTINGS_PATH, event)
             }
           };
         })
-
       });
     } else {
       console.error(`${CNAME}|Cannot publish`, this.localUserMediaStream, this.localParticipant)
     }
   }
 
-  toggleFlashlight(stream: LocalStream) {
+  toggleFlashlight(localStream: LocalStream) {
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-      console.debug(`${CNAME}|toggleFlashlight on stream<${stream.id}`, stream, this.mediaStreamInfos.get(stream))
+      console.debug(`${CNAME}|toggleFlashlight on stream<${localStream.id}`, localStream, this.mediaStreamInfos.get(localStream))
     }
     // https://www.oberhofer.co/mediastreamtrack-and-its-capabilities/ 
-    const l_torch = !(this.mediaStreamInfos.get(stream)?.video?.settings as any).torch;
-    stream.getMediaStream().getVideoTracks().forEach((track: MediaStreamTrack) => {
+    const l_torch = !(this.mediaStreamInfos.get(localStream)?.video?.settings as any).torch;
+    localStream.getMediaStream().getVideoTracks().forEach((track: MediaStreamTrack) => {
       track.applyConstraints({
         torch: l_torch,
         advanced: [{ torch: l_torch }]
       } as any)
         .then(() => {
-          // this.mediaStreamInfos.set(stream, MediaStreamHelper.getMediaStreamInfo(stream.getMediaStream()))
           // broadcast new MediaStreamInfo to all subscribers
-          const infos = MediaStreamHelper.getMediaStreamInfo(stream.getMediaStream());
-          this.mediaStreamInfos.set(stream, infos)
-          this.notify(stream, infos)
+          this.updateMediaStreamInfo(localStream)
         })
         .catch(event => {
           if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
@@ -944,6 +757,19 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           }
         });
     })
+  }
+
+  toggleRemoteFlashlight(remoteStream: RemoteStream) {
+    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+      console.debug(`${CNAME}|toggleRemoteFlashlight on stream<${remoteStream.id}`, remoteStream, this.mediaStreamInfos.get(remoteStream))
+    }
+    const l_torch = !(this.mediaStreamInfos.get(remoteStream)?.video?.settings as any).torch;
+    this.settingsDataChannelByRemoteStreams.get(remoteStream)?.send(JSON.stringify({
+      video: {
+        torch: l_torch,
+        advanced: [{ torch: l_torch }]
+      }
+    } as any)) // should be MediaStreamConstraints but 'torch' is not yet standardized as a property
   }
 
   unpublish() {
@@ -1032,3 +858,87 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
   }
 
 }
+  //blurredMediaStream: MediaStream | undefined;
+
+  // blur() {
+  //   if (this.localStream && this.localMediaStream) {
+  //     this.blurredMediaStream = this.localMediaStream;
+  //     this.localMediaStream = MediaStreamHelper.blur(this.localMediaStream);
+  //     this.localStream.replaceMediaStream(this.localMediaStream)
+  //   }
+  // }
+  // doListenToTracksEvents(mediaStream: MediaStream, logPrefix: string) {
+  //   mediaStream.getTracks().forEach((track: MediaStreamTrack) => {
+  //     track.onmute = (event) => {
+  //       console.log(logPrefix + "onmute", mediaStream, track, event)
+  //       if (this.localStream && (this.localStream.getMediaStream() === mediaStream)) {
+  //         this.localStream.notifyTracksStatusChanged();
+  //       }
+  //     }
+  //     track.onunmute = (event) => {
+  //       console.log(logPrefix + "onunmute", mediaStream, track, event)
+  //       if (this.localStream && (this.localStream.getMediaStream() === mediaStream)) {
+  //         this.localStream.notifyTracksStatusChanged();
+  //       }
+  //     }
+  //     track.onended = (event) => {
+  //       console.log(logPrefix + "onended", mediaStream, track, event)
+  //     }
+  //   })
+  // }
+  
+// public signOut() {
+//   if (this.conversation) {
+//     this.conversation.close().then(() => {
+//       this.conversation = undefined;
+//       if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
+//         console.info(`${CNAME}|Conversation closed`)
+//       }
+//     }).catch((error: any) => {
+//       console.error(`${CNAME}|Conversation closing error`, error)
+//     }).finally(() => {
+//       this.doSignOut()
+//     })
+//   } else {
+//     this.doSignOut()
+//   }
+// }
+
+// private doSignOut() {
+//   // TODO: migrate !
+//   // firebase.auth().signOut().then(() => {
+//   //   if (globalThis.logLevel.isInfoEnabled) {
+//   //     console.info(`${CNAME}|signed Out`);
+//   //   }
+//   //   this.router.navigate(['/login']);
+//   // }).catch(error => {
+//   //   console.error(`${CNAME}|doSignOut`, error)
+//   // });
+// }
+
+
+// toggleModeration() {
+//   this.conversation?.setModerated(!this.moderated);
+// }
+
+// accept(candidate: User) {
+//   this.conversation?.acceptCandidate(candidate);
+// }
+
+// reject(candidate: User) {
+//   this.conversation?.rejectCandidate(candidate);
+// }
+
+// eject(participant: RemoteParticipant) {
+//   this.conversation?.removeParticipant(participant);
+// }
+
+// sendMessage() {
+//   if (this.localParticipant) {
+//     this.localParticipant.sendMessage(this.messageFc.value);
+//   } else {
+//     console.error(`${CNAME}|Cannot sendMessage`, this.localParticipant)
+//   }
+// }
+
+// TODO : implement a sendPrivateMessage in the library ?

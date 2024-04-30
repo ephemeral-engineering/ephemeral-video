@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { LocalStream, PublishOptions } from 'ephemeral-webrtc';
 
-import { MediaStreamHelper } from '../MediaStreamHelper';
+import { MediaStreamHelper, MediaStreamInfo } from '../MediaStreamHelper';
 import { ControlledStreamComponent } from '../controlled-stream/controlled-stream.component';
 
 const CNAME = 'LocalStream';
@@ -68,8 +68,8 @@ export class LocalStreamComponent implements OnInit {
     }
   }
 
-  _mediaStreamInfo: any;//MediaStreamInfo;
-  @Input() set mediaStreamInfo(info: any) {
+  _mediaStreamInfo: any; // should MediaStreamInfo, but use 'any' because some properties like 'torch' is not standardized and defined in MediaStreamInfo
+  @Input() set mediaStreamInfo(info: MediaStreamInfo | undefined) {
     this._mediaStreamInfo = info;
   }
 

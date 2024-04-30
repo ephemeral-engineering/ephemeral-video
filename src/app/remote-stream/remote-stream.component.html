@@ -32,7 +32,7 @@
         </div>
         <div class="mt-1" *ngIf="_mediaStreamInfo.video?.capabilities.torch">
             <button mat-mini-fab aria-label="flashlight" title="flashlight" (click)="toggleFlashlight()">
-                <mat-icon>{{torch ? 'flashlight_on':'flashlight_off'}}
+                <mat-icon>{{_mediaStreamInfo.video?.settings.torch ? 'flashlight_on':'flashlight_off'}}
                 </mat-icon>
             </button>
         </div>
