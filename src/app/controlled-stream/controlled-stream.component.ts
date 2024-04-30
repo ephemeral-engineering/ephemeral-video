@@ -13,7 +13,6 @@ import { GLOBAL_STATE } from '../global-state';
 import { Pointer, PointerComponent } from '../pointer/pointer.component';
 import { StreamVideoComponent, VideoInfo } from '../stream-video/stream-video.component';
 
-
 const CNAME = 'ControlledStream';
 
 @Component({
@@ -202,28 +201,15 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     private contextService: ContextService,
   ) { }
 
-  doCalcMinHeightWidth() {
-    const height = Math.max((this.controls?.nativeElement.height || 0) + (this.objectFit?.nativeElement.height || 0),
-      (this.label?.nativeElement.height || 0) + (this.status?.nativeElement.height || 0)
-    );
-    const width = Math.max((this.controls?.nativeElement.width || 0), (this.status?.nativeElement.width || 0),
-      (this.label?.nativeElement.width || 0) + (this.objectFit?.nativeElement.width || 0)
-    );
-
-    this.minHeight = `${height + 4 * 2}px`;
-    this.minWidth = `${width + 4 * 2}px`;
-  }
-
   ngAfterViewInit() {
 
     let controlsEntry: ResizeObserverEntry | undefined = undefined;
     let labelEntry: ResizeObserverEntry | undefined = undefined;
-    // let objectFitEntry: ResizeObserverEntry | undefined = undefined;
     let statusEntry: ResizeObserverEntry | undefined = undefined;
 
-    const doCalc = () => {
-      // objectFitEntry is actually a fixed button of 48px
-      // It can be displayed of not but the problem is that it appears according to ascpect ratio,
+    const doCalcMinHeightWidth = () => {
+      // 'objectFit' control button is actually a fixed button of 48px
+      // It can be displayed or not but the problem is that it appears according to aspect ratio,
       // which can be modified when minHeght/minWidth kick in. It then enters a resizing loop that never ends growing and shrinking.
       // To prevent that, consider objectFitEntry is always 48px
       const height = Math.max((controlsEntry?.contentRect.height || 0) + 48, //(objectFitEntry?.contentRect.height || 0)
@@ -233,21 +219,16 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
         (labelEntry?.contentRect.width || 0) + 48//(objectFitEntry?.contentRect.width || 0)
       );
 
-      console.log("controlsObs", controlsEntry)
       this.minHeight = `${height + 8}px`;
       this.minWidth = `${width + 8}px`;
     }
 
     this.controlsObs = new ResizeObserver((entries) => {
-
       entries.forEach((entry) => {
         switch (entry.target) {
           case this.controls?.nativeElement:
             controlsEntry = entry;
             break;
-          // case this.objectFit?.nativeElement:
-          //   objectFitEntry = entry;
-          //   break;
           case this.label?.nativeElement:
             labelEntry = entry;
             break;
@@ -257,18 +238,15 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
           default:
             break;
         }
-
       })
 
-      doCalc()
+      doCalcMinHeightWidth()
 
     });
     this.controlsObs.observe(this.controls?.nativeElement);
     this.controlsObs.observe(this.label?.nativeElement);
-    // this.controlsObs.observe(this.objectFit?.nativeElement);
     this.controlsObs.observe(this.status?.nativeElement);
 
-    //this.aspectRatio = round2(this.el.nativeElement.clientWidth / this.el.nativeElement.clientHeight);
     this.componentObs = new ResizeObserver((entries) => {
       this.aspectRatio = round2(this.el.nativeElement.clientWidth / this.el.nativeElement.clientHeight);
       this.doCheckAspectRatios()
@@ -384,7 +362,6 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   translateToMediaPercentage(pointer: { l: number, t: number }) {
 
     let l_pointer: { l: number, t: number };
-    // if (this._videoStyle['objectFit'] === 'cover') {
     if (this._objectFit === 'cover') {
       if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
         // then image is full in height but is cropped in width
@@ -397,7 +374,6 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
           l: (pointer.l + offset) * factor,
           t: pointer.t * factor
         };
-
       } else {
         // then image is full in width but image will be reduced in height
         const factor = this.videoInfo.video.width / this.videoInfo.element.width;
@@ -444,8 +420,9 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       console.debug(`${CNAME}|onPointerMove sending`, pointer, array.map((elt) => elt.readyState))
     }
 
+    const buffer = JSON.stringify(pointer);
     this.openDataChannels.forEach((dataChannel) => {
-      dataChannel.send(JSON.stringify(pointer))
+      dataChannel.send(buffer)
     })
   }
 

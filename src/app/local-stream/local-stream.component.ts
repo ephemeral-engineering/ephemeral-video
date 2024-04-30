@@ -116,50 +116,10 @@ export class LocalStreamComponent implements OnInit {
   }
 
   toggleFlashlight() {
-    // https://www.oberhofer.co/mediastreamtrack-and-its-capabilities/ 
-    // const l_torch = !this._mediaStreamInfo.video?.settings.torch;
-    // this._mediaStream?.getVideoTracks().forEach((track: MediaStreamTrack) => {
-    //   track.applyConstraints({
-    //     torch: l_torch,
-    //     advanced: [{ torch: l_torch }]
-    //   } as any)
-    //     .then(() => {
-    //       this.doUpdateMediaStreamInfo()
-    //     })
-    //     .catch(event => {
-    //       if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
-    //         console.warn(`${CNAME}|toggleFlashlight error`, event)
-    //       }
-    //     });
-    // })
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
       console.debug(`${CNAME}|toggleFlashlight`)
     }
     this.onToggleFlashlight.emit()
   }
-
-  // toggleAudio() {
-  //   if (this._mediaStream) {
-  //     if (MediaStreamHelper.isAudioEnabled(this._mediaStream)) {
-  //       MediaStreamHelper.disableAudio(this._mediaStream);
-  //       this.audioEnabled = false;
-  //     } else {
-  //       MediaStreamHelper.enableAudio(this._mediaStream);
-  //       this.audioEnabled = true;
-  //     }
-  //   }
-  // }
-
-  // toggleVideo() {
-  //   if (this._mediaStream) {
-  //     if (MediaStreamHelper.isVideoEnabled(this._mediaStream)) {
-  //       MediaStreamHelper.disableVideo(this._mediaStream);
-  //       this.videoEnabled = false;
-  //     } else {
-  //       MediaStreamHelper.enableVideo(this._mediaStream);
-  //       this.videoEnabled = true;
-  //     }
-  //   }
-  // }
 
 }
