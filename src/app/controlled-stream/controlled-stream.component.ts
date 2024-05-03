@@ -415,7 +415,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       ...this.translateToMediaPercentage(this.getLocalPointer(event)),
       ...(this.moveCounter % 10 === 0 ? { n: GLOBAL_STATE.nickname } : {})
     };
-    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled && this.moveCounter % 10 === 0) {
       const array = Array.from(this.openDataChannels);
       console.debug(`${CNAME}|onPointerMove sending`, pointer, array.map((elt) => elt.readyState))
     }
