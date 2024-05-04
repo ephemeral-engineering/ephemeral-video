@@ -20,7 +20,7 @@ const CNAME = 'Pointer';
   standalone: true,
   imports: [MatIconModule],
   templateUrl: './pointer.component.html',
-  styleUrl: './pointer.component.css'
+  styleUrl: './pointer.component.scss'
 })
 export class PointerComponent {
 
