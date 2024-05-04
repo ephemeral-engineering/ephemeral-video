@@ -1,40 +1,46 @@
 <app-controlled-stream [stream]="_remoteStream" [mediaStream]="_mediaStream" [videoStyle]="_videoStyle"
-    [sinkId]="_sinkId">
-    <div label><span>{{_nickname}}</span><span *ngIf="_nickname">-</span><span>{{_publishOptions.topic}}</span><span
-            *ngIf="gstate.monitor">-{{_onlineStatus}}</span></div>
-    <div controls>
-        <div>
-            <button mat-mini-fab aria-label="snapshot" matTooltip="snapshot" (click)="snapshot()">
-                <mat-icon>photo_camera</mat-icon>
-            </button>
-        </div>
-        <div class="mt-1">
-            <button mat-mini-fab aria-label="publish-audio" matTooltip="on/off" (click)="togglePublishAudio()">
-                <mat-icon>{{_publishOptions.audio ? 'mic':'mic_off'}}</mat-icon>
-            </button>
-        </div>
-        <div class="mt-1">
-            <button mat-mini-fab aria-label="publish-video" matTooltip="on/off" (click)="togglePublishVideo()">
-                <mat-icon>{{_publishOptions.video ? 'videocam':'videocam_off'}}
-                </mat-icon>
-            </button>
-        </div>
-        <div class="mt-1">
-            <button mat-mini-fab aria-label="subscribe-audio" matTooltip="mute/unmute" (click)="toggleSubscribeAudio()">
-                <mat-icon>{{_subscribeOptions.audio && audioEnabled ? 'volume_up':'volume_off'}}</mat-icon>
-            </button>
-        </div>
-        <div class="mt-1">
-            <button mat-mini-fab aria-label="subscribe-video" matTooltip="play/pause" (click)="toggleSubscribeVideo()">
-                <mat-icon>{{_subscribeOptions.video && videoEnabled ? 'play_arrow':'pause'}}
-                </mat-icon>
-            </button>
-        </div>
-        <div class="mt-1" *ngIf="_mediaStreamInfo?.video?.capabilities.torch">
-            <button mat-mini-fab aria-label="flashlight" matTooltip="flashlight" (click)="toggleFlashlight()">
-                <mat-icon>{{_mediaStreamInfo.video?.settings.torch ? 'flashlight_on':'flashlight_off'}}
-                </mat-icon>
-            </button>
-        </div>
+  [sinkId]="_sinkId">
+  <div label><span>{{_nickname}}</span>@if (_nickname) {
+  <span>-</span>
+  }<span>{{_publishOptions.topic}}</span>@if (gstate.monitor) {
+  <span
+  >-{{_onlineStatus}}</span>
+}</div>
+<div controls>
+  <div>
+    <button mat-mini-fab aria-label="snapshot" matTooltip="snapshot" (click)="snapshot()">
+      <mat-icon>photo_camera</mat-icon>
+    </button>
+  </div>
+  <div class="mt-1">
+    <button mat-mini-fab aria-label="publish-audio" matTooltip="on/off" (click)="togglePublishAudio()">
+      <mat-icon>{{_publishOptions.audio ? 'mic':'mic_off'}}</mat-icon>
+    </button>
+  </div>
+  <div class="mt-1">
+    <button mat-mini-fab aria-label="publish-video" matTooltip="on/off" (click)="togglePublishVideo()">
+      <mat-icon>{{_publishOptions.video ? 'videocam':'videocam_off'}}
+      </mat-icon>
+    </button>
+  </div>
+  <div class="mt-1">
+    <button mat-mini-fab aria-label="subscribe-audio" matTooltip="mute/unmute" (click)="toggleSubscribeAudio()">
+      <mat-icon>{{_subscribeOptions.audio && audioEnabled ? 'volume_up':'volume_off'}}</mat-icon>
+    </button>
+  </div>
+  <div class="mt-1">
+    <button mat-mini-fab aria-label="subscribe-video" matTooltip="play/pause" (click)="toggleSubscribeVideo()">
+      <mat-icon>{{_subscribeOptions.video && videoEnabled ? 'play_arrow':'pause'}}
+      </mat-icon>
+    </button>
+  </div>
+  @if (_mediaStreamInfo?.video?.capabilities.torch) {
+    <div class="mt-1">
+      <button mat-mini-fab aria-label="flashlight" matTooltip="flashlight" (click)="toggleFlashlight()">
+        <mat-icon>{{_mediaStreamInfo.video?.settings.torch ? 'flashlight_on':'flashlight_off'}}
+        </mat-icon>
+      </button>
     </div>
+  }
+</div>
 </app-controlled-stream>

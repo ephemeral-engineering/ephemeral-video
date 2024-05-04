@@ -1,22 +1,24 @@
 <app-controlled-stream [stream]="_localStream" [mediaStream]="_mediaStream" [videoStyle]="_videoStyle" [muted]="true">
-    <span label>{{_publishOptions.topic}}</span>
-    <div controls>
-        <div>
-            <button mat-mini-fab aria-label="publish-audio" matTooltip="Publish audio" (click)="togglePublishAudio()">
-                <mat-icon>{{_publishOptions.audio && audioEnabled ? 'mic':'mic_off'}}</mat-icon>
-            </button>
-        </div>
-        <div class="mt-1">
-            <button mat-mini-fab aria-label="publish-video" matTooltip="Publish video" (click)="togglePublishVideo()">
-                <mat-icon>{{_publishOptions.video && videoEnabled ? 'videocam':'videocam_off'}}
-                </mat-icon>
-            </button>
-        </div>
-        <div class="mt-1" *ngIf="_mediaStreamInfo?.video?.capabilities?.torch">
-            <button mat-mini-fab aria-label="flashlight" matTooltip="Flashlight" (click)="toggleFlashlight()">
-                <mat-icon>{{_mediaStreamInfo?.video?.settings.torch ? 'flashlight_on':'flashlight_off'}}
-                </mat-icon>
-            </button>
-        </div>
+  <span label>{{_publishOptions.topic}}</span>
+  <div controls>
+    <div>
+      <button mat-mini-fab aria-label="publish-audio" matTooltip="Publish audio" (click)="togglePublishAudio()">
+        <mat-icon>{{_publishOptions.audio && audioEnabled ? 'mic':'mic_off'}}</mat-icon>
+      </button>
     </div>
+    <div class="mt-1">
+      <button mat-mini-fab aria-label="publish-video" matTooltip="Publish video" (click)="togglePublishVideo()">
+        <mat-icon>{{_publishOptions.video && videoEnabled ? 'videocam':'videocam_off'}}
+        </mat-icon>
+      </button>
+    </div>
+    @if (_mediaStreamInfo?.video?.capabilities?.torch) {
+      <div class="mt-1">
+        <button mat-mini-fab aria-label="flashlight" matTooltip="Flashlight" (click)="toggleFlashlight()">
+          <mat-icon>{{_mediaStreamInfo?.video?.settings.torch ? 'flashlight_on':'flashlight_off'}}
+          </mat-icon>
+        </button>
+      </div>
+    }
+  </div>
 </app-controlled-stream>

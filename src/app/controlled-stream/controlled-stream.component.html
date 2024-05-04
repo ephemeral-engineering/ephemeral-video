@@ -1,23 +1,31 @@
 <div [ngStyle]="{height:_containerHeight, width:_containerWidth, position:'relative'}" #container
-    (pointerenter)="onPointerEnter($event)" (pointermove)="onPointerMove($event)"
-    (pointerleave)="onPointerLeave($event)">
-    <app-stream-video [mediaStream]="_mediaStream" [videoStyle]="_videoStyle" [muted]="_muted" [sinkId]="_sinkId"
-        (click)="onClick($event)" (onInfo)="onInfo($event)"></app-stream-video>
-    <div class="pos-abs top-left bc-blue pe-none" #label>
-        <ng-content select="[label]"></ng-content>
-    </div>
-    <div class="pos-abs top-right" (click)="toggleObjectFit()" #objectFit>
-        <button *ngIf="_objectFitSwitch" mat-icon-button matTooltip="Cover/Crop"><mat-icon aria-hidden="false"
-                aria-label="crop" [fontIcon]="_objectFit === 'cover' ? 'crop' : 'crop_free'"></mat-icon></button>
-    </div>
-    <div class="pos-abs bottom-right" #controls>
-        <ng-content select="[controls]"></ng-content>
-    </div>
-    <div class="pos-abs centered-axis-x pe-none" #info>
-        <div *ngIf="gstate.monitor" class="bc-blue">
-            <span>{{videoSize}}</span>
-        </div>
-    </div>
-    <app-pointer *ngFor="let pointer of clickPointers" [pointer]="pointer"></app-pointer>
-    <app-pointer *ngFor="let pointer of pointers" [pointer]="pointer"></app-pointer>
+  (pointerenter)="onPointerEnter($event)" (pointermove)="onPointerMove($event)"
+  (pointerleave)="onPointerLeave($event)">
+  <app-stream-video [mediaStream]="_mediaStream" [videoStyle]="_videoStyle" [muted]="_muted" [sinkId]="_sinkId"
+  (click)="onClick($event)" (onInfo)="onInfo($event)"></app-stream-video>
+  <div class="pos-abs top-left bc-blue pe-none" #label>
+    <ng-content select="[label]"></ng-content>
+  </div>
+  <div class="pos-abs top-right" (click)="toggleObjectFit()" #objectFit>
+    @if (_objectFitSwitch) {
+      <button mat-icon-button matTooltip="Cover/Crop"><mat-icon aria-hidden="false"
+      aria-label="crop" [fontIcon]="_objectFit === 'cover' ? 'crop' : 'crop_free'"></mat-icon></button>
+    }
+  </div>
+  <div class="pos-abs bottom-right" #controls>
+    <ng-content select="[controls]"></ng-content>
+  </div>
+  <div class="pos-abs centered-axis-x pe-none" #info>
+    @if (gstate.monitor) {
+      <div class="bc-blue">
+        <span>{{videoSize}}</span>
+      </div>
+    }
+  </div>
+  @for (pointer of clickPointers; track pointer) {
+    <app-pointer [pointer]="pointer"></app-pointer>
+  }
+  @for (pointer of pointers; track pointer) {
+    <app-pointer [pointer]="pointer"></app-pointer>
+  }
 </div>

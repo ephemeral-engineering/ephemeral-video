@@ -5,7 +5,7 @@ import { MatTooltip } from '@angular/material/tooltip';
 
 import { PublishOptions, RemoteStream, SubscribeOptions, receiveByChunks } from 'ephemeral-webrtc';
 
-import { NgIf } from '@angular/common';
+
 import { MediaStreamHelper } from '../MediaStreamHelper';
 import { DATACHANNEL_SNAPSHOT_PATH } from '../constants';
 import { ContextService } from '../context.service';
@@ -19,9 +19,7 @@ const CNAME = 'RemoteStream';
   templateUrl: './remote-stream.component.html',
   styleUrls: ['./remote-stream.component.css'],
   standalone: true,
-  imports: [NgIf, MatButtonModule, MatIconModule, MatTooltip,
-    ControlledStreamComponent
-  ]
+  imports: [MatButtonModule, MatIconModule, MatTooltip, ControlledStreamComponent]
 })
 export class RemoteStreamComponent implements OnInit, OnDestroy {
 

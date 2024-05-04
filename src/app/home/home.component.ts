@@ -1,6 +1,6 @@
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { JsonPipe, KeyValuePipe, NgClass, NgFor, NgStyle } from '@angular/common';
+import { JsonPipe, KeyValuePipe, NgClass, NgStyle } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, HostListener, Inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule, UntypedFormBuilder, UntypedFormControl, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -47,14 +47,7 @@ const CNAME = 'Home';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
   standalone: true,
-  imports: [NgClass, NgFor, NgStyle, JsonPipe,
-    ClipboardModule,
-    AlertComponent,
-    LocalStreamComponent, RemoteStreamComponent,
-    MatButtonModule, MatIconModule, MatTooltip,
-    FormsModule, MatFormFieldModule, MatInputModule,
-    MatSelectModule,
-    KeyValuePipe, FilterOutPipe]
+  imports: [NgClass, NgStyle, JsonPipe, ClipboardModule, AlertComponent, LocalStreamComponent, RemoteStreamComponent, MatButtonModule, MatIconModule, MatTooltip, FormsModule, MatFormFieldModule, MatInputModule, MatSelectModule, KeyValuePipe, FilterOutPipe]
 })
 export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
 

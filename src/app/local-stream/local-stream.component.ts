@@ -1,4 +1,4 @@
-import { NgIf, NgStyle } from '@angular/common';
+import { NgStyle } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,9 +16,7 @@ const CNAME = 'LocalStream';
   templateUrl: './local-stream.component.html',
   styleUrls: ['./local-stream.component.css'],
   standalone: true,
-  imports: [NgIf, NgStyle,
-    MatButtonModule, MatIconModule, MatTooltip,
-    ControlledStreamComponent],
+  imports: [NgStyle, MatButtonModule, MatIconModule, MatTooltip, ControlledStreamComponent],
 })
 export class LocalStreamComponent implements OnInit {
 

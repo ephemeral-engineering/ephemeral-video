@@ -1,4 +1,4 @@
-import { JsonPipe, KeyValuePipe, NgFor, NgIf, NgStyle } from '@angular/common';
+import { JsonPipe, KeyValuePipe, NgStyle } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, HostBinding, Input, NgZone, OnDestroy, ViewChild } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -19,9 +19,7 @@ const CNAME = 'ControlledStream';
 @Component({
   selector: 'app-controlled-stream',
   standalone: true,
-  imports: [JsonPipe, MatButtonModule, MatIconModule, MatTooltip,
-    NgFor, NgIf, NgStyle, KeyValuePipe,
-    StreamVideoComponent, PointerComponent],
+  imports: [JsonPipe, MatButtonModule, MatIconModule, MatTooltip, NgStyle, KeyValuePipe, StreamVideoComponent, PointerComponent],
   templateUrl: './controlled-stream.component.html',
   styleUrl: './controlled-stream.component.css'
 })
