@@ -1,6 +1,6 @@
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { JsonPipe, KeyValuePipe, NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
+import { JsonPipe, KeyValuePipe, NgClass, NgFor, NgStyle } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, HostListener, Inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule, UntypedFormBuilder, UntypedFormControl, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatTooltip } from '@angular/material/tooltip';
 import { ActivatedRoute } from "@angular/router";
 
 import { setLogLevel as setEphClientLogLevel } from 'ephemeral-client';
@@ -46,11 +47,11 @@ const CNAME = 'Home';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
   standalone: true,
-  imports: [NgClass, NgIf, NgFor, NgStyle, JsonPipe,
+  imports: [NgClass, NgFor, NgStyle, JsonPipe,
     ClipboardModule,
     AlertComponent,
     LocalStreamComponent, RemoteStreamComponent,
-    MatButtonModule, MatIconModule,
+    MatButtonModule, MatIconModule, MatTooltip,
     FormsModule, MatFormFieldModule, MatInputModule,
     MatSelectModule,
     KeyValuePipe, FilterOutPipe]
@@ -95,6 +96,9 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
   localStream: LocalStream | undefined;
 
   localDisplayMediaStream: MediaStream | undefined;
+  localDisplayStream: LocalStream | undefined;
+
+  localStreams: Array<LocalStream> = new Array();
 
   mediaStreamInfos: Map<Stream, MediaStreamInfo> = new Map();
 
@@ -483,7 +487,6 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
           this.updateDeviceList()
         })
     })
-
   }
 
   ngAfterViewInit() {
@@ -816,15 +819,49 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
     participantStreams?.forEach((stream) => { this.remoteStreams.delete(stream) })
   }
 
-  shareScreen() {
-    // @ts-ignore (https://github.com/microsoft/TypeScript/issues/33232)
+  getDisplayMedia() {
     navigator.mediaDevices.getDisplayMedia().then((mediaStream: MediaStream) => {
+      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+        console.debug(`${CNAME}|getDisplayMedia`, mediaStream)
+      }
       this.localDisplayMediaStream = mediaStream;
+
+      const mediaStreamInfo = MediaStreamHelper.getMediaStreamInfo(mediaStream);
+      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+        console.debug(`${CNAME}|getDisplayMedia mediaStreamInfo`, mediaStreamInfo)
+      }
+
+   })
+  }
+
+  shareScreen() {
+    // const options = {
+    //   video: {
+    //     displaySurface: "browser",
+    //   },
+    //   // audio: {
+    //   //   suppressLocalAudioPlayback: false,// experimental
+    //   // },
+    //   // preferCurrentTab: false,
+    //   // selfBrowserSurface: "exclude",
+    //   // systemAudio: "include",
+    //   // surfaceSwitching: "include",
+    //   // monitorTypeSurfaces: "include",
+    // };
+    navigator.mediaDevices.getDisplayMedia().then((mediaStream: MediaStream) => {
       if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
         console.debug(`${CNAME}|shareScreen getDisplayMedia`, mediaStream)
       }
-      if (this.localParticipant) {
-        this.localParticipant.publish(mediaStream, { topic: 'screen' })
+      this.localDisplayMediaStream = mediaStream;
+      
+      if (this.localDisplayStream) {
+        this.localDisplayStream.replaceMediaStream(mediaStream)
+      } else if (this.localDisplayMediaStream && this.localParticipant) {
+        // TODO allow to share audio ? hotw does it work ?
+          this.localParticipant.publish(this.localDisplayMediaStream, { topic: 'screen', audio: false })
+          .then((localStream) => {
+            this.localDisplayStream = localStream;
+          })
       }
     }).catch((error: any) => {
       console.error(`${CNAME}|shareScreen`, error)

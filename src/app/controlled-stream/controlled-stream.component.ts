@@ -3,6 +3,7 @@ import { AfterViewInit, Component, ElementRef, HostBinding, Input, NgZone, OnDes
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltip } from '@angular/material/tooltip';
 
 import { Stream } from 'ephemeral-webrtc';
 
@@ -18,7 +19,9 @@ const CNAME = 'ControlledStream';
 @Component({
   selector: 'app-controlled-stream',
   standalone: true,
-  imports: [JsonPipe, MatButtonModule, MatIconModule, NgFor, NgIf, NgStyle, KeyValuePipe, StreamVideoComponent, PointerComponent],
+  imports: [JsonPipe, MatButtonModule, MatIconModule, MatTooltip,
+    NgFor, NgIf, NgStyle, KeyValuePipe,
+    StreamVideoComponent, PointerComponent],
   templateUrl: './controlled-stream.component.html',
   styleUrl: './controlled-stream.component.css'
 })

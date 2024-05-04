@@ -2,6 +2,7 @@ import { NgIf, NgStyle } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltip } from '@angular/material/tooltip';
 
 import { LocalStream, PublishOptions } from 'ephemeral-webrtc';
 
@@ -16,7 +17,8 @@ const CNAME = 'LocalStream';
   styleUrls: ['./local-stream.component.css'],
   standalone: true,
   imports: [NgIf, NgStyle,
-    ControlledStreamComponent, MatButtonModule, MatIconModule],
+    MatButtonModule, MatIconModule, MatTooltip,
+    ControlledStreamComponent],
 })
 export class LocalStreamComponent implements OnInit {
 

@@ -2,18 +2,18 @@
     <span label>{{_publishOptions.topic}}</span>
     <div controls>
         <div>
-            <button mat-mini-fab aria-label="publish-audio" title="publish audio" (click)="togglePublishAudio()">
+            <button mat-mini-fab aria-label="publish-audio" matTooltip="Publish audio" (click)="togglePublishAudio()">
                 <mat-icon>{{_publishOptions.audio && audioEnabled ? 'mic':'mic_off'}}</mat-icon>
             </button>
         </div>
         <div class="mt-1">
-            <button mat-mini-fab aria-label="publish-video" title="publish video" (click)="togglePublishVideo()">
+            <button mat-mini-fab aria-label="publish-video" matTooltip="Publish video" (click)="togglePublishVideo()">
                 <mat-icon>{{_publishOptions.video && videoEnabled ? 'videocam':'videocam_off'}}
                 </mat-icon>
             </button>
         </div>
         <div class="mt-1" *ngIf="_mediaStreamInfo?.video?.capabilities?.torch">
-            <button mat-mini-fab aria-label="flashlight" title="flashlight" (click)="toggleFlashlight()">
+            <button mat-mini-fab aria-label="flashlight" matTooltip="Flashlight" (click)="toggleFlashlight()">
                 <mat-icon>{{_mediaStreamInfo?.video?.settings.torch ? 'flashlight_on':'flashlight_off'}}
                 </mat-icon>
             </button>

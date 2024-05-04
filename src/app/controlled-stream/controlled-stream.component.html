@@ -7,8 +7,8 @@
         <ng-content select="[label]"></ng-content>
     </div>
     <div class="pos-abs top-right" (click)="toggleObjectFit()" #objectFit>
-        <button *ngIf="_objectFitSwitch" mat-icon-button><mat-icon aria-hidden="false" aria-label="crop"
-                [fontIcon]="_objectFit === 'cover' ? 'crop' : 'crop_free'"></mat-icon></button>
+        <button *ngIf="_objectFitSwitch" mat-icon-button matTooltip="Cover/Crop"><mat-icon aria-hidden="false"
+                aria-label="crop" [fontIcon]="_objectFit === 'cover' ? 'crop' : 'crop_free'"></mat-icon></button>
     </div>
     <div class="pos-abs bottom-right" #controls>
         <ng-content select="[controls]"></ng-content>
