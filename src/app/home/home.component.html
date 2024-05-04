@@ -106,7 +106,7 @@
     </div>
     <div class="d-flex justify-content-center">
         <mat-form-field>
-            <mat-label>Audio In</mat-label>
+            <mat-label class="d-flex align-items-center"><mat-icon>mic</mat-icon>&nbsp;<span>Audio In</span></mat-label>
             <mat-select [disabled]="grabbing" [(value)]="selectedAudioDeviceId" panelWidth="">
                 <!-- <mat-option>Default</mat-option> -->
                 @for (device of audioInMediaDevices; track device) {
@@ -115,7 +115,7 @@
             </mat-select>
         </mat-form-field>
         <mat-form-field class="ml-2">
-            <mat-label>Video In</mat-label>
+            <mat-label class="d-flex align-items-center"><mat-icon>videocam</mat-icon>&nbsp;<span>Video In</span></mat-label>
             <mat-select [disabled]="grabbing" [(value)]="selectedVideoDeviceId" panelWidth="">
                 @for (device of videoInMediaDevices; track device) {
                 <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
@@ -125,7 +125,7 @@
     </div>
     <div class="d-flex justify-content-center">
         <mat-form-field>
-            <mat-label>Resolution</mat-label>
+            <mat-label class="d-flex align-items-center"><mat-icon>hd</mat-icon>&nbsp;<span>Resolution</span></mat-label>
             <mat-select [disabled]="grabbing" [(value)]="selectedVideoResolution" panelWidth="auto">
                 @for (r of resolutions; track r) {
                 <mat-option [value]="r">{{r}}p</mat-option>
@@ -143,7 +143,7 @@
     </div>
     <div class="d-flex justify-content-center">
         <mat-form-field>
-            <mat-label>Audio Out</mat-label>
+            <mat-label class="d-flex align-items-center"><mat-icon>volume_up</mat-icon>&nbsp;<span>Audio Out</span></mat-label>
             <mat-select [(value)]="selectedAudioOutputDeviceId" panelWidth="">
                 @for (device of audioOutMediaDevices; track device) {
                 <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
@@ -153,21 +153,21 @@
     </div>
 </div>
 
-<!-- <div class="mt-5">
+<div *ngIf="gstate.monitor" class="mt-5">
     <div *ngFor="let msg of _notifications">
         <span>{{msg}}</span>
     </div>
 </div>
 
-<div class="mt-5">
+<div *ngIf="gstate.monitor" class="mt-5">
     Bandwidth
     <div *ngFor="let kv of bandwidthByPeerId | keyvalue">
         <span>{{kv.key}}->{{kv.value}}</span>
     </div>
     Average: {{averageBandwidth}}
-</div> -->
+</div>
 
-<!-- <div class="mt-5 vw-100 d-flex align-items-center justify-content-center">
+<div *ngIf="gstate.monitor" class="mt-5 vw-100 d-flex align-items-center justify-content-center">
     <div *ngFor="let kv of mediaStreamInfos | keyvalue">
         <span>{{kv.key.id}}</span>
         <h3>Capabilities</h3>
@@ -192,7 +192,7 @@
             <pre>video: {{kv.value.video.settings | filterOut:'deviceId':'groupId' | json}}</pre>
         </div>
     </div>
-</div> -->
+</div>
 
 <!-- <div class="row">
         <div class="col">

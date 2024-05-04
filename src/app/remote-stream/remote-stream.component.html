@@ -1,7 +1,7 @@
 <app-controlled-stream [stream]="_remoteStream" [mediaStream]="_mediaStream" [videoStyle]="_videoStyle"
     [sinkId]="_sinkId">
-    <span label>{{_nickname}}-{{_publishOptions.topic}}</span>
-    <span status>{{_onlineStatus}}</span>
+    <div label><span>{{_nickname}}</span><span *ngIf="_nickname">-</span><span>{{_publishOptions.topic}}</span><span
+            *ngIf="gstate.monitor">-{{_onlineStatus}}</span></div>
     <div controls>
         <div>
             <button mat-mini-fab aria-label="snapshot" title="snapshot" (click)="snapshot()">

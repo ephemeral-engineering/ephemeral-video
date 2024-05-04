@@ -1,7 +1,7 @@
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { JsonPipe, KeyValuePipe, NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, HostListener, Inject, OnDestroy, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, Inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule, UntypedFormBuilder, UntypedFormControl, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,7 +10,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute } from "@angular/router";
 
-import { Conversation, ConversationOptions, LocalParticipant, LocalStream, RemoteParticipant, RemoteStream, Stream, User, sendByChunksWithDelayPromise, setLogLevel as setEphWebRtcLogLevel } from 'ephemeral-webrtc';
+import { setLogLevel as setEphClientLogLevel } from 'ephemeral-client';
+import { setLogLevel as setEphWebRtcLogLevel } from 'ephemeral-webrtc';
+
+import { Conversation, ConversationOptions, LocalParticipant, LocalStream, RemoteParticipant, RemoteStream, Stream, User, sendByChunksWithDelayPromise } from 'ephemeral-webrtc';
 
 import { saveAs } from 'file-saver-es';
 
@@ -52,7 +55,9 @@ const CNAME = 'Home';
     MatSelectModule,
     KeyValuePipe, FilterOutPipe]
 })
-export class HomeComponent implements AfterViewInit, OnDestroy {
+export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
+
+  readonly gstate = GLOBAL_STATE;
 
   conversation: Conversation | undefined;
 
@@ -145,16 +150,19 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     private messagesService: MessagesService,
     private fb: UntypedFormBuilder,
     private responsive: BreakpointObserver
-  ) { }
+  ) {
 
-  gstate = GLOBAL_STATE;
-
-  ngOnInit(): void {
-    const logLevel = this.activatedRoute.snapshot.queryParamMap.get('lL') as LogLevelText;
+    const logLevel = (this.activatedRoute.snapshot.queryParamMap.get('log') || 'warn') as LogLevelText;
     if (logLevel) {
       setLogLevel(logLevel)
+      setEphClientLogLevel(logLevel)
       setEphWebRtcLogLevel(logLevel)
     }
+
+    this.gstate.monitor = /^true$/i.test(this.activatedRoute.snapshot.queryParamMap.get('mon') || 'false');
+  }
+
+  ngOnInit(): void {
 
     this.responsive.observe([
       Breakpoints.TabletPortrait,
@@ -163,7 +171,10 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       .subscribe(result => {
         const breakpoints = result.breakpoints;
         this.isHandsetPortrait = false;
-        console.log("responsive subscribe", result);
+        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+          console.debug("responsive subscribe", result);
+        }
+        
         if (breakpoints[Breakpoints.TabletPortrait]) {
           console.log("screens matches TabletPortrait");
         } else if (breakpoints[Breakpoints.HandsetLandscape]) {
@@ -204,7 +215,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       moderated: this.moderated
     };
 
-    ///^true$/i.test(hash)
     Conversation.getOrCreate(conversationId, hash, options).then((conversation: Conversation) => {
       if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
         console.log(`${CNAME}|Conversation`, conversation)
@@ -212,7 +222,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
       this.conversation = conversation;
 
-      window.history.replaceState({}, '', `${baseUrl}/${conversation.id}`)
+      window.history.replaceState({}, '', `${baseUrl}/${conversation.id}${window.location.search}`)
 
       // Listen to Conversation events
       //
@@ -356,6 +366,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           console.debug(`${CNAME}|dataChannel:onclose`, DATACHANNEL_MEDIASTREAMSETTINGS_PATH, event);
         }
         this.settingsDataChannelByRemoteStreams.delete(stream)
+        this.mediaStreamInfos.delete(stream)
       }
       dataChannel.onerror = (event) => {
         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {

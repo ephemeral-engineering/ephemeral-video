@@ -3,9 +3,8 @@
     (pointerleave)="onPointerLeave($event)">
     <app-stream-video [mediaStream]="_mediaStream" [videoStyle]="_videoStyle" [muted]="_muted" [sinkId]="_sinkId"
         (click)="onClick($event)" (onInfo)="onInfo($event)"></app-stream-video>
-    <div class="pos-abs top-left pe-none" #label>
+    <div class="pos-abs top-left bc-blue pe-none" #label>
         <ng-content select="[label]"></ng-content>
-        <!-- {{pointers.length}} -->
     </div>
     <div class="pos-abs top-right" (click)="toggleObjectFit()" #objectFit>
         <button *ngIf="_objectFitSwitch" mat-icon-button><mat-icon aria-hidden="false" aria-label="crop"
@@ -14,8 +13,10 @@
     <div class="pos-abs bottom-right" #controls>
         <ng-content select="[controls]"></ng-content>
     </div>
-    <div class="pos-abs centered-axis-x bc-blue pe-none" #status>
-        <ng-content select="[status]"></ng-content><span>:{{videoSize}}</span>
+    <div class="pos-abs centered-axis-x pe-none" #info>
+        <div *ngIf="gstate.monitor" class="bc-blue">
+            <span>{{videoSize}}</span>
+        </div>
     </div>
     <app-pointer *ngFor="let pointer of clickPointers" [pointer]="pointer"></app-pointer>
     <app-pointer *ngFor="let pointer of pointers" [pointer]="pointer"></app-pointer>

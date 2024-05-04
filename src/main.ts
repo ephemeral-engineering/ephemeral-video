@@ -3,7 +3,7 @@ import { APP_INITIALIZER, enableProdMode, importProvidersFrom } from '@angular/c
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 
-import { setLogLevel as setEphClientRtcLogLevel } from 'ephemeral-client';
+import { setLogLevel as setEphClientLogLevel } from 'ephemeral-client';
 import { Configuration, initialize as initializeEphWebRtc, setLogLevel as setEphWebRtcLogLevel } from 'ephemeral-webrtc';
 
 import { HttpClient, provideHttpClient } from '@angular/common/http';
@@ -15,10 +15,10 @@ import { WINDOW_PROVIDERS } from './app/windows-provider';
 import { environment } from './environments/environment';
 import { setLogLevel } from './logLevel';
 
-const logLevel = 'debug';
+const logLevel = 'warn';
 
 setLogLevel(logLevel)
-setEphClientRtcLogLevel(logLevel)
+setEphClientLogLevel(logLevel)
 setEphWebRtcLogLevel(logLevel)
 
 if (environment.production) {

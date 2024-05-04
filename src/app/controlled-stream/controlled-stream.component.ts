@@ -24,6 +24,8 @@ const CNAME = 'ControlledStream';
 })
 export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 
+  readonly gstate = GLOBAL_STATE;
+
   _objectFitSwitch = false;
   _objectFit: 'cover' | undefined = 'cover';
   _containerHeight = '100%'; // must be 100% by default if _objectFit is 'cover' by default
@@ -187,7 +189,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   @ViewChild('label') label: ElementRef | undefined;
   @ViewChild('controls') controls: ElementRef | undefined;
   @ViewChild('objectFit') objectFit: ElementRef | undefined;
-  @ViewChild('status') status: ElementRef | undefined;
+  @ViewChild('info') info: ElementRef | undefined;
 
   // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
   private controlsObs: ResizeObserver | undefined;
@@ -205,7 +207,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 
     let controlsEntry: ResizeObserverEntry | undefined = undefined;
     let labelEntry: ResizeObserverEntry | undefined = undefined;
-    let statusEntry: ResizeObserverEntry | undefined = undefined;
+    let infoEntry: ResizeObserverEntry | undefined = undefined;
 
     const doCalcMinHeightWidth = () => {
       // 'objectFit' control button is actually a fixed button of 48px
@@ -213,9 +215,9 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       // which can be modified when minHeght/minWidth kick in. It then enters a resizing loop that never ends growing and shrinking.
       // To prevent that, consider objectFitEntry is always 48px
       const height = Math.max((controlsEntry?.contentRect.height || 0) + 48, //(objectFitEntry?.contentRect.height || 0)
-        (labelEntry?.contentRect.height || 0) + (this.status?.nativeElement.height || 0)
+        (labelEntry?.contentRect.height || 0) + (this.info?.nativeElement.height || 0)
       );
-      const width = Math.max((controlsEntry?.contentRect.width || 0), (statusEntry?.contentRect.width || 0),
+      const width = Math.max((controlsEntry?.contentRect.width || 0), (infoEntry?.contentRect.width || 0) + ((controlsEntry?.contentRect.width || 0) * 2) + 8,
         (labelEntry?.contentRect.width || 0) + 48//(objectFitEntry?.contentRect.width || 0)
       );
 
@@ -232,8 +234,8 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
           case this.label?.nativeElement:
             labelEntry = entry;
             break;
-          case this.status?.nativeElement:
-            statusEntry = entry;
+          case this.info?.nativeElement:
+            infoEntry = entry;
             break;
           default:
             break;
@@ -245,7 +247,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     });
     this.controlsObs.observe(this.controls?.nativeElement);
     this.controlsObs.observe(this.label?.nativeElement);
-    this.controlsObs.observe(this.status?.nativeElement);
+    this.controlsObs.observe(this.info?.nativeElement);
 
     this.componentObs = new ResizeObserver((entries) => {
       this.aspectRatio = round2(this.el.nativeElement.clientWidth / this.el.nativeElement.clientHeight);

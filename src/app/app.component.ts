@@ -9,6 +9,5 @@ import { RouterOutlet } from '@angular/router';
   imports: [RouterOutlet]
 })
 export class AppComponent {
-  title = 'ephemeral-video';
   constructor() { }
 }

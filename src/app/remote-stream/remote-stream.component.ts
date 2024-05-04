@@ -9,6 +9,7 @@ import { MediaStreamHelper } from '../MediaStreamHelper';
 import { DATACHANNEL_SNAPSHOT_PATH } from '../constants';
 import { ContextService } from '../context.service';
 import { ControlledStreamComponent } from '../controlled-stream/controlled-stream.component';
+import { GLOBAL_STATE } from '../global-state';
 
 const CNAME = 'RemoteStream';
 
@@ -20,6 +21,8 @@ const CNAME = 'RemoteStream';
   imports: [NgIf, ControlledStreamComponent, MatButtonModule, MatIconModule]
 })
 export class RemoteStreamComponent implements OnInit, OnDestroy {
+
+  readonly gstate = GLOBAL_STATE;
 
   _publishOptions: PublishOptions = { audio: false, video: false };
   _subscribeOptions: SubscribeOptions = { audio: false, video: false };
