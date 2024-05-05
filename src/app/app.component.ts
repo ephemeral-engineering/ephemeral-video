@@ -9,5 +9,10 @@ import { RouterOutlet } from '@angular/router';
   imports: [RouterOutlet]
 })
 export class AppComponent {
+  // @HostBinding('class')
+  // get themeMode() {
+  //   return 'mat-app-background';
+  // }
+
   constructor() { }
 }
