@@ -22,7 +22,7 @@ import { LogLevelText, setLogLevel } from 'src/logLevel';
 import { MediaStreamHelper, MediaStreamInfo } from '../MediaStreamHelper';
 import { AlertComponent } from '../alert/alert.component';
 import { getSessionStorage, setSessionStorage } from '../common';
-import { DATACHANNEL_MEDIASTREAMSETTINGS_PATH, DATACHANNEL_SNAPSHOT_PATH, FRAME_RATES, RESOLUTIONS, STORAGE_PREFIX } from '../constants';
+import { DATACHANNEL_MEDIASTREAMSETTINGS_PATH, DATACHANNEL_SNAPSHOT_PATH, FRAME_RATES, RESOLUTIONS, STORAGE_PREFIX, TOPIC_SCREEN } from '../constants';
 import { ContextService } from '../context.service';
 import { FilterOutPipe } from '../filter-out.pipe';
 import { GLOBAL_STATE } from '../global-state';
@@ -266,6 +266,7 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
             console.log(`${CNAME}|onStreamPublished`, participant, stream)
           }
           // First, set listener(s)
+          // TODO !! onMediaStream !
           this.doStoreRemoteStreamByParticipant(participant, stream)
           // And then, subscribe
           // this.localParticipant?.subscribe(stream)
@@ -846,12 +847,18 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
         console.debug(`${CNAME}|shareScreen getDisplayMedia`, mediaStream)
       }
       this.localDisplayMediaStream = mediaStream;
+
+      mediaStream.getVideoTracks()[0].onended =  () =>{
+          this.localParticipant?.unpublish(mediaStream)
+          this.localDisplayMediaStream = undefined;
+          this.localDisplayStream = undefined;
+      };
       
       if (this.localDisplayStream) {
         this.localDisplayStream.replaceMediaStream(mediaStream)
       } else if (this.localDisplayMediaStream && this.localParticipant) {
-        // TODO allow to share audio ? hotw does it work ?
-          this.localParticipant.publish(this.localDisplayMediaStream, { topic: 'screen', audio: false })
+        // TODO allow to share audio ? how does it work ?
+          this.localParticipant.publish(this.localDisplayMediaStream, { topic: TOPIC_SCREEN, audio: false })
           .then((localStream) => {
             this.localDisplayStream = localStream;
           })

@@ -15,22 +15,26 @@
                 <mat-icon>photo_camera</mat-icon>
             </button>
         </div>
+        @if (_publishOptions.topic !== 'screen') {
         <div class="mt-1">
             <button mat-mini-fab aria-label="publish-audio" matTooltip="on/off" (click)="togglePublishAudio()">
                 <mat-icon>{{_publishOptions.audio ? 'mic':'mic_off'}}</mat-icon>
             </button>
         </div>
+        }
         <div class="mt-1">
             <button mat-mini-fab aria-label="publish-video" matTooltip="on/off" (click)="togglePublishVideo()">
-                <mat-icon>{{_publishOptions.video ? 'videocam':'videocam_off'}}
+                <mat-icon>{{_publishOptions.video ? _videoOnIcon:_videoOffIcon}}
                 </mat-icon>
             </button>
         </div>
+        @if (_publishOptions.topic !== 'screen') {
         <div class="mt-1">
             <button mat-mini-fab aria-label="subscribe-audio" matTooltip="mute/unmute" (click)="toggleSubscribeAudio()">
                 <mat-icon>{{_subscribeOptions.audio && audioEnabled ? 'volume_up':'volume_off'}}</mat-icon>
             </button>
         </div>
+        }
         <div class="mt-1">
             <button mat-mini-fab aria-label="subscribe-video" matTooltip="play/pause" (click)="toggleSubscribeVideo()">
                 <mat-icon>{{_subscribeOptions.video && videoEnabled ? 'play_arrow':'pause'}}

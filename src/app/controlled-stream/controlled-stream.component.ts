@@ -8,7 +8,7 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { Stream } from 'ephemeral-webrtc';
 
 import { round2 } from '../common';
-import { DATACHANNEL_POINTER_PATH } from '../constants';
+import { DATACHANNEL_POINTER_PATH, TOPIC_SCREEN } from '../constants';
 import { ContextService } from '../context.service';
 import { GLOBAL_STATE } from '../global-state';
 import { Pointer, PointerComponent } from '../pointer/pointer.component';
@@ -55,6 +55,11 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   _stream: Stream;
   @Input({ required: true }) set stream(stream: Stream) {
     this._stream = stream;
+
+    if (this._stream.getPublishOptions().topic === TOPIC_SCREEN) {
+      this._objectFit = undefined;
+      this._videoStyle = { ...this._videoStyle };
+    }
 
     this._stream.onDataChannel(DATACHANNEL_POINTER_PATH, (dataChannel: RTCDataChannel) => {
       // DONE: create a pointer each datachannel
@@ -242,9 +247,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
             break;
         }
       })
-
       doCalcMinHeightWidth()
-
     });
     this.controlsObs.observe(this.controls?.nativeElement);
     this.controlsObs.observe(this.label?.nativeElement);
@@ -260,7 +263,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   doCheckAspectRatios() {
     if (this.aspectRatio !== -1 && this.videoAspectRatio !== -1) {
       if (this._objectFit !== 'cover') {
-        if (this.aspectRatio > this.videoAspectRatio) {
+        if (this.aspectRatio + 0.01 > this.videoAspectRatio - 0.01) {
           this.flexDirection = 'row';
           this._containerHeight = '100%';
           this._containerWidth = 'auto';

@@ -13,7 +13,7 @@
 </div> -->
 
 @if (_error) {
-  <app-alert [level]="'error'" [message]="_error"></app-alert>
+<app-alert [level]="'error'" [message]="_error"></app-alert>
 }
 
 <!-- <div class="pos-relative vh-100">
@@ -47,31 +47,34 @@
 <div class="room pos-relative dvh-100 d-flex align-items-center" [ngStyle]="{justifyContent:'space-around'}">
   <!-- class="flex-g-1" -->
   @for (stream of remoteStreams; track stream) {
-    <app-remote-stream [remoteStream]="stream"
-      [mediaStreamInfo]="mediaStreamInfos.get(stream)" (onSnapshot)="onSnapshot($event)"
-    (onToggleFlashlight)="toggleRemoteFlashlight(stream)"></app-remote-stream>
+  <app-remote-stream [remoteStream]="stream" [mediaStreamInfo]="mediaStreamInfos.get(stream)"
+    (onSnapshot)="onSnapshot($event)" (onToggleFlashlight)="toggleRemoteFlashlight(stream)"></app-remote-stream>
   }
   @if (url&&remoteStreams.size===0) {
-    <button mat-fab extended [cdkCopyToClipboard]="url" matTooltip="Copy link and then share it with someone">
-      <mat-icon>link</mat-icon>
-      Copy link
-      <!-- <mat-icon iconPositionEnd>share</mat-icon> -->
-    </button>}
-    <div class="pos-abs bottom-left d-flex flex-row align-items-center gap-1" [ngStyle]="{height:'34%', width:'auto'}">
-      @if (localStream) {
-        <app-local-stream [localStream]="localStream" [videoStyle]="{opacity:0.8}"
-          [mediaStreamInfo]="mediaStreamInfos.get(localStream)" (onToggleFlashlight)="toggleFlashlight(localStream)">
-        </app-local-stream>
-      }
-      <div>
-        <button mat-fab (click)="shareScreen()" aria-label="Share screen" matTooltip="Share screen">
-          <mat-icon>screen_share</mat-icon>
-        </button>
-      </div>
-    </div>
+  <button mat-fab extended [cdkCopyToClipboard]="url" matTooltip="Copy link and then share it with someone">
+    <mat-icon>link</mat-icon>
+    Copy link
+    <!-- <mat-icon iconPositionEnd>share</mat-icon> -->
+  </button>}
+  <div class="pos-abs bottom-left d-flex flex-row align-items-center gap-1" [ngStyle]="{height:'34%'}">
+    @if (localStream) {
+    <app-local-stream [localStream]="localStream" [videoStyle]="{opacity:0.8}"
+      [mediaStreamInfo]="mediaStreamInfos.get(localStream)" (onToggleFlashlight)="toggleFlashlight(localStream)">
+    </app-local-stream>
+    }
+    @if (localDisplayStream) {
+    <app-local-stream [localStream]="localDisplayStream" [videoStyle]="{opacity:0.8}">
+    </app-local-stream>
+    }
+    @if (!gstate.isMobile) {
+    <button mat-fab (click)="shareScreen()" aria-label="Share screen" matTooltip="Share screen">
+      <mat-icon>screen_share</mat-icon>
+    </button>
+    }
   </div>
+</div>
 
-  <!--
+<!--
   https://stackoverflow.com/questions/20590239/maintain-aspect-ratio-of-div-but-fill-screen-width-and-height-in-css
   16:9
   width: 100vw;
@@ -84,80 +87,79 @@
   max-height: 100vh;
   max-width: 133.34vh; /* 16/9 = 1.333
   -->
-  <!-- align-items-stretch -->
-  <!-- bottom-0 mb-1 start-0 ms-1 col-6 col-sm-6 col-md-5 col-lg-4 col-xl-3 col-xxl-2 -->
-  <!-- <div class="d-flex flex-column-reverse "> -->
-  <!-- <div class="row "> -->
+<!-- align-items-stretch -->
+<!-- bottom-0 mb-1 start-0 ms-1 col-6 col-sm-6 col-md-5 col-lg-4 col-xl-3 col-xxl-2 -->
+<!-- <div class="d-flex flex-column-reverse "> -->
+<!-- <div class="row "> -->
 
-  @if (url&&remoteStreams.size>0) {
-    <div class="mt-5 d-flex justify-content-center">
-      <button mat-fab extended [cdkCopyToClipboard]="url" matTooltip="Copy link and then share it with someone">
-        <mat-icon>link</mat-icon>
-        Copy link
-        <!-- <mat-icon iconPositionEnd>share</mat-icon> -->
+@if (url&&remoteStreams.size>0) {
+<div class="mt-5 d-flex justify-content-center">
+  <button mat-fab extended [cdkCopyToClipboard]="url" matTooltip="Copy link and then share it with someone">
+    <mat-icon>link</mat-icon>
+    Copy link
+    <!-- <mat-icon iconPositionEnd>share</mat-icon> -->
+  </button>
+</div>
+}
+
+<!-- [ngClass]="{'flex-col': isHandsetPortrait}" -->
+<div class="mt-5 d-flex flex-col justify-content-center">
+  <div class="d-flex justify-content-center">
+    <mat-form-field>
+      <mat-label>Nickname</mat-label>
+      <input matInput type="text" [(ngModel)]="nickname">
+      @if (nickname) {
+      <button matSuffix mat-icon-button aria-label="Clear" (click)="nickname=''">
+        <mat-icon>close</mat-icon>
       </button>
-    </div>
-  }
-
-  <!-- [ngClass]="{'flex-col': isHandsetPortrait}" -->
-  <div class="mt-5 d-flex flex-col justify-content-center">
-    <div class="d-flex justify-content-center">
-      <mat-form-field>
-        <mat-label>Nickname</mat-label>
-        <input matInput type="text" [(ngModel)]="nickname">
-        @if (nickname) {
-          <button matSuffix mat-icon-button aria-label="Clear" (click)="nickname=''">
-            <mat-icon>close</mat-icon>
-          </button>
+      }
+    </mat-form-field>
+  </div>
+  <div class="d-flex justify-content-center">
+    <mat-form-field>
+      <mat-label class="d-flex align-items-center"><mat-icon>mic</mat-icon>&nbsp;<span>Audio In</span></mat-label>
+      <mat-select [disabled]="grabbing" [(value)]="selectedAudioDeviceId" panelWidth="">
+        <!-- <mat-option>Default</mat-option> -->
+        @for (device of audioInMediaDevices; track device) {
+        <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
         }
-      </mat-form-field>
-    </div>
-    <div class="d-flex justify-content-center">
-      <mat-form-field>
-        <mat-label class="d-flex align-items-center"><mat-icon>mic</mat-icon>&nbsp;<span>Audio In</span></mat-label>
-        <mat-select [disabled]="grabbing" [(value)]="selectedAudioDeviceId" panelWidth="">
-          <!-- <mat-option>Default</mat-option> -->
-          @for (device of audioInMediaDevices; track device) {
-            <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field class="ml-2">
-        <mat-label class="d-flex align-items-center"><mat-icon>videocam</mat-icon>&nbsp;<span>Video
-      In</span></mat-label>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field class="ml-2">
+      <mat-label class="d-flex align-items-center"><mat-icon>videocam</mat-icon>&nbsp;<span>Video
+          In</span></mat-label>
       <mat-select [disabled]="grabbing" [(value)]="selectedVideoDeviceId" panelWidth="">
         @for (device of videoInMediaDevices; track device) {
-          <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
+        <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
         }
       </mat-select>
     </mat-form-field>
   </div>
   <div class="d-flex justify-content-center">
     <mat-form-field>
-      <mat-label
-        class="d-flex align-items-center"><mat-icon>hd</mat-icon>&nbsp;<span>Resolution</span></mat-label>
-        <mat-select [disabled]="grabbing" [(value)]="selectedVideoResolution" panelWidth="auto">
-          @for (r of resolutions; track r) {
-            <mat-option [value]="r">{{r}}p</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field class="ml-2">
-        <mat-label>Frame rate</mat-label>
-        <mat-select [disabled]="grabbing" [(value)]="selectedVideoFrameRate" panelWidth="auto">
-          @for (fr of frameRates; track fr) {
-            <mat-option [value]="fr">{{fr}}i/s</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-    </div>
-    <div class="d-flex justify-content-center">
-      <mat-form-field>
-        <mat-label class="d-flex align-items-center"><mat-icon>volume_up</mat-icon>&nbsp;<span>Audio
-      Out</span></mat-label>
+      <mat-label class="d-flex align-items-center"><mat-icon>hd</mat-icon>&nbsp;<span>Resolution</span></mat-label>
+      <mat-select [disabled]="grabbing" [(value)]="selectedVideoResolution" panelWidth="auto">
+        @for (r of resolutions; track r) {
+        <mat-option [value]="r">{{r}}p</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field class="ml-2">
+      <mat-label>Frame rate</mat-label>
+      <mat-select [disabled]="grabbing" [(value)]="selectedVideoFrameRate" panelWidth="auto">
+        @for (fr of frameRates; track fr) {
+        <mat-option [value]="fr">{{fr}}i/s</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+  <div class="d-flex justify-content-center">
+    <mat-form-field>
+      <mat-label class="d-flex align-items-center"><mat-icon>volume_up</mat-icon>&nbsp;<span>Audio
+          Out</span></mat-label>
       <mat-select [(value)]="selectedAudioOutputDeviceId" panelWidth="">
         @for (device of audioOutMediaDevices; track device) {
-          <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
+        <mat-option [value]="device.deviceId">{{device.label}}</mat-option>
         }
       </mat-select>
     </mat-form-field>
@@ -165,52 +167,52 @@
 </div>
 
 @if (gstate.monitor) {
-  <div class="mt-5">
-    @for (msg of _notifications; track msg) {
-      <div>
-        <span>{{msg}}</span>
-      </div>
-    }
+<div class="mt-5">
+  @for (msg of _notifications; track msg) {
+  <div>
+    <span>{{msg}}</span>
   </div>
+  }
+</div>
 
-  <div class="mt-5">
-    Bandwidth
-    @for (kv of bandwidthByPeerId | keyvalue; track kv) {
-      <div>
-        <span>{{kv.key}}->{{kv.value}}</span>
-      </div>
-    }
-    Average: {{averageBandwidth}}
+<div class="mt-5">
+  Bandwidth
+  @for (kv of bandwidthByPeerId | keyvalue; track kv) {
+  <div>
+    <span>{{kv.key}}->{{kv.value}}</span>
   </div>
+  }
+  Average: {{averageBandwidth}}
+</div>
 
-  <div class="mt-5 vw-100 d-flex align-items-center justify-content-center">
-    @for (kv of mediaStreamInfos | keyvalue; track kv) {
-      <div>
-        <span>{{kv.key.id}}</span>
-        <h3>Capabilities</h3>
-        @if (kv.value.audio) {
-          <pre>audio: {{kv.value.audio.capabilities | filterOut:'deviceId':'groupId' | json}}</pre>
-        }
-        @if (kv.value.video) {
-          <pre>video: {{kv.value.video.capabilities | filterOut:'deviceId':'groupId' | json}}</pre>
-        }
-        <h3>Constraints</h3>
-        @if (kv.value.audio) {
-          <pre>audio: {{kv.value.audio.constraints | filterOut:'deviceId':'groupId' | json}}</pre>
-        }
-        @if (kv.value.video) {
-          <pre>video: {{kv.value.video.constraints | filterOut:'deviceId':'groupId' | json}}</pre>
-        }
-        <h3>Settings</h3>
-        @if (kv.value.audio) {
-          <pre>audio: {{kv.value.audio.settings | filterOut:'deviceId':'groupId' | json}}</pre>
-        }
-        @if (kv.value.video) {
-          <pre>video: {{kv.value.video.settings | filterOut:'deviceId':'groupId' | json}}</pre>
-        }
-      </div>
+<div class="mt-5 vw-100 d-flex align-items-center justify-content-center">
+  @for (kv of mediaStreamInfos | keyvalue; track kv) {
+  <div>
+    <span>{{kv.key.id}}</span>
+    <h3>Capabilities</h3>
+    @if (kv.value.audio) {
+    <pre>audio: {{kv.value.audio.capabilities | filterOut:'deviceId':'groupId' | json}}</pre>
+    }
+    @if (kv.value.video) {
+    <pre>video: {{kv.value.video.capabilities | filterOut:'deviceId':'groupId' | json}}</pre>
+    }
+    <h3>Constraints</h3>
+    @if (kv.value.audio) {
+    <pre>audio: {{kv.value.audio.constraints | filterOut:'deviceId':'groupId' | json}}</pre>
+    }
+    @if (kv.value.video) {
+    <pre>video: {{kv.value.video.constraints | filterOut:'deviceId':'groupId' | json}}</pre>
+    }
+    <h3>Settings</h3>
+    @if (kv.value.audio) {
+    <pre>audio: {{kv.value.audio.settings | filterOut:'deviceId':'groupId' | json}}</pre>
+    }
+    @if (kv.value.video) {
+    <pre>video: {{kv.value.video.settings | filterOut:'deviceId':'groupId' | json}}</pre>
     }
   </div>
+  }
+</div>
 }
 
 <!-- <div class="row">

@@ -7,7 +7,7 @@ import { PublishOptions, RemoteStream, SubscribeOptions, receiveByChunks } from 
 
 
 import { MediaStreamHelper } from '../MediaStreamHelper';
-import { DATACHANNEL_SNAPSHOT_PATH } from '../constants';
+import { DATACHANNEL_SNAPSHOT_PATH, TOPIC_SCREEN } from '../constants';
 import { ContextService } from '../context.service';
 import { ControlledStreamComponent } from '../controlled-stream/controlled-stream.component';
 import { GLOBAL_STATE } from '../global-state';
@@ -32,6 +32,9 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
 
   audioEnabled = false;
   videoEnabled = false;
+
+  _videoOnIcon = 'videocam';
+  _videoOffIcon = 'videocam_off';
 
   constructor(private contextService: ContextService) {
     this.contextService.sinkId$.subscribe(id => {
@@ -59,6 +62,7 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
     const l_stream = this._remoteStream;
 
     this._publishOptions = l_stream.getPublishOptions();
+
     l_stream.onPublishOptionsUpdate(() => {
       this._publishOptions = l_stream.getPublishOptions();
     })

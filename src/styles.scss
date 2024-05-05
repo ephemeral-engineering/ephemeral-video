@@ -26,11 +26,11 @@ body {
   display: flex;
 }
 
-.d-grid {
-  display: grid;
-  grid-template-columns: 50% 50%;
-  grid-template-rows: 50% 50%;
-}
+// .d-grid {
+//   display: grid;
+//   grid-template-columns: 50% 50%;
+//   grid-template-rows: 50% 50%;
+// }
 
 .flex-row {
   flex-direction: row;
@@ -40,9 +40,9 @@ body {
   flex-direction: column;
 }
 
-.flex-g-1 {
-  flex-grow: 1;
-}
+// .flex-g-1 {
+//   flex-grow: 1;
+// }
 
 .gap-1 {
   gap: 4px;
