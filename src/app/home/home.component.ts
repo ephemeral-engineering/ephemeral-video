@@ -828,7 +828,9 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
    })
   }
 
-  shareScreen() {
+  grabbingDisplayMedia = false;
+
+  toggleScreenShare() {
     // const options = {
     //   video: {
     //     displaySurface: "browser",
@@ -842,30 +844,41 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
     //   // surfaceSwitching: "include",
     //   // monitorTypeSurfaces: "include",
     // };
-    navigator.mediaDevices.getDisplayMedia().then((mediaStream: MediaStream) => {
-      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-        console.debug(`${CNAME}|shareScreen getDisplayMedia`, mediaStream)
-      }
-      this.localDisplayMediaStream = mediaStream;
+    if (this.localDisplayStream) {
+      this.localParticipant?.unpublish(this.localDisplayStream)
+      // Must force tracks to stop to stop screen sharing
+      this.localDisplayMediaStream?.getTracks().forEach(track => track.stop())
+      this.localDisplayMediaStream = undefined;
+      this.localDisplayStream = undefined;
+    } else {
+      this.grabbingDisplayMedia = true;
+      navigator.mediaDevices.getDisplayMedia().then((mediaStream: MediaStream) => {
+        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+          console.debug(`${CNAME}|shareScreen getDisplayMedia`, mediaStream)
+        }
+        this.localDisplayMediaStream = mediaStream;
 
-      mediaStream.getVideoTracks()[0].onended =  () =>{
-          this.localParticipant?.unpublish(mediaStream)
-          this.localDisplayMediaStream = undefined;
-          this.localDisplayStream = undefined;
-      };
-      
-      if (this.localDisplayStream) {
-        this.localDisplayStream.replaceMediaStream(mediaStream)
-      } else if (this.localDisplayMediaStream && this.localParticipant) {
-        // TODO allow to share audio ? how does it work ?
-          this.localParticipant.publish(this.localDisplayMediaStream, { topic: TOPIC_SCREEN, audio: false })
-          .then((localStream) => {
-            this.localDisplayStream = localStream;
-          })
-      }
-    }).catch((error: any) => {
-      console.error(`${CNAME}|shareScreen`, error)
-    });
+        mediaStream.getVideoTracks()[0].onended = () => {
+            this.localParticipant?.unpublish(mediaStream)
+            this.localDisplayMediaStream = undefined;
+            this.localDisplayStream = undefined;
+        };
+        
+        if (this.localDisplayStream) {
+          this.localDisplayStream.replaceMediaStream(mediaStream)
+        } else if (this.localDisplayMediaStream && this.localParticipant) {
+          // TODO allow to share audio ? how does it work ?
+            this.localParticipant.publish(this.localDisplayMediaStream, { topic: TOPIC_SCREEN, audio: false })
+            .then((localStream) => {
+              this.localDisplayStream = localStream;
+            })
+        }
+      }).catch((error: any) => {
+        console.error(`${CNAME}|shareScreen`, error)
+      }).finally(()=>{
+        this.grabbingDisplayMedia = false;
+      })
+    }
   }
 
   mediaRecorder: MediaRecorder | undefined;

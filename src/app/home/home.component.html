@@ -67,8 +67,12 @@
     </app-local-stream>
     }
     @if (!gstate.isMobile) {
-    <button mat-fab (click)="shareScreen()" aria-label="Share screen" matTooltip="Share screen">
+    <button mat-fab (click)="toggleScreenShare()" aria-label="Share screen" matTooltip="Share screen" [disabled]="grabbingDisplayMedia">
+      @if (localDisplayStream) {
+      <mat-icon>stop_screen_share</mat-icon>
+      } @else {
       <mat-icon>screen_share</mat-icon>
+      }
     </button>
     }
   </div>
