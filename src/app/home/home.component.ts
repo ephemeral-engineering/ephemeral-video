@@ -261,17 +261,15 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
             console.log(`${CNAME}|onUserDataUpdate`, participant, userData)
           }
         })
+        
         participant.onStreamPublished((stream: RemoteStream) => {
           if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
             console.log(`${CNAME}|onStreamPublished`, participant, stream)
           }
-          // First, set listener(s)
-          // TODO !! onMediaStream !
+          // Store
           this.doStoreRemoteStreamByParticipant(participant, stream)
-          // And then, subscribe
-          // this.localParticipant?.subscribe(stream)
-          stream.subscribe()
-          // or 
+          // And subscribe
+          stream.subscribe() // or 
           //stream.subscribe({ audio: true, video: false })
 
           // and also setup channel for 'subscribing' to MediaStreamInfo changes and change settings (using constraints)
@@ -282,6 +280,13 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
             console.log(`${CNAME}|onStreamUnpublished`, participant, stream)
           }
           this.doRemoveMediaStream(participant, stream)
+
+          // and cleanup associated datachannel
+          const dc = this.settingsDataChannelByRemoteStreams.get(stream);
+          if (dc) {
+            dc.close()
+          }
+          this.settingsDataChannelByRemoteStreams.delete(stream)
         })
       };
       conversation.onParticipantRemoved = (participant: RemoteParticipant | LocalParticipant) => {
@@ -813,21 +818,6 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
     participantStreams?.forEach((stream) => { this.remoteStreams.delete(stream) })
   }
 
-  getDisplayMedia() {
-    navigator.mediaDevices.getDisplayMedia().then((mediaStream: MediaStream) => {
-      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-        console.debug(`${CNAME}|getDisplayMedia`, mediaStream)
-      }
-      this.localDisplayMediaStream = mediaStream;
-
-      const mediaStreamInfo = MediaStreamHelper.getMediaStreamInfo(mediaStream);
-      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-        console.debug(`${CNAME}|getDisplayMedia mediaStreamInfo`, mediaStreamInfo)
-      }
-
-   })
-  }
-
   grabbingDisplayMedia = false;
 
   toggleScreenShare() {
@@ -976,7 +966,6 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
 //   //   console.error(`${CNAME}|doSignOut`, error)
 //   // });
 // }
-
 
 // toggleModeration() {
 //   this.conversation?.setModerated(!this.moderated);
