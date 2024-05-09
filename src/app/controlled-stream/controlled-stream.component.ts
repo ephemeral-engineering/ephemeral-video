@@ -5,10 +5,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 
-import { Stream } from 'ephemeral-webrtc';
+import { LocalStream, RemoteStream, Stream } from 'ephemeral-webrtc';
 
 import { round2 } from '../common';
-import { DATACHANNEL_POINTER_PATH, TOPIC_SCREEN } from '../constants';
+import { TOPIC_SCREEN } from '../constants';
 import { ContextService } from '../context.service';
 import { GLOBAL_STATE } from '../global-state';
 import { Pointer, PointerComponent } from '../pointer/pointer.component';
@@ -32,7 +32,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   _containerHeight = '100%'; // must be 100% by default if _objectFit is 'cover' by default
   _containerWidth = '100%'; // must be 100% by default if _objectFit is 'cover' by default
 
-  pointerChannels: Map<RTCDataChannel, Pointer> = new Map();
+  peersPointers: Map<string, Pointer> = new Map();
   pointers: Pointer[] = [];
 
   clickPointers: Pointer[] = [];
@@ -61,25 +61,26 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       this._videoStyle = { ...this._videoStyle };
     }
 
-    this._stream.onDataChannel(DATACHANNEL_POINTER_PATH, (dataChannel: RTCDataChannel) => {
-      // DONE: create a pointer each datachannel
-      // DONE: how do we know this is for a pointer ? => path indicates the purpose
-      // DONE: how do we know who is sending his pointer ? => some messages contain nickname
-
-      const clearDataChannelPointers = () => {
-        this.pointerChannels.delete(dataChannel);
-        this.ngZone.run(() => {
-          this.pointers = [...this.pointerChannels.values()];
-        });
+    this._stream.onData((data, peerId) => {
+      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+        console.debug(`${CNAME}|onData`, data, peerId)
       }
+      if (data.startsWith('pointer|')) {
 
-      dataChannel.addEventListener('message', (event) => {
-        const data = JSON.parse(event.data) as Pointer;
-        const prev = this.pointerChannels.get(dataChannel);
+        if (this._stream instanceof LocalStream) {
+          const localStream: LocalStream = this._stream;
+          // forward to subscribers, except the originating peer
+          const to = new Set(localStream.getSubscribers());
+          to.delete(peerId)
+          localStream.sendData(data, to)
+        }
+
+        // parse 'pointer|l|t|n|ts'
+        const [_p, l, t, nickname, timestamp] = data.split('|');
 
         // convert % of original video size to this video size
-        data.l = data.l * this.videoInfo.video.width / 100;
-        data.t = data.t * this.videoInfo.video.height / 100;
+        const left = +l * this.videoInfo.video.width / 100;
+        const top = +t * this.videoInfo.video.height / 100;
 
         let pointer: Pointer;
 
@@ -91,8 +92,8 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
             const n_width = this.videoInfo.video.width / factor;
             const offset = (n_width - this.videoInfo.element.width) / 2;
 
-            const t = data.t / factor;
-            const n_left = (data.l / factor) - offset;
+            const t = top / factor;
+            const n_left = (left / factor) - offset;
             const l = Math.min(Math.max(0, n_left), this.videoInfo.element.width);
             pointer = { l, t };
           } else {
@@ -102,8 +103,8 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
             const n_height = this.videoInfo.video.height / factor;
             const offset = (n_height - this.videoInfo.element.height) / 2;
 
-            const t = Math.min(Math.max(0, (data.t / factor) - offset), this.videoInfo.element.height);
-            const l = (data.l / factor);
+            const t = Math.min(Math.max(0, (top / factor) - offset), this.videoInfo.element.height);
+            const l = (left / factor);
             pointer = { l, t };
           }
         } else {
@@ -129,37 +130,29 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
           // the video must have kept its aspectRatio and should exactly be fitted into its parent element
           // so we shall just apply the factor
           const factor = this.videoInfo.video.width / this.videoInfo.element.width;
-          pointer = { l: data.l / factor, t: data.t / factor };
+          pointer = { l: left / factor, t: top / factor };
         }
 
-        if (data.n) {
-          pointer.n = data.n;
+        if (nickname && nickname !== 'undefined') {
+          pointer.n = nickname;
         }
 
-        this.pointerChannels.set(dataChannel, { ...(prev ? prev : {}), ...pointer });
+        const prev = this.peersPointers.get(peerId);
+        this.peersPointers.set(peerId, { ...(prev ? prev : {}), ...pointer });
+
+        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+          console.debug(`${CNAME}|received pointer`, pointer)
+        }
 
         this.ngZone.run(() => {
           // update the data of the component
-          this.pointers = [...this.pointerChannels.values()];
-          if (data.ts) {
-            pointer.ts = data.ts;
+          this.pointers = [...this.peersPointers.values()];
+          if (timestamp && timestamp !== 'undefined') {
+            pointer.ts = +timestamp;
             this.addClickPointer(pointer)
           }
-          if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-            console.debug(`${CNAME}|received pointer`, pointer)
-          }
         });
-      });
-      dataChannel.addEventListener('error', (error) => {
-        console.error(`${CNAME}|dataChannel.onerror`, error)
-        clearDataChannelPointers()
-      })
-      dataChannel.addEventListener('close', () => {
-        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|dataChannel.onclose`)
-        }
-        clearDataChannelPointers()
-      })
+      }
     })
   }
 
@@ -295,9 +288,6 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  outboundDataChannels: Set<RTCDataChannel> = new Set();
-  openDataChannels: Set<RTCDataChannel> = new Set();
-
   // human readable displayed video size
   videoSize = "";
 
@@ -323,37 +313,12 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     this.doCheckAspectRatios()
   }
 
-  onPointerEnter(event: PointerEvent) {
-    // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
-    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-      console.debug(`${CNAME}|onPointerEnter`, event, this._stream)
-    }
-
-    this._stream?.broadcast(DATACHANNEL_POINTER_PATH, (dataChannel) => {
-      const added = this.outboundDataChannels.add(dataChannel);
-      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-        console.debug(`${CNAME}|onPointerEnter stored outbound DataChannel`, dataChannel, this.outboundDataChannels.size, added)
-      }
-
-      dataChannel.onopen = () => {
-        this.openDataChannels.add(dataChannel);
-      };
-      dataChannel.onclose = () => {
-        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|broadcast dataChannel.onclose`)
-        }
-        this.outboundDataChannels.delete(dataChannel)
-        this.openDataChannels.delete(dataChannel)
-      }
-      dataChannel.onerror = (error) => {
-        if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
-          console.warn(`${CNAME}|broadcast dataChannel.onerror`, error)
-        }
-        this.outboundDataChannels.delete(dataChannel)
-        this.openDataChannels.delete(dataChannel)
-      }
-    }, { ordered: false })
-  }
+  // onPointerEnter(event: PointerEvent) {
+  //   // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
+  //   if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+  //     console.debug(`${CNAME}|onPointerEnter`, event, this._stream)
+  //   }
+  // }
 
   private moveCounter = 0;
 
@@ -421,15 +386,17 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       ...this.translateToMediaPercentage(this.getLocalPointer(event)),
       ...(this.moveCounter % 10 === 0 ? { n: GLOBAL_STATE.nickname } : {})
     };
-    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled && this.moveCounter % 10 === 0) {
-      const array = Array.from(this.openDataChannels);
-      console.debug(`${CNAME}|onPointerMove sending`, pointer, array.map((elt) => elt.readyState))
-    }
 
-    const buffer = JSON.stringify(pointer);
-    this.openDataChannels.forEach((dataChannel) => {
-      dataChannel.send(buffer)
-    })
+    if (this._stream instanceof LocalStream) {
+      const localStream: LocalStream = this._stream;
+      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled && this.moveCounter % 10 === 0) {
+        console.debug(`${CNAME}|onPointerMove sendToSubscribers`, pointer)
+      }
+      localStream.sendData(`pointer|${pointer.l}|${pointer.t}|${pointer.n}`, localStream.getSubscribers())
+    } else if (this._stream instanceof RemoteStream) {
+      const remoteStream: RemoteStream = this._stream;
+      remoteStream.sendData(`pointer|${pointer.l}|${pointer.t}|${pointer.n}`, new Set([remoteStream.peerId]))
+    }
   }
 
   onClick(event: MouseEvent) {
@@ -444,27 +411,26 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       ts: Date.now()
     })
 
-    const sendPointer = {
+    const pointer = {
       ...this.translateToMediaPercentage(local),
       n: GLOBAL_STATE.nickname,
       ts: Date.now()
     }
 
-    this.openDataChannels.forEach((dataChannel) => {
-      dataChannel.send(JSON.stringify(sendPointer))
-    })
+    if (this._stream instanceof LocalStream) {
+      const localStream: LocalStream = this._stream;
+      localStream.sendData(`pointer|${pointer.l}|${pointer.t}|${pointer.n}|${pointer.ts}`, localStream.getSubscribers())
+    } else if (this._stream instanceof RemoteStream) {
+      const remoteStream: RemoteStream = this._stream;
+      remoteStream.sendData(`pointer|${pointer.l}|${pointer.t}|${pointer.n}|${pointer.ts}`, new Set([remoteStream.peerId]))
+    }
   }
 
-  onPointerLeave(event: PointerEvent) {
-    // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
-    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-      console.debug(`${CNAME}|onPointerLeave`, event)
-    }
-    this.outboundDataChannels.forEach((dataChannel) => {
-      dataChannel.close()
-    })
-    this.openDataChannels.clear()
-    this.outboundDataChannels.clear()
-  }
+  // onPointerLeave(event: PointerEvent) {
+  //   // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
+  //   if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+  //     console.debug(`${CNAME}|onPointerLeave`, event)
+  //   }
+  // }
 
 }

@@ -17,4 +17,6 @@
   background:
     radial-gradient(black, #82D5F6) content-box,
     #82D5F6;
+  // to let someone click at the same place !
+  pointer-events: none;
 }
