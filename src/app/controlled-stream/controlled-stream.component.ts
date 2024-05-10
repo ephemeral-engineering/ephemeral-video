@@ -385,18 +385,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     };
 
     const data = [DATA_HEADER_POINTER, pointer.l, pointer.t, pointer.n].join(DATA_SEPARATOR);
-
-    if (this._stream instanceof LocalStream) {
-      const localStream: LocalStream = this._stream;
-      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled && count10) {
-        console.debug(`${CNAME}|onPointerMove sendToSubscribers`, pointer)
-      }
-
-      localStream.sendData(data, localStream.getSubscribers())
-    } else if (this._stream instanceof RemoteStream) {
-      const remoteStream: RemoteStream = this._stream;
-      remoteStream.sendData(data, new Set([remoteStream.peerId]))
-    }
+    this._stream.sendData(data)
   }
 
   onClick(event: MouseEvent) {
@@ -418,14 +407,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     }
 
     const data = [DATA_HEADER_POINTER, pointer.l, pointer.t, pointer.n, pointer.ts].join(DATA_SEPARATOR);
-
-    if (this._stream instanceof LocalStream) {
-      const localStream: LocalStream = this._stream;
-      localStream.sendData(data, localStream.getSubscribers())
-    } else if (this._stream instanceof RemoteStream) {
-      const remoteStream: RemoteStream = this._stream;
-      remoteStream.sendData(data, new Set([remoteStream.peerId]))
-    }
+    this._stream.sendData(data)
   }
 
 
