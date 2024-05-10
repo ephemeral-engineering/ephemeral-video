@@ -5,9 +5,8 @@ import { MatTooltip } from '@angular/material/tooltip';
 
 import { PublishOptions, RemoteStream, SubscribeOptions, receiveByChunks } from 'ephemeral-webrtc';
 
-
 import { MediaStreamHelper } from '../MediaStreamHelper';
-import { DATACHANNEL_SNAPSHOT_PATH, TOPIC_SCREEN } from '../constants';
+import { DATACHANNEL_SNAPSHOT_PATH } from '../constants';
 import { ContextService } from '../context.service';
 import { ControlledStreamComponent } from '../controlled-stream/controlled-stream.component';
 import { GLOBAL_STATE } from '../global-state';
@@ -19,7 +18,8 @@ const CNAME = 'RemoteStream';
   templateUrl: './remote-stream.component.html',
   styleUrls: ['./remote-stream.component.css'],
   standalone: true,
-  imports: [MatButtonModule, MatIconModule, MatTooltip, ControlledStreamComponent]
+  imports: [MatButtonModule, MatIconModule, MatTooltip,
+    ControlledStreamComponent]
 })
 export class RemoteStreamComponent implements OnInit, OnDestroy {
 
@@ -176,7 +176,10 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
   //   this._remoteStream?.sendData({ x: event.clientX, y: event.clientY })
   // }
 
+  snapshotInPrgs = false;
+
   snapshot() {
+    this.snapshotInPrgs = true;
     this._remoteStream?.singlecast(DATACHANNEL_SNAPSHOT_PATH, (dataChannel) => {
       // dataChannel.onopen = (event) => {
       //   if (globalThis.logLevel.isDebugEnabled) {
@@ -192,18 +195,18 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
       receiveByChunks(dataChannel).then((dataUrl) => {
         this.onSnapshot.emit(dataUrl)
         dataChannel.close()
+        this.snapshotInPrgs = false;
       })
 
-      dataChannel.onclose = (event) => {
+      const doHandleErrorClose = (event: Event) => {
         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|dataChannel:onclose`, DATACHANNEL_SNAPSHOT_PATH, event);
+          console.debug(`${CNAME}|dataChannel:onclose/onerror`, DATACHANNEL_SNAPSHOT_PATH, event);
         }
-      }
-      dataChannel.onerror = (event) => {
-        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|dataChannel:onerror`, DATACHANNEL_SNAPSHOT_PATH, event);
-        }
-      }
+        this.snapshotInPrgs = false;
+      };
+
+      dataChannel.onclose = doHandleErrorClose;
+      dataChannel.onerror = doHandleErrorClose;
     })
   }
 

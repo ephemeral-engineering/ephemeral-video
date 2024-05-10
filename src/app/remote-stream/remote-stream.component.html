@@ -1,6 +1,7 @@
 <app-controlled-stream [stream]="_remoteStream" [mediaStream]="_mediaStream" [videoStyle]="_videoStyle"
     [sinkId]="_sinkId">
-    <div label><span>{{_nickname}}</span>
+    <div label>
+        <span>{{_nickname}}</span>
         @if (_nickname) {
         <span>-</span>
         }
@@ -11,7 +12,8 @@
     </div>
     <div controls>
         <div>
-            <button mat-mini-fab aria-label="snapshot" matTooltip="snapshot" (click)="snapshot()">
+            <button mat-mini-fab aria-label="snapshot" matTooltip="snapshot" (click)="snapshot()"
+                [class.spinner]="snapshotInPrgs" [disabled]="snapshotInPrgs">
                 <mat-icon>photo_camera</mat-icon>
             </button>
         </div>
