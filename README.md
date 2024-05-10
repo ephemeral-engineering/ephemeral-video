@@ -74,19 +74,32 @@ git push origin main
 
 ## Roadmap
 
-- DONE(2023/12/26) broadcast ability in ephemeral-video library to support data streaming to all peers having subscribed to one stream
-- multiple colors pointers
-- try ServiceWorker onbeforeunload to cleanup firebase database https://stackoverflow.com/questions/36379155/wait-for-promises-in-onbeforeunload
-
+- DONE(2023/12/26) broadcast ability in ephemeral-webrtc library to support data streaming to all peers having subscribed to one stream
+- DONE(2024/05/09): rework broadcast to avoid using ephemeral-server. Actually sendData to publisher, that forwards it to subscribers
+- WIP pointer sharing
+    - DONE pointer sharing, managing 'cover' and 'none' display modes on both sides.
+    - multiple colors pointers
+    - add nickname on pointers
 - read https://www.webrtc-experiment.com/webrtcpedia/
   Vp8 codec minimum bandwidth is 100kbits/s
   Vp8 codec maximum bandwidth is 2000+ kbits/s
-
       720p at 30 FPS causes 1.0-to-2.0 Mbps bandwidth usage
       360p at 30 FPS causes 0.5-to-1.0 Mbps bandwidth usage
       180p at 30 FPS causes 0.1-to-0.5 Mbps bandwidth usage
 
 - https://webrtc.github.io/samples/src/content/peerconnection/bandwidth/
   https://github.com/webrtc/samples/blob/gh-pages/src/content/peerconnection/bandwidth/js/main.js
+- DONE remote control flashlight when available
+- DONE exchange stream capabilities between publisher and subscribers, not going through ephemeral server
+- DONE screen sharing
+- WIP(2024/05/10) dark theming
+    - created a dark-theme
+    - but some stream labels are not theme dependant...
+- DONE(2024/05/10) snapshot button spinner
+- ability to select a main display stream, and get back to the grid
+- manage multiple streams grid ? or not, maybe we should stick to a max of 3 or 4 streams and manage this properly at least.
+- DONE manage log level as a url parameter
+- DONE manage monitoring mode as a url parameter
+- exhange nicknames without using ephemeral-server
 
 ## BUILD SIZE
