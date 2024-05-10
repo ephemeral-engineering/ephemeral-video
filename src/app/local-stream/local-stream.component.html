@@ -1,5 +1,5 @@
 <app-controlled-stream [stream]="_localStream" [mediaStream]="_mediaStream" [videoStyle]="_videoStyle" [muted]="true">
-  <span label>{{_publishOptions.topic}}</span>
+  <span label class="c-primary">{{_publishOptions.topic}}</span>
   <div controls>
     <div>
       <button mat-mini-fab aria-label="publish-audio" matTooltip="Publish audio" (click)="togglePublishAudio()">

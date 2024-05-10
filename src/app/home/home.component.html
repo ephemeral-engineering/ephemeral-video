@@ -44,7 +44,7 @@
 </div> -->
 <!-- ,'flex-wrap':'wrap' -->
 <!-- {justifyContent:'space-around','flex-wrap':'wrap','gap':'4px'} -->
-<div class="room pos-relative dvh-100 d-flex align-items-center" [ngStyle]="{justifyContent:'space-around'}">
+<div class="pos-relative dvh-100 d-flex align-items-center" [ngStyle]="{justifyContent:'space-around'}">
   <!-- class="flex-g-1" -->
   @for (stream of remoteStreams; track stream) {
   <app-remote-stream [remoteStream]="stream" [mediaStreamInfo]="mediaStreamInfos.get(stream)"
@@ -67,7 +67,8 @@
     </app-local-stream>
     }
     @if (!gstate.isMobile) {
-    <button mat-fab (click)="toggleScreenShare()" aria-label="Share screen" matTooltip="Share screen" [disabled]="grabbingDisplayMedia">
+    <button mat-fab (click)="toggleScreenShare()" aria-label="Share screen" matTooltip="Share screen"
+      [disabled]="grabbingDisplayMedia">
       @if (localDisplayStream) {
       <mat-icon>stop_screen_share</mat-icon>
       } @else {
