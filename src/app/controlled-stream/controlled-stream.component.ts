@@ -14,6 +14,9 @@ import { GLOBAL_STATE } from '../global-state';
 import { Pointer, PointerComponent } from '../pointer/pointer.component';
 import { StreamVideoComponent, VideoInfo } from '../stream-video/stream-video.component';
 
+const DATA_HEADER_POINTER = 'p';
+const DATA_SEPARATOR = '|';
+
 const CNAME = 'ControlledStream';
 
 @Component({
@@ -65,7 +68,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
         console.debug(`${CNAME}|onData`, data, peerId)
       }
-      if (data.startsWith('pointer|')) {
+      if (data.startsWith(`${DATA_HEADER_POINTER}${DATA_SEPARATOR}`)) {
 
         if (this._stream instanceof LocalStream) {
           const localStream: LocalStream = this._stream;
@@ -75,8 +78,8 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
           localStream.sendData(data, to)
         }
 
-        // parse 'pointer|l|t|n|ts'
-        const [_p, l, t, nickname, timestamp] = data.split('|');
+        // parse 'p|<l>|<t>|<n>|<ts>'
+        const [_p, l, t, nickname, timestamp] = data.split(DATA_SEPARATOR);
 
         // convert % of original video size to this video size
         const left = +l * this.videoInfo.video.width / 100;
@@ -313,15 +316,6 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     this.doCheckAspectRatios()
   }
 
-  // onPointerEnter(event: PointerEvent) {
-  //   // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
-  //   if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-  //     console.debug(`${CNAME}|onPointerEnter`, event, this._stream)
-  //   }
-  // }
-
-  private moveCounter = 0;
-
   getLocalPointer(event: MouseEvent) {
     const rect = this.container?.nativeElement.getBoundingClientRect();
     return {
@@ -378,24 +372,30 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  private moveCounter = 0;
+
   onPointerMove(event: PointerEvent) {
     // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
 
-    this.moveCounter++;
+    const count10 = this.moveCounter++ % 10 === 0;
+
     const pointer: Pointer = {
       ...this.translateToMediaPercentage(this.getLocalPointer(event)),
-      ...(this.moveCounter % 10 === 0 ? { n: GLOBAL_STATE.nickname } : {})
+      ...(count10 ? { n: GLOBAL_STATE.nickname } : {})
     };
+
+    const data = [DATA_HEADER_POINTER, pointer.l, pointer.t, pointer.n].join(DATA_SEPARATOR);
 
     if (this._stream instanceof LocalStream) {
       const localStream: LocalStream = this._stream;
-      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled && this.moveCounter % 10 === 0) {
+      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled && count10) {
         console.debug(`${CNAME}|onPointerMove sendToSubscribers`, pointer)
       }
-      localStream.sendData(`pointer|${pointer.l}|${pointer.t}|${pointer.n}`, localStream.getSubscribers())
+
+      localStream.sendData(data, localStream.getSubscribers())
     } else if (this._stream instanceof RemoteStream) {
       const remoteStream: RemoteStream = this._stream;
-      remoteStream.sendData(`pointer|${pointer.l}|${pointer.t}|${pointer.n}`, new Set([remoteStream.peerId]))
+      remoteStream.sendData(data, new Set([remoteStream.peerId]))
     }
   }
 
@@ -417,14 +417,24 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       ts: Date.now()
     }
 
+    const data = [DATA_HEADER_POINTER, pointer.l, pointer.t, pointer.n, pointer.ts].join(DATA_SEPARATOR);
+
     if (this._stream instanceof LocalStream) {
       const localStream: LocalStream = this._stream;
-      localStream.sendData(`pointer|${pointer.l}|${pointer.t}|${pointer.n}|${pointer.ts}`, localStream.getSubscribers())
+      localStream.sendData(data, localStream.getSubscribers())
     } else if (this._stream instanceof RemoteStream) {
       const remoteStream: RemoteStream = this._stream;
-      remoteStream.sendData(`pointer|${pointer.l}|${pointer.t}|${pointer.n}|${pointer.ts}`, new Set([remoteStream.peerId]))
+      remoteStream.sendData(data, new Set([remoteStream.peerId]))
     }
   }
+
+
+  // onPointerEnter(event: PointerEvent) {
+  //   // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
+  //   if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+  //     console.debug(`${CNAME}|onPointerEnter`, event, this._stream)
+  //   }
+  // }
 
   // onPointerLeave(event: PointerEvent) {
   //   // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
