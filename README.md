@@ -101,5 +101,7 @@ git push origin main
 - DONE manage log level as a url parameter
 - DONE manage monitoring mode as a url parameter
 - exhange nicknames without using ephemeral-server
+- work on blur with https://developers.google.com/mediapipe/solutions/vision/interactive_segmenter/web_js maybe ?
+    - and https://www.youtube.com/watch?v=yuUbVQdTRZQ ?
 
 ## BUILD SIZE

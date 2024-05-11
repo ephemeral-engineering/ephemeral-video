@@ -76,6 +76,9 @@
       }
     </button>
     }
+    <!-- <button mat-fab (click)="blur()">
+      <mat-icon>blur_on</mat-icon>
+    </button> -->
   </div>
 </div>
 
@@ -265,10 +268,6 @@
         <p>{{participant.user.id}}</p>
         <button *ngIf="moderator" (click)="eject(participant)">Eject</button>
       </div>
-    </div>
-
-    <div>
-      <button (click)="blur()">blur </button>
     </div>
 
     <div>

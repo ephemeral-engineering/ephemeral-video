@@ -909,15 +909,16 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
 }
-  //blurredMediaStream: MediaStream | undefined;
+  // blurredMediaStream: MediaStream | undefined;
 
   // blur() {
-  //   if (this.localStream && this.localMediaStream) {
-  //     this.blurredMediaStream = this.localMediaStream;
-  //     this.localMediaStream = MediaStreamHelper.blur(this.localMediaStream);
-  //     this.localStream.replaceMediaStream(this.localMediaStream)
+  //   if (this.localStream && this.localUserMediaStream) {
+  //     this.blurredMediaStream = this.localUserMediaStream;
+  //     this.localUserMediaStream = MediaStreamHelper.blur(this.localUserMediaStream);
+  //     this.localStream.replaceMediaStream(this.localUserMediaStream)
   //   }
   // }
+
   // doListenToTracksEvents(mediaStream: MediaStream, logPrefix: string) {
   //   mediaStream.getTracks().forEach((track: MediaStreamTrack) => {
   //     track.onmute = (event) => {
