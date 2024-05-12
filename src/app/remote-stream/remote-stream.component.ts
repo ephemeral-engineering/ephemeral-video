@@ -1,6 +1,8 @@
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
+// import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltip } from '@angular/material/tooltip';
 
 import { PublishOptions, RemoteStream, SubscribeOptions, receiveByChunks } from 'ephemeral-webrtc';
@@ -18,7 +20,8 @@ const CNAME = 'RemoteStream';
   templateUrl: './remote-stream.component.html',
   styleUrls: ['./remote-stream.component.css'],
   standalone: true,
-  imports: [MatButtonModule, MatIconModule, MatTooltip,
+  // MatProgressSpinnerModule
+  imports: [MatButtonModule, MatChipsModule, MatIconModule, MatTooltip,
     ControlledStreamComponent]
 })
 export class RemoteStreamComponent implements OnInit, OnDestroy {

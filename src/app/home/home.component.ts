@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import {MatSnackBar} from '@angular/material/snack-bar';
 import { MatTooltip } from '@angular/material/tooltip';
 import { ActivatedRoute } from "@angular/router";
 
@@ -146,7 +147,8 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
     public contextService: ContextService,
     private messagesService: MessagesService,
     private fb: UntypedFormBuilder,
-    private responsive: BreakpointObserver
+    private responsive: BreakpointObserver,
+    private _snackBar: MatSnackBar
   ) {
 
     const logLevel = (this.activatedRoute.snapshot.queryParamMap.get('log') || 'warn') as LogLevelText;
@@ -495,6 +497,10 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
     this.getUserMedia()
   }
 
+  copyLinkSnackBar(copied:boolean) {
+    this._snackBar.open(copied ? 'Link copied to clipboard':'Failed to copy link', 'Ok',{duration:2000, verticalPosition:'top'});
+  }
+
   _selectedAudioDeviceId = getSessionStorage(`${STORAGE_PREFIX}-audioDeviceId`);
   set selectedAudioDeviceId(id: string) {
     // For device change, need to go through getUserMedia
@@ -816,6 +822,12 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
       console.debug(`${CNAME}|doRemoveRemoteParticipant`, participant, deleted, this.remoteStreamsByParticipant.size)
     }
     participantStreams?.forEach((stream) => { this.remoteStreams.delete(stream) })
+  }
+
+  selectedStream:LocalStream|undefined;
+
+  select(stream?:LocalStream){
+    this.selectedStream = stream || undefined;
   }
 
   grabbingDisplayMedia = false;

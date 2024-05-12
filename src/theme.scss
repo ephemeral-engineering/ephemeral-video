@@ -40,13 +40,16 @@ $dark-theme: mat.define-dark-theme((color: (primary: $dark-primary,
 // passed to `define-light-theme` omits typography, `button-theme` will not
 // emit any typography styles.
 @include mat.button-theme($dark-theme);
+@include mat.chips-theme($dark-theme);
 // Include the theme mixins for other components you use here.
 @include mat.fab-theme($dark-theme);
 @include mat.icon-theme($dark-theme);
 @include mat.icon-button-theme($dark-theme);
 @include mat.input-theme($dark-theme);
 @include mat.form-field-theme($dark-theme);
+// @include mat.progress-spinner-theme($dark-theme);
 @include mat.select-theme($dark-theme);
+@include mat.snack-bar-theme($dark-theme);
 @include mat.tooltip-theme($dark-theme);
 // As an alternative, to listing every component that your application uses :
 // These mixins behave the same as individual component mixins, except they emit styles for core-theme and all 35+ components in Angular Material. Unless your application uses every single component, this will produce unnecessary CSS.

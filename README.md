@@ -92,16 +92,17 @@ git push origin main
 - DONE remote control flashlight when available
 - DONE exchange stream capabilities between publisher and subscribers, not going through ephemeral server
 - DONE screen sharing
-- WIP(2024/05/10) dark theming
+- DONE(2024/05/10) dark theming
     - created a dark-theme
-    - but some stream labels are not theme dependant...
 - DONE(2024/05/10) snapshot button spinner
 - ability to select a main display stream, and get back to the grid
+    - maybe use https://vasily-ivanov.medium.com/instanceof-in-angular-html-templates-63f23d497242 to check instanceof Local or Remote Stream ? 
 - manage multiple streams grid ? or not, maybe we should stick to a max of 3 or 4 streams and manage this properly at least.
 - DONE manage log level as a url parameter
 - DONE manage monitoring mode as a url parameter
 - exhange nicknames without using ephemeral-server
 - work on blur with https://developers.google.com/mediapipe/solutions/vision/interactive_segmenter/web_js maybe ?
     - and https://www.youtube.com/watch?v=yuUbVQdTRZQ ?
+- DONE add snackabr indicating link was copied to clipboard
 
 ## BUILD SIZE

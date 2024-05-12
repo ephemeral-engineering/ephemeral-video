@@ -2,10 +2,11 @@ import { JsonPipe, KeyValuePipe, NgStyle } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, HostBinding, Input, NgZone, OnDestroy, ViewChild } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 
-import { LocalStream, RemoteStream, Stream } from 'ephemeral-webrtc';
+import { LocalStream, Stream } from 'ephemeral-webrtc';
 
 import { round2 } from '../common';
 import { TOPIC_SCREEN } from '../constants';
@@ -22,7 +23,9 @@ const CNAME = 'ControlledStream';
 @Component({
   selector: 'app-controlled-stream',
   standalone: true,
-  imports: [JsonPipe, MatButtonModule, MatIconModule, MatTooltip, NgStyle, KeyValuePipe, StreamVideoComponent, PointerComponent],
+  imports: [MatButtonModule, MatChipsModule, MatIconModule, MatTooltip,
+    JsonPipe, KeyValuePipe, NgStyle,
+    StreamVideoComponent, PointerComponent],
   templateUrl: './controlled-stream.component.html',
   styleUrl: './controlled-stream.component.css'
 })
@@ -190,7 +193,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   @ViewChild('container') container: ElementRef | undefined;
   @ViewChild('label') label: ElementRef | undefined;
   @ViewChild('controls') controls: ElementRef | undefined;
-  @ViewChild('objectFit') objectFit: ElementRef | undefined;
+  @ViewChild('dcontrols') displayControls: ElementRef | undefined;
   @ViewChild('info') info: ElementRef | undefined;
 
   // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
@@ -208,6 +211,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit() {
 
     let controlsEntry: ResizeObserverEntry | undefined = undefined;
+    let displayControlsEntry: ResizeObserverEntry | undefined = undefined;
     let labelEntry: ResizeObserverEntry | undefined = undefined;
     let infoEntry: ResizeObserverEntry | undefined = undefined;
 
@@ -216,11 +220,11 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       // It can be displayed or not but the problem is that it appears according to aspect ratio,
       // which can be modified when minHeght/minWidth kick in. It then enters a resizing loop that never ends growing and shrinking.
       // To prevent that, consider objectFitEntry is always 48px
-      const height = Math.max((controlsEntry?.contentRect.height || 0) + 48, //(objectFitEntry?.contentRect.height || 0)
-        (labelEntry?.contentRect.height || 0) + (this.info?.nativeElement.height || 0)
+      const height = Math.max((controlsEntry?.contentRect.height || 0) + (displayControlsEntry?.contentRect.height || 0) + 4,
+        (labelEntry?.contentRect.height || 0) + (this.info?.nativeElement.height || 0) + 4
       );
       const width = Math.max((controlsEntry?.contentRect.width || 0), (infoEntry?.contentRect.width || 0) + ((controlsEntry?.contentRect.width || 0) * 2) + 8,
-        (labelEntry?.contentRect.width || 0) + 48//(objectFitEntry?.contentRect.width || 0)
+        (labelEntry?.contentRect.width || 0) + (displayControlsEntry?.contentRect.width || 0)
       );
 
       this.minHeight = `${height + 8}px`;
@@ -232,6 +236,9 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
         switch (entry.target) {
           case this.controls?.nativeElement:
             controlsEntry = entry;
+            break;
+          case this.displayControls?.nativeElement:
+            displayControlsEntry = entry;
             break;
           case this.label?.nativeElement:
             labelEntry = entry;
@@ -246,10 +253,11 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       doCalcMinHeightWidth()
     });
     this.controlsObs.observe(this.controls?.nativeElement);
+    this.controlsObs.observe(this.displayControls?.nativeElement);
     this.controlsObs.observe(this.label?.nativeElement);
     this.controlsObs.observe(this.info?.nativeElement);
 
-    this.componentObs = new ResizeObserver((entries) => {
+    this.componentObs = new ResizeObserver((_entries) => {
       this.aspectRatio = round2(this.el.nativeElement.clientWidth / this.el.nativeElement.clientHeight);
       this.doCheckAspectRatios()
     });

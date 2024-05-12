@@ -3,23 +3,22 @@
   <!-- (pointerenter)="onPointerEnter($event)" (pointerleave)="onPointerLeave($event)" -->
   <app-stream-video [mediaStream]="_mediaStream" [videoStyle]="_videoStyle" [muted]="_muted" [sinkId]="_sinkId"
     (click)="onClick($event)" (onInfo)="onInfo($event)"></app-stream-video>
-  <div class="pos-abs top-left bc-blue pe-none" #label>
+  <div class="pos-abs top-left op-7" #label>
     <ng-content select="[label]"></ng-content>
   </div>
-  <div class="pos-abs top-right" (click)="toggleObjectFit()" #objectFit>
+  <div class="pos-abs top-right op-7 d-flex flex-row gap-1" #dcontrols>
     @if (_objectFitSwitch) {
-    <button mat-icon-button matTooltip="Cover/Crop"><mat-icon aria-hidden="false" aria-label="crop"
-        [fontIcon]="_objectFit === 'cover' ? 'crop' : 'crop_free'"></mat-icon></button>
+    <button mat-mini-fab matTooltip="Cover/Crop" (click)="toggleObjectFit()"><mat-icon aria-hidden="false"
+        aria-label="crop" [fontIcon]="_objectFit === 'cover' ? 'crop' : 'crop_free'"></mat-icon></button>
     }
+    <ng-content select="[dcontrols]"></ng-content>
   </div>
-  <div class="pos-abs bottom-right" #controls>
+  <div class="pos-abs bottom-right op-7" #controls>
     <ng-content select="[controls]"></ng-content>
   </div>
-  <div class="pos-abs centered-axis-x pe-none" #info>
+  <div class="pos-abs centered-axis-x op-7 pe-none" #info>
     @if (gstate.monitor) {
-    <div class="bc-blue">
-      <span>{{videoSize}}</span>
-    </div>
+    <mat-chip>{{videoSize}}</mat-chip>
     }
   </div>
   @for (pointer of clickPointers; track pointer) {

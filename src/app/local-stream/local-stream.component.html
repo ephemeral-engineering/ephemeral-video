@@ -1,5 +1,16 @@
 <app-controlled-stream [stream]="_localStream" [mediaStream]="_mediaStream" [videoStyle]="_videoStyle" [muted]="true">
-  <span label class="c-primary">{{_publishOptions.topic}}</span>
+  <!-- <span label class="c-primary"></span> -->
+  <!-- <button label mat-flat-button (click)="select()">{{_publishOptions.topic}}</button> -->
+  <mat-chip label>
+    <span>{{gstate.nickname}}</span>
+    @if (gstate.nickname) {
+    <span>-</span>
+    }
+    <span>{{_publishOptions.topic}}</span>
+  </mat-chip>
+  <!-- [fontIcon]="'fullscreen'" -->
+    <!-- <button dcontrols mat-mini-fab matTooltip="Fullscreen">
+        <mat-icon aria-hidden="false" aria-label="fullscreen">fullscreen</mat-icon></button> -->
   <div controls>
     <div>
       <button mat-mini-fab aria-label="publish-audio" matTooltip="Publish audio" (click)="togglePublishAudio()">
@@ -13,12 +24,12 @@
       </button>
     </div>
     @if (_mediaStreamInfo?.video?.capabilities?.torch) {
-      <div class="mt-1">
-        <button mat-mini-fab aria-label="flashlight" matTooltip="Flashlight" (click)="toggleFlashlight()">
-          <mat-icon>{{_mediaStreamInfo?.video?.settings.torch ? 'flashlight_on':'flashlight_off'}}
-          </mat-icon>
-        </button>
-      </div>
+    <div class="mt-1">
+      <button mat-mini-fab aria-label="flashlight" matTooltip="Flashlight" (click)="toggleFlashlight()">
+        <mat-icon>{{_mediaStreamInfo?.video?.settings.torch ? 'flashlight_on':'flashlight_off'}}
+        </mat-icon>
+      </button>
+    </div>
     }
   </div>
 </app-controlled-stream>

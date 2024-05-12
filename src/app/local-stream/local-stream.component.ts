@@ -1,6 +1,7 @@
 import { NgStyle } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 
@@ -8,6 +9,7 @@ import { LocalStream, PublishOptions } from 'ephemeral-webrtc';
 
 import { MediaStreamHelper, MediaStreamInfo } from '../MediaStreamHelper';
 import { ControlledStreamComponent } from '../controlled-stream/controlled-stream.component';
+import { GLOBAL_STATE } from '../global-state';
 
 const CNAME = 'LocalStream';
 
@@ -16,9 +18,11 @@ const CNAME = 'LocalStream';
   templateUrl: './local-stream.component.html',
   styleUrls: ['./local-stream.component.css'],
   standalone: true,
-  imports: [NgStyle, MatButtonModule, MatIconModule, MatTooltip, ControlledStreamComponent],
+  imports: [NgStyle, MatButtonModule, MatChipsModule, MatIconModule, MatTooltip, ControlledStreamComponent],
 })
 export class LocalStreamComponent implements OnInit {
+
+  readonly gstate = GLOBAL_STATE;
 
   _publishOptions: PublishOptions = { audio: false, video: false };
 
@@ -78,6 +82,8 @@ export class LocalStreamComponent implements OnInit {
     this._videoStyle = { ...this._videoStyle, ...style };
   }
 
+  @Output() onSelect = new EventEmitter<void>();
+
   @Output() onToggleFlashlight = new EventEmitter<void>();
 
   _mediaStream: MediaStream | undefined;
@@ -115,10 +121,11 @@ export class LocalStreamComponent implements OnInit {
     }
   }
 
+  select() {
+    this.onSelect.emit()
+  }
+
   toggleFlashlight() {
-    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-      console.debug(`${CNAME}|toggleFlashlight`)
-    }
     this.onToggleFlashlight.emit()
   }
 

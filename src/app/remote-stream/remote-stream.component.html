@@ -1,6 +1,6 @@
 <app-controlled-stream [stream]="_remoteStream" [mediaStream]="_mediaStream" [videoStyle]="_videoStyle"
     [sinkId]="_sinkId">
-    <div label>
+    <mat-chip label>
         <span>{{_nickname}}</span>
         @if (_nickname) {
         <span>-</span>
@@ -9,14 +9,15 @@
         @if (gstate.monitor) {
         <span>-{{_onlineStatus}}</span>
         }
-    </div>
+    </mat-chip>
+    <!-- [fontIcon]="'fullscreen'" -->
+    <!-- <button dcontrols mat-mini-fab matTooltip="Fullscreen">
+        <mat-icon aria-hidden="false" aria-label="fullscreen">fullscreen</mat-icon></button> -->
     <div controls>
-        <div>
-            <button mat-mini-fab aria-label="snapshot" matTooltip="snapshot" (click)="snapshot()"
-                [class.spinner]="snapshotInPrgs" [disabled]="snapshotInPrgs">
-                <mat-icon>photo_camera</mat-icon>
-            </button>
-        </div>
+        <button mat-mini-fab aria-label="snapshot" matTooltip="snapshot" (click)="snapshot()"
+            [class.spinner]="snapshotInPrgs" [disabled]="snapshotInPrgs">
+            <mat-icon>photo_camera</mat-icon>
+        </button>
         @if (_publishOptions.topic !== 'screen') {
         <div class="mt-1">
             <button mat-mini-fab aria-label="publish-audio" matTooltip="on/off" (click)="togglePublishAudio()">
