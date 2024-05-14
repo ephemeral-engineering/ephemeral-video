@@ -58,8 +58,127 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
     this.startClickPointersTimer()
   }
 
+  peerRemoved = (peerId: string) => {
+    this.peersPointers.delete(peerId)
+    this.ngZone.run(() => {
+      // update the data of the component
+      this.pointers = [...this.peersPointers.values()];
+    });
+  };
+
+  onData = (data: string, peerId: string) => {
+    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+      console.debug(`${CNAME}|onData`, data, peerId)
+    }
+    if (data.startsWith(`${DATA_HEADER_POINTER}${DATA_SEPARATOR}`)) {
+
+      if (this._stream instanceof LocalStream) {
+        const localStream: LocalStream = this._stream;
+        // forward to subscribers, except the originating peer
+        const to = new Set(localStream.getSubscribers());
+        to.delete(peerId)
+        localStream.sendData(data, to)
+      }
+
+      // parse 'p|<l>|<t>|<n>|<ts>'
+      const [_p, l, t, nickname, timestamp] = data.split(DATA_SEPARATOR);
+
+      // convert % of original video size to this video size
+      const left = +l * this.videoInfo.video.width / 100;
+      const top = +t * this.videoInfo.video.height / 100;
+
+      let pointer: Pointer;
+
+      if (this._objectFit === 'cover') {
+        if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
+          // then image is full in height but image will be reduced in width
+          const factor = this.videoInfo.video.height / this.videoInfo.element.height;
+
+          const n_width = this.videoInfo.video.width / factor;
+          const offset = (n_width - this.videoInfo.element.width) / 2;
+
+          const t = top / factor;
+          const n_left = (left / factor) - offset;
+          const l = Math.min(Math.max(0, n_left), this.videoInfo.element.width);
+          pointer = { l, t };
+        } else {
+          // then image is full in width but image will be reduced in height
+          const factor = this.videoInfo.video.width / this.videoInfo.element.width;
+
+          const n_height = this.videoInfo.video.height / factor;
+          const offset = (n_height - this.videoInfo.element.height) / 2;
+
+          const t = Math.min(Math.max(0, (top / factor) - offset), this.videoInfo.element.height);
+          const l = (left / factor);
+          pointer = { l, t };
+        }
+      } else {
+        // manage the 'contain' case.
+        // if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
+        //   const factor = this.videoInfo.video.width / this.videoInfo.element.width;
+        //   const n_height = this.videoInfo.video.height / factor;
+        //   const offset = (this.videoInfo.element.height - n_height) / 2;
+        //   const t = Math.min(Math.max(0, (data.t / factor) + offset), this.videoInfo.element.height);
+        //   const l = (data.l / factor);
+        //   pointer = { l, t };
+        // } else {
+        //   const factor = this.videoInfo.video.height / this.videoInfo.element.height;
+        //   const n_width = this.videoInfo.video.width / factor;
+        //   const offset = (this.videoInfo.element.width - n_width) / 2;
+        //   const t = data.t / factor;
+        //   const n_left = (data.l / factor) + offset;
+        //   const l = Math.min(Math.max(0, n_left), this.videoInfo.element.width);
+        //   pointer = { l, t };
+        // }
+
+        // If not 'cover', then undefined, 
+        // the video must have kept its aspectRatio and should exactly be fitted into its parent element
+        // so we shall just apply the factor
+        const factor = this.videoInfo.video.width / this.videoInfo.element.width;
+        pointer = { l: left / factor, t: top / factor };
+      }
+
+      if (nickname && nickname !== 'undefined') {
+        pointer.n = nickname;
+      }
+
+      const prev = this.peersPointers.get(peerId);
+      this.peersPointers.set(peerId, { ...(prev ? prev : {}), ...pointer });
+
+      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+        console.debug(`${CNAME}|received pointer`, pointer)
+      }
+
+      this.ngZone.run(() => {
+        // update the data of the component
+        this.pointers = [...this.peersPointers.values()];
+        if (timestamp && timestamp !== 'undefined') {
+          pointer.ts = +timestamp;
+          this.addClickPointer(pointer)
+        }
+      });
+    } else if (data === 'd') {
+      this.peersPointers.delete(peerId)
+      this.ngZone.run(() => {
+        // update the data of the component
+        this.pointers = [...this.peersPointers.values()];
+      });
+    }
+  };
+
+  removeStreamListeners() {
+    if (this._stream instanceof LocalStream) {
+      this._stream.offPeer('removed', this.peerRemoved)
+    }
+    this._stream?.offData(this.onData)
+  }
+
   _stream: Stream;
   @Input({ required: true }) set stream(stream: Stream) {
+    // cleanup in case of stream change
+    this.removeStreamListeners()
+
+    // override
     this._stream = stream;
 
     if (this._stream.getPublishOptions().topic === TOPIC_SCREEN) {
@@ -67,99 +186,12 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       this._videoStyle = { ...this._videoStyle };
     }
 
-    this._stream.onData((data, peerId) => {
-      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-        console.debug(`${CNAME}|onData`, data, peerId)
-      }
-      if (data.startsWith(`${DATA_HEADER_POINTER}${DATA_SEPARATOR}`)) {
+    if (this._stream instanceof LocalStream) {
+      // remove pointer from a peer that unsubscribed (or left, or refreshed the page)
+      this._stream.onPeer('removed', this.peerRemoved)
+    }
 
-        if (this._stream instanceof LocalStream) {
-          const localStream: LocalStream = this._stream;
-          // forward to subscribers, except the originating peer
-          const to = new Set(localStream.getSubscribers());
-          to.delete(peerId)
-          localStream.sendData(data, to)
-        }
-
-        // parse 'p|<l>|<t>|<n>|<ts>'
-        const [_p, l, t, nickname, timestamp] = data.split(DATA_SEPARATOR);
-
-        // convert % of original video size to this video size
-        const left = +l * this.videoInfo.video.width / 100;
-        const top = +t * this.videoInfo.video.height / 100;
-
-        let pointer: Pointer;
-
-        if (this._objectFit === 'cover') {
-          if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
-            // then image is full in height but image will be reduced in width
-            const factor = this.videoInfo.video.height / this.videoInfo.element.height;
-
-            const n_width = this.videoInfo.video.width / factor;
-            const offset = (n_width - this.videoInfo.element.width) / 2;
-
-            const t = top / factor;
-            const n_left = (left / factor) - offset;
-            const l = Math.min(Math.max(0, n_left), this.videoInfo.element.width);
-            pointer = { l, t };
-          } else {
-            // then image is full in width but image will be reduced in height
-            const factor = this.videoInfo.video.width / this.videoInfo.element.width;
-
-            const n_height = this.videoInfo.video.height / factor;
-            const offset = (n_height - this.videoInfo.element.height) / 2;
-
-            const t = Math.min(Math.max(0, (top / factor) - offset), this.videoInfo.element.height);
-            const l = (left / factor);
-            pointer = { l, t };
-          }
-        } else {
-          // manage the 'contain' case.
-          // if (this.videoInfo.element.aspectRatio <= this.videoInfo.video.aspectRatio) {
-          //   const factor = this.videoInfo.video.width / this.videoInfo.element.width;
-          //   const n_height = this.videoInfo.video.height / factor;
-          //   const offset = (this.videoInfo.element.height - n_height) / 2;
-          //   const t = Math.min(Math.max(0, (data.t / factor) + offset), this.videoInfo.element.height);
-          //   const l = (data.l / factor);
-          //   pointer = { l, t };
-          // } else {
-          //   const factor = this.videoInfo.video.height / this.videoInfo.element.height;
-          //   const n_width = this.videoInfo.video.width / factor;
-          //   const offset = (this.videoInfo.element.width - n_width) / 2;
-          //   const t = data.t / factor;
-          //   const n_left = (data.l / factor) + offset;
-          //   const l = Math.min(Math.max(0, n_left), this.videoInfo.element.width);
-          //   pointer = { l, t };
-          // }
-
-          // If not 'cover', then undefined, 
-          // the video must have kept its aspectRatio and should exactly be fitted into its parent element
-          // so we shall just apply the factor
-          const factor = this.videoInfo.video.width / this.videoInfo.element.width;
-          pointer = { l: left / factor, t: top / factor };
-        }
-
-        if (nickname && nickname !== 'undefined') {
-          pointer.n = nickname;
-        }
-
-        const prev = this.peersPointers.get(peerId);
-        this.peersPointers.set(peerId, { ...(prev ? prev : {}), ...pointer });
-
-        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|received pointer`, pointer)
-        }
-
-        this.ngZone.run(() => {
-          // update the data of the component
-          this.pointers = [...this.peersPointers.values()];
-          if (timestamp && timestamp !== 'undefined') {
-            pointer.ts = +timestamp;
-            this.addClickPointer(pointer)
-          }
-        });
-      }
-    })
+    this._stream.onData(this.onData)
   }
 
   _mediaStream: MediaStream | undefined;
@@ -286,6 +318,8 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       // disconnect() unobserves all observed Element targets of a particular observer.
       this.controlsObs.disconnect();
     }
+
+    this.removeStreamListeners()
   }
 
   toggleObjectFit() {
@@ -426,11 +460,13 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   //   }
   // }
 
-  // onPointerLeave(event: PointerEvent) {
-  //   // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
-  //   if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-  //     console.debug(`${CNAME}|onPointerLeave`, event)
-  //   }
-  // }
+  onPointerLeave(event: PointerEvent) {
+    // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
+    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+      console.debug(`${CNAME}|onPointerLeave`, event)
+    }
+
+    this._stream.sendData('d')
+  }
 
 }

@@ -104,5 +104,7 @@ git push origin main
 - work on blur with https://developers.google.com/mediapipe/solutions/vision/interactive_segmenter/web_js maybe ?
     - and https://www.youtube.com/watch?v=yuUbVQdTRZQ ?
 - DONE add snackabr indicating link was copied to clipboard
+- DONE(2024/05/15) fix a bug of a remaining pointer on local stream from a remote when remote page is refreshed
+    - DONE(2024/05/15)also fix delete pointer on a stream when mouse left the origin stream, to prevent from still seeing the pointer on a previous stream when user is pointing another one
 
 ## BUILD SIZE

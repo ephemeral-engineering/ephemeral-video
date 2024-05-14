@@ -1,6 +1,6 @@
 <div [ngStyle]="{height:_containerHeight, width:_containerWidth, position:'relative'}" #container
-  (pointermove)="onPointerMove($event)">
-  <!-- (pointerenter)="onPointerEnter($event)" (pointerleave)="onPointerLeave($event)" -->
+  (pointermove)="onPointerMove($event)" (pointerleave)="onPointerLeave($event)">
+  <!-- (pointerenter)="onPointerEnter($event)"  -->
   <app-stream-video [mediaStream]="_mediaStream" [videoStyle]="_videoStyle" [muted]="_muted" [sinkId]="_sinkId"
     (click)="onClick($event)" (onInfo)="onInfo($event)"></app-stream-video>
   <div class="pos-abs top-left op-7" #label>

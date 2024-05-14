@@ -183,34 +183,35 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
 
   snapshot() {
     this.snapshotInPrgs = true;
-    this._remoteStream?.singlecast(DATACHANNEL_SNAPSHOT_PATH, (dataChannel) => {
-      // dataChannel.onopen = (event) => {
-      //   if (globalThis.logLevel.isDebugEnabled) {
-      //     console.debug(`${CNAME}|snapshot dataChannel.onopen`, this, event);
-      //   }
-      // };
-      // Store to keep a reference, otherwise the instance might be garbage collected
-      // I had some weird issues with snapshots not always working, I suspected garbage collection.
-      // I tried to store references in a set, and it seems to fix the issue. Let's see if the problem
-      // is really fixed. 
-      //this.snapshotDataChannels.add(dataChannel)
+    const dataChannel = this._remoteStream.createDataChannel(DATACHANNEL_SNAPSHOT_PATH);
+    // this._remoteStream?.singlecast(DATACHANNEL_SNAPSHOT_PATH, (dataChannel) => {
+    // dataChannel.onopen = (event) => {
+    //   if (globalThis.logLevel.isDebugEnabled) {
+    //     console.debug(`${CNAME}|snapshot dataChannel.onopen`, this, event);
+    //   }
+    // };
+    // Store to keep a reference, otherwise the instance might be garbage collected
+    // I had some weird issues with snapshots not always working, I suspected garbage collection.
+    // I tried to store references in a set, and it seems to fix the issue. Let's see if the problem
+    // is really fixed. 
+    //this.snapshotDataChannels.add(dataChannel)
 
-      receiveByChunks(dataChannel).then((dataUrl) => {
-        this.onSnapshot.emit(dataUrl)
-        dataChannel.close()
-        this.snapshotInPrgs = false;
-      })
-
-      const doHandleErrorClose = (event: Event) => {
-        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|dataChannel:onclose/onerror`, DATACHANNEL_SNAPSHOT_PATH, event);
-        }
-        this.snapshotInPrgs = false;
-      };
-
-      dataChannel.onclose = doHandleErrorClose;
-      dataChannel.onerror = doHandleErrorClose;
+    receiveByChunks(dataChannel).then((dataUrl) => {
+      this.onSnapshot.emit(dataUrl)
+      dataChannel.close()
+      this.snapshotInPrgs = false;
     })
+
+    const doHandleErrorClose = (event: Event) => {
+      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+        console.debug(`${CNAME}|dataChannel:onclose/onerror`, DATACHANNEL_SNAPSHOT_PATH, event);
+      }
+      this.snapshotInPrgs = false;
+    };
+
+    dataChannel.onclose = doHandleErrorClose;
+    dataChannel.onerror = doHandleErrorClose;
+    // })
   }
 
   togglePublishAudio() {
