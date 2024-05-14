@@ -8,7 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import {MatSnackBar} from '@angular/material/snack-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltip } from '@angular/material/tooltip';
 import { ActivatedRoute } from "@angular/router";
 
@@ -34,7 +34,7 @@ import { WINDOW } from '../windows-provider';
 
 interface UserData {
   nickname: string
-  isModerator: boolean
+  // isModerator: boolean
 }
 
 interface Message {
@@ -59,7 +59,7 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
   // Messages (defined as an array of tuples)
   public readonly messages: Array<[UserData, Message]> = new Array();
 
-  readonly remoteCandidates: Set<User> = new Set();
+  // readonly remoteCandidates: Set<User> = new Set();
   readonly remoteParticipants: Set<RemoteParticipant> = new Set();
 
   _error: string;
@@ -76,6 +76,9 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
     return this.gstate.nickname || '';
   }
   set nickname(value: string) {
+    // TODO : replace this, maybe even get rid of setUserData from ephemeral-webrtc library to prevent from
+    // overloading ephemeral server. This can even be considered as a security by design enforcement (not sending user level info to the server).
+    // Instead, implement a way to notify every peer of the conversation about the nickname/userData
     this.localParticipant?.user.setUserData({ ...this.localParticipant?.user.getUserData(), nickname: value })
     //this.contextService.setNickname(value)
     this.gstate.nickname = value;
@@ -96,7 +99,7 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
 
   mediaStreamInfos: Map<Stream, MediaStreamInfo> = new Map();
 
-  moderated: boolean = false;
+  // moderated: boolean = false;
   moderator: boolean = false;
 
   url: string | undefined;
@@ -211,7 +214,7 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
     }
 
     const options: ConversationOptions = {
-      moderated: this.moderated
+      moderated: false
     };
 
     Conversation.getOrCreate(conversationId, hash, options).then((conversation: Conversation) => {
@@ -234,23 +237,23 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
         this.averageBandwidth = average;
       };
 
-      conversation.onModeratedChanged = (moderated: boolean) => {
-        this.moderated = moderated;
-      };
-      conversation.onCandidateAdded = (candidate: User) => {
-        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|onCandidateAdded`, candidate)
-        }
-        // Maintain local list of pending Candidates
-        this.remoteCandidates.add(candidate)
-      };
-      conversation.onCandidateRemoved = (candidate: User) => {
-        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|onCandidateRemoved`, candidate)
-        }
-        // Maintain local list of pending Candidates
-        this.remoteCandidates.delete(candidate)
-      };
+      // conversation.onModeratedChanged = (moderated: boolean) => {
+      //   this.moderated = moderated;
+      // };
+      // conversation.onCandidateAdded = (candidate: User) => {
+      //   if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+      //     console.debug(`${CNAME}|onCandidateAdded`, candidate)
+      //   }
+      //   // Maintain local list of pending Candidates
+      //   this.remoteCandidates.add(candidate)
+      // };
+      // conversation.onCandidateRemoved = (candidate: User) => {
+      //   if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+      //     console.debug(`${CNAME}|onCandidateRemoved`, candidate)
+      //   }
+      //   // Maintain local list of pending Candidates
+      //   this.remoteCandidates.delete(candidate)
+      // };
       conversation.onParticipantAdded = (participant: RemoteParticipant) => {
         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
           console.debug(`${CNAME}|onParticipantAdded`, participant)
@@ -308,13 +311,13 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
       // Enter the conversation
       const userData: UserData = {
         nickname: this.gstate.nickname,
-        isModerator: this.moderator
+        // isModerator: this.moderator
       };
       if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
         console.debug(`${CNAME}|joining with `, userData)
       }
       this.isWaitingForAcceptance = true;
-      conversation.getOrCreateParticipant(userData, { moderator: this.moderator }).then((participant: LocalParticipant) => {
+      conversation.getOrCreateParticipant(userData).then((participant: LocalParticipant) => {
         if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
           console.log(`${CNAME}|addParticipant succeed`, participant)
         }
