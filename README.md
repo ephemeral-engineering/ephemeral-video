@@ -76,36 +76,38 @@ git push origin main
 
 - DONE(2023/12/26) broadcast ability in ephemeral-webrtc library to support data streaming to all peers having subscribed to one stream
 - DONE(2024/05/09): rework broadcast to avoid using ephemeral-server. Actually sendData to publisher, that forwards it to subscribers
+- DONE remote control flashlight when available
+- DONE exchange stream capabilities between publisher and subscribers, not going through ephemeral server
+- DONE screen sharing
+- DONE(2024/05/10) dark theming
+- DONE(2024/05/10) snapshot button spinner
+- DONE manage log level as a url parameter
+- DONE manage monitoring mode as a url parameter
+- DONE(2024/05/16) exchange nicknames without using ephemeral-server
+    DONE: implemented a LocalParticipant.shareData (to peers RemoteParticpant) to  support this in ephemeral-webrtc
+- DONE add snackbar indicating link was copied to clipboard
 - WIP pointer sharing
     - DONE pointer sharing, managing 'cover' and 'none' display modes on both sides.
     - multiple colors pointers
     - add nickname on pointers
+- ability to select a main display stream, and get back to the grid
+    - maybe use https://vasily-ivanov.medium.com/instanceof-in-angular-html-templates-63f23d497242 to check instanceof Local or Remote Stream ? 
+- manage multiple streams grid ? or not, maybe we should stick to a max of 3 or 4 streams and manage this properly at least.
+- work on blur with https://developers.google.com/mediapipe/solutions/vision/interactive_segmenter/web_js maybe ?
+    - and https://www.youtube.com/watch?v=yuUbVQdTRZQ ?
+- allow for a light hteme too ? but this creates bigger package...
+- about bandwidth https://webrtc.github.io/samples/src/content/peerconnection/bandwidth/
+  https://github.com/webrtc/samples/blob/gh-pages/src/content/peerconnection/bandwidth/js/main.js
 - read https://www.webrtc-experiment.com/webrtcpedia/
   Vp8 codec minimum bandwidth is 100kbits/s
   Vp8 codec maximum bandwidth is 2000+ kbits/s
       720p at 30 FPS causes 1.0-to-2.0 Mbps bandwidth usage
       360p at 30 FPS causes 0.5-to-1.0 Mbps bandwidth usage
       180p at 30 FPS causes 0.1-to-0.5 Mbps bandwidth usage
+      
+## Debug
 
-- https://webrtc.github.io/samples/src/content/peerconnection/bandwidth/
-  https://github.com/webrtc/samples/blob/gh-pages/src/content/peerconnection/bandwidth/js/main.js
-- DONE remote control flashlight when available
-- DONE exchange stream capabilities between publisher and subscribers, not going through ephemeral server
-- DONE screen sharing
-- DONE(2024/05/10) dark theming
-    - created a dark-theme
-- DONE(2024/05/10) snapshot button spinner
-- ability to select a main display stream, and get back to the grid
-    - maybe use https://vasily-ivanov.medium.com/instanceof-in-angular-html-templates-63f23d497242 to check instanceof Local or Remote Stream ? 
-- manage multiple streams grid ? or not, maybe we should stick to a max of 3 or 4 streams and manage this properly at least.
-- DONE manage log level as a url parameter
-- DONE manage monitoring mode as a url parameter
-- DONE(2024/05/16) exchange nicknames without using ephemeral-server
-    DONE: implemented a LocalParticipant.shareData (to peers RemoteParticpant) to  support this in ephemeral-webrtc
-- work on blur with https://developers.google.com/mediapipe/solutions/vision/interactive_segmenter/web_js maybe ?
-    - and https://www.youtube.com/watch?v=yuUbVQdTRZQ ?
-- DONE add snackabr indicating link was copied to clipboard
-- DONE(2024/05/15) fix a bug of a remaining pointer on local stream from a remote when remote page is refreshed
-    - DONE(2024/05/15)also fix delete pointer on a stream when mouse left the origin stream, to prevent from still seeing the pointer on a previous stream when user is pointing another one
+- FIXED(2024/05/15) fix a bug of a remaining pointer on local stream from a remote when remote page is refreshed
+    - FIXED(2024/05/15)also fix delete pointer on a stream when mouse left the origin stream, to prevent from still seeing the pointer on a previous stream when user is pointing another one
 
 ## BUILD SIZE
