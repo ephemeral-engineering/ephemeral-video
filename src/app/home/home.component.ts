@@ -74,10 +74,7 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
     return this.gstate.nickname || '';
   }
   set nickname(value: string) {
-    // TODO : replace this, maybe even get rid of setUserData from ephemeral-webrtc library to prevent from
-    // overloading ephemeral server. This can even be considered as a security by design enforcement (not sending user level info to the server).
-    // Instead, implement a way to notify every peer of the conversation about the nickname/userData
-    this.localParticipant?.user.setUserData({ ...this.localParticipant?.user.getUserData(), nickname: value })
+    this.localParticipant?.shareData(`n|${value}`)
     this.gstate.nickname = value;
     setSessionStorage(`${STORAGE_PREFIX}-nickname`, value)
   }
@@ -232,11 +229,7 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
 
         this.remoteParticipants.add(participant);
 
-        participant.user.onUserDataUpdate((userData: UserData) => {
-          if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
-            console.log(`${CNAME}|onUserDataUpdate`, participant, userData)
-          }
-        })
+        this.localParticipant?.shareData(`n|${this.gstate.nickname}`, participant.peerId)
 
         participant.onStreamPublished((stream: RemoteStream) => {
           if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
@@ -280,28 +273,20 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
       };
 
       // Enter the conversation
-      const userData: UserData = {
-        nickname: this.gstate.nickname,
-        // isModerator: this.moderator
-      };
       if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-        console.debug(`${CNAME}|joining with `, userData)
+        console.debug(`${CNAME}|joining`)
       }
       this.isWaitingForAcceptance = true;
-      conversation.getOrCreateParticipant(userData).then((participant: LocalParticipant) => {
+      conversation.getOrCreateParticipant().then((participant: LocalParticipant) => {
         if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
           console.log(`${CNAME}|addParticipant succeed`, participant)
         }
         this.isWaitingForAcceptance = false;
         this.localParticipant = participant;
 
-        this.publish()
+        this.localParticipant.shareData(`n|${this.gstate.nickname}`)
 
-        this.localParticipant.user.onUserDataUpdate((userData: UserData) => {
-          if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
-            console.log(`${CNAME}|onUserDataUpdate`, this.localParticipant, userData)
-          }
-        })
+        this.publish()
       }).catch((error: any) => {
         if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
           console.warn(`${CNAME}|addParticipant failed`, error)

@@ -46,8 +46,11 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
   }
 
   _nickname = '';
-  on_userDataUpdate = (userData: any) => {
-    this._nickname = userData.nickname;
+
+  on_participantData = (data: string) => {
+    if (data.startsWith('n|')) {
+      this._nickname = data.replace('n|', '');
+    }
   };
 
   _onlineStatus = '';
@@ -60,7 +63,7 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
   @Input({ required: true }) set remoteStream(remoteStream: RemoteStream) {
 
     this._remoteStream = remoteStream;
-    this._remoteStream.getParticipant().user.onUserDataUpdate(this.on_userDataUpdate);
+    this._remoteStream.getParticipant().onData(this.on_participantData)
 
     const l_stream = this._remoteStream;
 
@@ -167,7 +170,7 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this._remoteStream) {
-      this._remoteStream.getParticipant().user.offUserDataUpdate(this.on_userDataUpdate);
+      this._remoteStream.getParticipant().offData(this.on_participantData);
     }
   }
 

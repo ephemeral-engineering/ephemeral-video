@@ -100,7 +100,8 @@ git push origin main
 - manage multiple streams grid ? or not, maybe we should stick to a max of 3 or 4 streams and manage this properly at least.
 - DONE manage log level as a url parameter
 - DONE manage monitoring mode as a url parameter
-- exhange nicknames without using ephemeral-server
+- DONE(2024/05/16) exchange nicknames without using ephemeral-server
+    DONE: implemented a LocalParticipant.shareData (to peers RemoteParticpant) to  support this in ephemeral-webrtc
 - work on blur with https://developers.google.com/mediapipe/solutions/vision/interactive_segmenter/web_js maybe ?
     - and https://www.youtube.com/watch?v=yuUbVQdTRZQ ?
 - DONE add snackabr indicating link was copied to clipboard
