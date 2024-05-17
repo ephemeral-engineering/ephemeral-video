@@ -130,6 +130,8 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
 
   isHandsetPortrait = false;
 
+  communicationStarted = false;
+
   constructor(@Inject(WINDOW) public window: Window,
     private activatedRoute: ActivatedRoute,
     public contextService: ContextService,
@@ -243,6 +245,14 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
 
           // and also setup channel for 'subscribing' to MediaStreamInfo changes and change settings (using constraints)
           this.setupRemoteStreamSettingsDataChannel(stream)
+
+          if (!this.communicationStarted) {
+            this.communicationStarted = true;
+            this.messagesService.postMessage({
+              type: MessageType.CommunicationStarted,
+            })
+          }
+
         })
         participant.onStreamUnpublished((stream: RemoteStream) => {
           if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {

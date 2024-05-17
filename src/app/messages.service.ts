@@ -5,6 +5,7 @@ import { GLOBAL_STATE } from './global-state';
 const CNAME = 'MessagesService';
 
 export enum MessageType {
+  CommunicationStarted = 'communication-started',
   Config = 'config',
   Initialized = 'initialized',
   Enter = 'enter',
