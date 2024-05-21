@@ -75,16 +75,6 @@
     <app-local-stream [localStream]="localDisplayStream" [videoStyle]="{opacity:0.8}">
     </app-local-stream>
     }
-    @if (!gstate.isMobile) {
-    <button mat-fab (click)="toggleScreenShare()" aria-label="Share screen" matTooltip="Share screen"
-      [disabled]="grabbingDisplayMedia">
-      @if (localDisplayStream) {
-      <mat-icon>stop_screen_share</mat-icon>
-      } @else {
-      <mat-icon>screen_share</mat-icon>
-      }
-    </button>
-    }
     <!-- <button mat-fab (click)="blur()">
       <mat-icon>blur_on</mat-icon>
     </button> -->
@@ -109,16 +99,28 @@
 <!-- <div class="d-flex flex-column-reverse "> -->
 <!-- <div class="row "> -->
 
-@if (url&&remoteStreams.size>0) {
-<div class="mt-5 d-flex justify-content-center">
+<div class="mt-5 d-flex flex-row gap-1 justify-content-center">
+  @if (!gstate.isMobile) {
+  <button mat-fab extended (click)="toggleScreenShare()" aria-label="Share screen" matTooltip="Share screen"
+    [disabled]="grabbingDisplayMedia">
+    @if (localDisplayStream) {
+    <mat-icon>stop_screen_share</mat-icon>
+    } @else {
+    <mat-icon>screen_share</mat-icon>
+    }
+    Share screen
+  </button>
+  }
+
+  @if (url&&remoteStreams.size>0) {
   <button mat-fab extended [cdkCopyToClipboard]="url" (cdkCopyToClipboardCopied)="copyLinkSnackBar($event)"
     matTooltip="Copy link and share it with someone">
     <mat-icon>link</mat-icon>
     Copy link
     <!-- <mat-icon iconPositionEnd>share</mat-icon> -->
   </button>
+  }
 </div>
-}
 
 <!-- [ngClass]="{'flex-col': isHandsetPortrait}" -->
 <div class="mt-5 d-flex flex-col justify-content-center">
