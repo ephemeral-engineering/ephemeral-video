@@ -1,15 +1,16 @@
 <app-controlled-stream [stream]="_localStream" [mediaStream]="_mediaStream" [videoStyle]="_videoStyle" [muted]="true">
   <!-- <span label class="c-primary"></span> -->
   <!-- <button label mat-flat-button (click)="select()">{{_publishOptions.topic}}</button> -->
-  <mat-chip label>
-    <span>{{gstate.nickname}}</span>
-    @if (gstate.nickname) {
-    <span>-</span>
-    }
-    <span>{{_publishOptions.topic}}</span>
+  <mat-chip label (click)="select()">
+    <div class="c-pointer"><span>{{gstate.nickname}}</span>
+      @if (gstate.nickname) {
+      <span>-</span>
+      }
+      <span>{{_publishOptions.topic}}</span>
+    </div>
   </mat-chip>
   <!-- [fontIcon]="'fullscreen'" -->
-    <!-- <button dcontrols mat-mini-fab matTooltip="Fullscreen">
+  <!-- <button dcontrols mat-mini-fab matTooltip="Fullscreen">
         <mat-icon aria-hidden="false" aria-label="fullscreen">fullscreen</mat-icon></button> -->
   <div controls>
     <div>

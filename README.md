@@ -90,7 +90,7 @@ git push origin main
     - DONE pointer sharing, managing 'cover' and 'none' display modes on both sides.
     - multiple colors pointers
     - add nickname on pointers
-- ability to select a main display stream, and get back to the grid
+- DONE(2024/05/29) ability to select a main display stream, and get back to the grid
     - maybe use https://vasily-ivanov.medium.com/instanceof-in-angular-html-templates-63f23d497242 to check instanceof Local or Remote Stream ? 
 - manage multiple streams grid ? or not, maybe we should stick to a max of 3 or 4 streams and manage this properly at least.
 - work on blur with https://developers.google.com/mediapipe/solutions/vision/interactive_segmenter/web_js maybe ?

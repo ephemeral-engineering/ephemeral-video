@@ -30,6 +30,7 @@ import { GLOBAL_STATE } from '../global-state';
 import { LocalStreamComponent } from '../local-stream/local-stream.component';
 import { MessageType, MessagesService } from '../messages.service';
 import { RemoteStreamComponent } from '../remote-stream/remote-stream.component';
+import { RemovePipe } from '../remove.pipe';
 import { WINDOW } from '../windows-provider';
 
 interface UserData {
@@ -48,7 +49,9 @@ const CNAME = 'Home';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
   standalone: true,
-  imports: [NgClass, NgStyle, JsonPipe, ClipboardModule, AlertComponent, LocalStreamComponent, RemoteStreamComponent, MatButtonModule, MatIconModule, MatTooltip, FormsModule, MatFormFieldModule, MatInputModule, MatSelectModule, KeyValuePipe, FilterOutPipe]
+  imports: [NgClass, NgStyle,
+    RemovePipe, JsonPipe,
+    ClipboardModule, AlertComponent, LocalStreamComponent, RemoteStreamComponent, MatButtonModule, MatIconModule, MatTooltip, FormsModule, MatFormFieldModule, MatInputModule, MatSelectModule, KeyValuePipe, FilterOutPipe]
 })
 export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
 
@@ -794,9 +797,17 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   selectedStream: LocalStream | undefined;
+  selectedRemoteStream: RemoteStream | undefined;
 
-  select(stream?: LocalStream) {
-    this.selectedStream = stream || undefined;
+  select(stream?: LocalStream | RemoteStream) {
+    if (stream instanceof LocalStream) {
+      this.selectedRemoteStream = undefined;
+      this.selectedStream = stream;
+    }
+    else {
+      this.selectedRemoteStream = stream;
+      this.selectedStream = undefined;
+    }
   }
 
   grabbingDisplayMedia = false;

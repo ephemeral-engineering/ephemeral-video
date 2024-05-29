@@ -128,6 +128,8 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
     this._mirror = mirror;
   }
 
+  @Output() onSelect = new EventEmitter<void>();
+
   @Output() onSnapshot = new EventEmitter<string>();
 
   @Output() onToggleFlashlight = new EventEmitter<void>();
@@ -237,6 +239,10 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
 
   toggleFlashlight() {
     this.onToggleFlashlight.emit()
+  }
+
+  select() {
+    this.onSelect.emit()
   }
 
   // toggleAudio() {

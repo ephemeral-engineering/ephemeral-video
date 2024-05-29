@@ -47,14 +47,19 @@
 <div class="pos-relative dvh-100 d-flex align-items-center" [ngStyle]="{justifyContent:'space-around'}">
   <!-- class="flex-g-1" -->
   @if (selectedStream) {
-  <app-local-stream [localStream]="selectedStream" [videoStyle]="{opacity:0.8}"
-    [mediaStreamInfo]="mediaStreamInfos.get(selectedStream)" (onSelect)="select()"
-    (onToggleFlashlight)="toggleFlashlight(selectedStream)">
+  <app-local-stream [localStream]="selectedStream" [mediaStreamInfo]="mediaStreamInfos.get(selectedStream)"
+    (onSelect)="select()" (onToggleFlashlight)="toggleFlashlight(selectedStream)">
   </app-local-stream>
+  } @else if (selectedRemoteStream){
+  <app-remote-stream [remoteStream]="selectedRemoteStream"
+    [mediaStreamInfo]="mediaStreamInfos.get(selectedRemoteStream)" (onSelect)="select()"
+    (onSnapshot)="onSnapshot($event)"
+    (onToggleFlashlight)="toggleRemoteFlashlight(selectedRemoteStream)"></app-remote-stream>
   } @else {
   @for (stream of remoteStreams; track stream) {
   <app-remote-stream [remoteStream]="stream" [mediaStreamInfo]="mediaStreamInfos.get(stream)"
-    (onSnapshot)="onSnapshot($event)" (onToggleFlashlight)="toggleRemoteFlashlight(stream)"></app-remote-stream>
+    (onSelect)="select(stream)" (onSnapshot)="onSnapshot($event)"
+    (onToggleFlashlight)="toggleRemoteFlashlight(stream)"></app-remote-stream>
   }
   @if (url&&remoteStreams.size===0) {
   <button mat-fab extended [cdkCopyToClipboard]="url" (cdkCopyToClipboardCopied)="copyLinkSnackBar($event)"
@@ -65,16 +70,24 @@
   </button>}
   }
   <div class="pos-abs bottom-left d-flex flex-row align-items-center gap-1" [ngStyle]="{height:'34%'}">
-    @if (localStream) {
+    @if (localStream && localStream !== selectedStream) {
     <app-local-stream [localStream]="localStream" [videoStyle]="{opacity:0.8}"
       [mediaStreamInfo]="mediaStreamInfos.get(localStream)" (onSelect)="select(localStream)"
       (onToggleFlashlight)="toggleFlashlight(localStream)">
     </app-local-stream>
     }
-    @if (localDisplayStream) {
-    <app-local-stream [localStream]="localDisplayStream" [videoStyle]="{opacity:0.8}">
+    @if (localDisplayStream && localDisplayStream !== selectedStream) {
+    <app-local-stream [localStream]="localDisplayStream" [videoStyle]="{opacity:0.8}"
+      (onSelect)="select(localDisplayStream)">
     </app-local-stream>
     }
+    @if (selectedStream || selectedRemoteStream) {
+    @for (stream of remoteStreams | remove:selectedRemoteStream; track stream) {
+    <app-remote-stream [remoteStream]="stream" [videoStyle]="{opacity:0.8}"
+      [mediaStreamInfo]="mediaStreamInfos.get(stream)" (onSelect)="select(stream)" (onSnapshot)="onSnapshot($event)"
+      (onToggleFlashlight)="toggleRemoteFlashlight(stream)"></app-remote-stream>
+    } }
+
     <!-- <button mat-fab (click)="blur()">
       <mat-icon>blur_on</mat-icon>
     </button> -->
