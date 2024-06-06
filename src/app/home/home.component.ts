@@ -84,6 +84,8 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
 
   // readonly year: number = new Date().getFullYear();
 
+  url: string | undefined;
+
   localParticipant: LocalParticipant | undefined;
 
   localUserMediaStream: MediaStream | undefined;
@@ -94,14 +96,37 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
 
   localStreams: Array<LocalStream> = new Array();
 
-  mediaStreamInfos: Map<Stream, MediaStreamInfo> = new Map();
-
-  url: string | undefined;
-
   remoteStreamsByParticipant: Map<RemoteParticipant, Set<RemoteStream>> = new Map();
   remoteStreams: Set<RemoteStream> = new Set();
 
+  mediaStreamInfos: Map<Stream, MediaStreamInfo> = new Map();
+
   isWaitingForAcceptance = false;
+
+  _notifications: string[] = new Array();
+
+  bandwidthByPeerId: Map<string, number> = new Map();
+  averageBandwidth: number = 0;
+
+  isHandsetPortrait = false;
+
+  communicationStarted = false;
+
+  selectedStream: LocalStream | undefined;
+  selectedRemoteStream: RemoteStream | undefined;
+
+  settingsDataChannelsByLocalStreams: Map<LocalStream, Set<RTCDataChannel>> = new Map();
+  settingsDataChannelByRemoteStreams: Map<RemoteStream, RTCDataChannel> = new Map();
+
+  grabbing: boolean = false;
+  audioInMediaDevices: MediaDeviceInfo[];
+  videoInMediaDevices: MediaDeviceInfo[];
+  audioOutMediaDevices: MediaDeviceInfo[];
+
+  resolutions: number[] = RESOLUTIONS;
+  frameRates: number[] = FRAME_RATES;
+
+  // mainRemoteStreams: Set<RemoteStream> = new Set();
 
   @ViewChild("dwnld") aRef: ElementRef | undefined;
 
@@ -125,15 +150,6 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
     this.doCleanUp()
     // event.returnValue = true;
   }
-
-  _notifications: string[] = new Array();
-
-  bandwidthByPeerId: Map<string, number> = new Map();
-  averageBandwidth: number = 0;
-
-  isHandsetPortrait = false;
-
-  communicationStarted = false;
 
   constructor(@Inject(WINDOW) public window: Window,
     private activatedRoute: ActivatedRoute,
@@ -318,7 +334,16 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
     })
   }
 
-  settingsDataChannelByRemoteStreams: Map<RemoteStream, RTCDataChannel> = new Map();
+  select(stream?: LocalStream | RemoteStream) {
+    if (stream instanceof LocalStream) {
+      this.selectedRemoteStream = undefined;
+      this.selectedStream = stream;
+    }
+    else {
+      this.selectedRemoteStream = stream;
+      this.selectedStream = undefined;
+    }
+  }
 
   // Sets up a channel to both receive MediaStreamInfo from RemoteStream publisher,
   // and send 'constraints' to RemoteStream publisher in order to remote control its MediaStream settings.
@@ -354,8 +379,6 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
     };
   }
 
-  settingsDataChannelsByLocalStreams: Map<LocalStream, Set<RTCDataChannel>> = new Map();
-
   notifyMediaStreamInfoChanged(stream: LocalStream, infos: MediaStreamInfo) {
     this.settingsDataChannelsByLocalStreams.get(stream)?.forEach((dataChannel) => {
       dataChannel.send(JSON.stringify(infos))
@@ -367,14 +390,6 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
     this.mediaStreamInfos.set(stream, infos)
     this.notifyMediaStreamInfoChanged(stream, infos)
   }
-
-  grabbing: boolean = false;
-  audioInMediaDevices: MediaDeviceInfo[];
-  videoInMediaDevices: MediaDeviceInfo[];
-  audioOutMediaDevices: MediaDeviceInfo[];
-
-  resolutions: number[] = RESOLUTIONS;
-  frameRates: number[] = FRAME_RATES;
 
   updateDeviceList() {
     navigator.mediaDevices.enumerateDevices()
@@ -794,20 +809,6 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
       console.debug(`${CNAME}|doRemoveRemoteParticipant`, participant, deleted, this.remoteStreamsByParticipant.size)
     }
     participantStreams?.forEach((stream) => { this.remoteStreams.delete(stream) })
-  }
-
-  selectedStream: LocalStream | undefined;
-  selectedRemoteStream: RemoteStream | undefined;
-
-  select(stream?: LocalStream | RemoteStream) {
-    if (stream instanceof LocalStream) {
-      this.selectedRemoteStream = undefined;
-      this.selectedStream = stream;
-    }
-    else {
-      this.selectedRemoteStream = stream;
-      this.selectedStream = undefined;
-    }
   }
 
   grabbingDisplayMedia = false;

@@ -398,7 +398,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       // The video is just adapted to the parent element
       const factor = this.videoInfo.video.width / this.videoInfo.element.width;
       l_pointer = {
-        l: (pointer.l) * factor,
+        l: pointer.l * factor,
         t: pointer.t * factor
       };
     }
