@@ -66,12 +66,6 @@ MIT
 @angular/router
 MIT
 
-@mediapipe/camera_utils
-Apache-2.0
-
-@mediapipe/selfie_segmentation
-Apache-2.0
-
 ephemeral-client
 ISC
 
