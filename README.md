@@ -22,11 +22,10 @@ Then `npm run build` or `ng build` to build the project. The build artifacts wil
 
 src/app.config.json
 
-"ephemeralServerUrl": "https://ephemeral",
+"ephemeralServerUrl": "<https://ephemeral>",
 OR
-"ephemeralServerUrl": "https://localhost:3077",
-"ephemeralServerUrl": "http://93.24.136.95:3077",
-
+"ephemeralServerUrl": "<https://localhost:3077>",
+"ephemeralServerUrl": "<http://93.24.136.95:3077>",
 
 ## angular.json with baseHref
 
@@ -87,27 +86,27 @@ git push origin main
     DONE: implemented a LocalParticipant.shareData (to peers RemoteParticpant) to  support this in ephemeral-webrtc
 - DONE add snackbar indicating link was copied to clipboard
 - WIP pointer sharing
-    - DONE pointer sharing, managing 'cover' and 'none' display modes on both sides.
-    - multiple colors pointers
-    - add nickname on pointers
+  - DONE pointer sharing, managing 'cover' and 'none' display modes on both sides.
+  - multiple colors pointers
+  - add nickname on pointers
 - DONE(2024/05/29) ability to select a main display stream, and get back to the grid
-    - maybe use https://vasily-ivanov.medium.com/instanceof-in-angular-html-templates-63f23d497242 to check instanceof Local or Remote Stream ? 
+  - maybe use <https://vasily-ivanov.medium.com/instanceof-in-angular-html-templates-63f23d497242> to check instanceof Local or Remote Stream ?
 - manage multiple streams grid ? or not, maybe we should stick to a max of 3 or 4 streams and manage this properly at least.
-- work on blur with https://developers.google.com/mediapipe/solutions/vision/interactive_segmenter/web_js maybe ?
-    - and https://www.youtube.com/watch?v=yuUbVQdTRZQ ?
-- allow for a light hteme too ? but this creates bigger package...
-- about bandwidth https://webrtc.github.io/samples/src/content/peerconnection/bandwidth/
-  https://github.com/webrtc/samples/blob/gh-pages/src/content/peerconnection/bandwidth/js/main.js
-- read https://www.webrtc-experiment.com/webrtcpedia/
+- work on blur with <https://developers.google.com/mediapipe/solutions/vision/interactive_segmenter/web_js> maybe ?
+  - and <https://www.youtube.com/watch?v=yuUbVQdTRZQ> ?
+- allow for a light theme too ? but this creates bigger package...
+- about bandwidth <https://webrtc.github.io/samples/src/content/peerconnection/bandwidth/>
+  <https://github.com/webrtc/samples/blob/gh-pages/src/content/peerconnection/bandwidth/js/main.js>
+- read <https://www.webrtc-experiment.com/webrtcpedia/>
   Vp8 codec minimum bandwidth is 100kbits/s
   Vp8 codec maximum bandwidth is 2000+ kbits/s
       720p at 30 FPS causes 1.0-to-2.0 Mbps bandwidth usage
       360p at 30 FPS causes 0.5-to-1.0 Mbps bandwidth usage
       180p at 30 FPS causes 0.1-to-0.5 Mbps bandwidth usage
-      
+
 ## Debug
 
 - FIXED(2024/05/15) fix a bug of a remaining pointer on local stream from a remote when remote page is refreshed
-    - FIXED(2024/05/15)also fix delete pointer on a stream when mouse left the origin stream, to prevent from still seeing the pointer on a previous stream when user is pointing another one
+  - FIXED(2024/05/15)also fix delete pointer on a stream when mouse left the origin stream, to prevent from still seeing the pointer on a previous stream when user is pointing another one
 
 ## BUILD SIZE
