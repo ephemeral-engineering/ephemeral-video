@@ -50,6 +50,10 @@ OR
 
 `npm run start`
 
+## Play url
+
+<https://localhost/kiwi?hash=true&log=debug>
+
 ## Running unit tests
 
 Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
