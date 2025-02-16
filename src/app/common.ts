@@ -19,3 +19,14 @@ export const round2 = (num: number) => {
 export const isMobile = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 };
+
+export const removeQueryParam = (search: string, paramName: string): string => {
+    // const urlWithoutParam = url.split('?')[0];
+    const params = new URLSearchParams(search);
+
+    if (params.has(paramName)) {
+        params.delete(paramName);
+    }
+
+    return (params.toString() ? '?' + params.toString() : '');
+}

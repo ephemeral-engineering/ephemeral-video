@@ -22,7 +22,7 @@ import { saveAs } from 'file-saver-es';
 import { LogLevelText, setLogLevel } from 'src/logLevel';
 import { MediaStreamHelper, MediaStreamInfo } from '../MediaStreamHelper';
 import { AlertComponent } from '../alert/alert.component';
-import { getSessionStorage, setSessionStorage } from '../common';
+import { getSessionStorage, removeQueryParam, setSessionStorage } from '../common';
 import { DATACHANNEL_MEDIASTREAMSETTINGS_PATH, DATACHANNEL_SNAPSHOT_PATH, FRAME_RATES, RESOLUTIONS, STORAGE_PREFIX, TOPIC_SCREEN } from '../constants';
 import { ContextService } from '../context.service';
 import { FilterOutPipe } from '../filter-out.pipe';
@@ -230,7 +230,8 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
 
       this.conversation = conversation;
 
-      window.history.replaceState({}, '', `${baseUrl}/${conversation.id}${window.location.search}`)
+      // Replace url, keeping all search parameters but 'hash' to prevent re-hash of the initially obtained id at each refresh.
+      window.history.replaceState({}, '', `${baseUrl}/${conversation.id}${removeQueryParam(window.location.search, 'hash')}`)
 
       // Listen to Conversation events
       //
