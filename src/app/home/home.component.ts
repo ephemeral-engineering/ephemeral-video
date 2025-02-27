@@ -235,8 +235,15 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
 
       // Listen to Conversation events
       //
-      conversation.onConnectionStatus = (status: string) => {
-        this._notifications.push(`${new Date().toLocaleTimeString()}: Server ${status}`);
+      conversation.onConnectionStatus = (status: string, error: Event) => {
+        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+          console.debug(`${CNAME}|Conversation.onConnectionStatus`, status, error)
+        }
+        this._notifications.push(`${new Date().toLocaleTimeString()}: Server ${status}, Error:${JSON.stringify(error)}`);
+        // If error force a windows reload, this is not very satisfying though...
+        if (status === 'error') {
+          window.location.reload();
+        }
       }
 
       conversation.onBandwidth = (peerId: string, speedKbps: number, average: number) => {

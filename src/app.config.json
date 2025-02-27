@@ -1,5 +1,5 @@
 {
-    "ephemeralServerUrl": "http://localhost:3077/api",
+    "ephemeralServerUrl": "/api",
     "rtcConfiguration": {
         "iceServers": [
             {

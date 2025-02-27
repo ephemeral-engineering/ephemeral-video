@@ -26,6 +26,11 @@ src/app.config.json
 OR
 "ephemeralServerUrl": "<https://localhost:3077>",
 "ephemeralServerUrl": "<http://93.24.136.95:3077>",
+OR
+"ephemeralServerUrl": "/api"
+
+the last option will use the same server as the one hosting the app. The nginx configuration on the server may redirect anything for /api
+to the correct application and port on the machine !
 
 ## angular.json with baseHref
 
