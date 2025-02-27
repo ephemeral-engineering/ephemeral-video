@@ -10,7 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltip } from '@angular/material/tooltip';
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 
 import { setLogLevel as setEphClientLogLevel } from 'ephemeral-client';
 import { setLogLevel as setEphWebRtcLogLevel } from 'ephemeral-webrtc';
@@ -152,6 +152,7 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   constructor(@Inject(WINDOW) public window: Window,
+    private router: Router,
     private activatedRoute: ActivatedRoute,
     public contextService: ContextService,
     private messagesService: MessagesService,
@@ -225,7 +226,7 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
 
     Conversation.getOrCreate(conversationId, hash, options).then((conversation: Conversation) => {
       if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
-        console.log(`${CNAME}|Conversation`, conversation)
+        console.log(`${CNAME}|Conversation`, conversation, this.router.url)
       }
 
       this.conversation = conversation;
@@ -242,6 +243,11 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
         this._notifications.push(`${new Date().toLocaleTimeString()}: Server ${status}, Error:${JSON.stringify(error)}`);
         // If error force a windows reload, this is not very satisfying though...
         if (status === 'error') {
+          // Navigate to the same route (does not work fine)
+          // const url = this.router.url;
+          // this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+          //   this.router.navigate([url]);
+          // });
           window.location.reload();
         }
       }
