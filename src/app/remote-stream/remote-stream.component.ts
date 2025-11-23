@@ -47,6 +47,8 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
 
   _nickname = '';
 
+  subscribed = true;
+
   on_participantData = (data: string) => {
     if (data.startsWith('n|')) {
       this._nickname = data.replace('n|', '');
@@ -217,6 +219,16 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
     dataChannel.onclose = doHandleErrorClose;
     dataChannel.onerror = doHandleErrorClose;
     // })
+  }
+
+  toggleSubscribe() {
+    if (this.subscribed) {
+      this._remoteStream?.unsubscribe()
+      this.subscribed = false;
+    } else {
+      this.subscribed = this._remoteStream?.subscribe(this._remoteStream.getSubscribeOptions())
+    }
+
   }
 
   togglePublishAudio() {
