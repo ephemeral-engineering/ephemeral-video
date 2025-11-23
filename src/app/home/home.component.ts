@@ -257,7 +257,7 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
         this.averageBandwidth = average;
       };
 
-      conversation.onParticipantAdded = (participant: RemoteParticipant) => {
+      conversation.onParticipantAdded((participant: RemoteParticipant) => {
         if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
           console.debug(`${CNAME}|onParticipantAdded`, participant)
         }
@@ -300,8 +300,8 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
           }
           this.settingsDataChannelByRemoteStreams.delete(stream)
         })
-      };
-      conversation.onParticipantRemoved = (participant: RemoteParticipant | LocalParticipant) => {
+      });
+      conversation.onParticipantRemoved((participant: RemoteParticipant | LocalParticipant) => {
         if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
           console.log(`${CNAME}|onParticipantRemoved`, participant)
         }
@@ -313,7 +313,7 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
             console.log(`${CNAME}|local user removed ?!`, participant)
           }
         }
-      };
+      });
 
       // Enter the conversation
       if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
