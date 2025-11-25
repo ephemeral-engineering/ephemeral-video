@@ -197,6 +197,9 @@
 
 @if (gstate.monitor) {
 <div class="mt-5">
+  <span>{{sfuPeerId || 'mesh'}}</span>
+</div>
+<div class="mt-5">
   @for (msg of _notifications; track msg) {
   <div>
     <span>{{msg}}</span>

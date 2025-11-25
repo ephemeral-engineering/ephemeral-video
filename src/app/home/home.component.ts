@@ -126,6 +126,8 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
   resolutions: number[] = RESOLUTIONS;
   frameRates: number[] = FRAME_RATES;
 
+  sfuPeerId: string | null = null;
+
   // mainRemoteStreams: Set<RemoteStream> = new Set();
 
   @ViewChild("dwnld") aRef: ElementRef | undefined;
@@ -230,6 +232,10 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
       }
 
       this.conversation = conversation;
+
+      conversation.onSfu((sfuPeerId) => {
+        this.sfuPeerId = sfuPeerId;
+      })
 
       // Replace url, keeping all search parameters but 'hash' to prevent re-hash of the initially obtained id at each refresh.
       window.history.replaceState({}, '', `${baseUrl}/${conversation.id}${removeQueryParam(window.location.search, 'hash')}`)
