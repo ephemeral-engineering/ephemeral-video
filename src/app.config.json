@@ -1,4 +1,5 @@
 {
+    "ephemeralServerUrl_": "https://ephemeral/api",
     "ephemeralServerUrl": "https://ephemeral/api",
     "rtcConfiguration": {
         "iceServers": [

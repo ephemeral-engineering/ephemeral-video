@@ -351,7 +351,16 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 
   onInfo(info: VideoInfo) {
     this.videoInfo = info;
-    const frameRate = this._mediaStream?.getVideoTracks()[0].getSettings().frameRate;
+    this.dobuildInSets(info)
+  }
+
+  dobuildInSets(info: VideoInfo) {
+    //console.log("dobuildInSets", this._mediaStream)
+    let frameRate
+    if (this._mediaStream && this._mediaStream.getVideoTracks().length > 0) {
+      //console.log("dobuildInSets", this._mediaStream.getVideoTracks().length, this._mediaStream.getVideoTracks()[0])
+      frameRate = this._mediaStream.getVideoTracks()[0].getSettings().frameRate;
+    }
     this.videoSize = `${info.video.width}x${info.video.height}@${frameRate || '?'}i/s`;
     this.contextService.recordNotification(`stream<${this._mediaStream?.id}> ${this.videoSize}`)
     this.videoAspectRatio = round2(info.video.width / info.video.height);
@@ -415,10 +424,14 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   }
 
   private moveCounter = 0;
+  private isPointerActive = false;
 
   onPointerMove(event: PointerEvent) {
     // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
 
+    if (!this.isPointerActive) {
+      return
+    }
     const count10 = this.moveCounter++ % 10 === 0;
 
     const pointer: Pointer = {
@@ -431,6 +444,11 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   }
 
   onClick(event: MouseEvent) {
+
+    if (!this.isPointerActive) {
+      return
+    }
+
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
       console.debug(`${CNAME}|onClick`, event)
     }
@@ -461,6 +479,11 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   // }
 
   onPointerLeave(event: PointerEvent) {
+
+    if (!this.isPointerActive) {
+      return
+    }
+
     // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
     if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
       console.debug(`${CNAME}|onPointerLeave`, event)

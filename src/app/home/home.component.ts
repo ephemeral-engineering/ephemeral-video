@@ -655,7 +655,7 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
 
   publish() {
     if (this.localUserMediaStream && this.localParticipant) {
-      this.localParticipant.publish(this.localUserMediaStream, { topic: 'webcam', audio: true }).then((localStream) => {
+      this.localParticipant.publish(this.localUserMediaStream, { topic: 'webcam', audio: false }).then((localStream) => {
         this.localStream = localStream;
         this.updateMediaStreamInfo(localStream)
 

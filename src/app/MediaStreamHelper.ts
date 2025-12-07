@@ -50,8 +50,8 @@ export class MediaStreamHelper {
 
   public static getMediaStreamInfo(mediaStream: MediaStream): MediaStreamInfo {
 
-    const audioTrack = mediaStream.getAudioTracks()[0];
-    const videoTrack = mediaStream.getVideoTracks()[0];
+    const audioTrack = mediaStream.getAudioTracks().length > 0 && mediaStream.getAudioTracks()[0];
+    const videoTrack = mediaStream.getVideoTracks().length > 0 && mediaStream.getVideoTracks()[0];
 
     return {
       audio: audioTrack ? {
