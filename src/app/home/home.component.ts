@@ -171,6 +171,7 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
     }
 
     this.gstate.monitor = /^true$/i.test(this.activatedRoute.snapshot.queryParamMap.get('mon') || 'false');
+    this.gstate.publish = /^true$/i.test(this.activatedRoute.snapshot.queryParamMap.get('pub') || 'true');
   }
 
   ngOnInit(): void {
@@ -335,7 +336,9 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
 
         this.localParticipant.shareData(`n|${this.gstate.nickname}`)
 
-        this.publish()
+        if (this.gstate.publish) {
+          this.publish()
+        }
       }).catch((error: any) => {
         if (globalThis.ephemeralVideoLogLevel.isWarnEnabled) {
           console.warn(`${CNAME}|addParticipant failed`, error)
@@ -485,7 +488,9 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
           if (this.localStream) {
             this.localStream.replaceMediaStream(mediaStream)
           } else {
-            this.publish()
+            if (this.gstate.publish) {
+              this.publish()
+            }
           }
           resolve()
         }).catch((error) => {
@@ -655,7 +660,7 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
 
   publish() {
     if (this.localUserMediaStream && this.localParticipant) {
-      this.localParticipant.publish(this.localUserMediaStream, { topic: 'webcam', audio: false }).then((localStream) => {
+      this.localParticipant.publish(this.localUserMediaStream, { topic: 'webcam', audio: true }).then((localStream) => {
         this.localStream = localStream;
         this.updateMediaStreamInfo(localStream)
 
