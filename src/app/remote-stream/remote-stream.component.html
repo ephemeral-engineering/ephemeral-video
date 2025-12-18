@@ -20,32 +20,35 @@
             <mat-icon>photo_camera</mat-icon>
         </button>
         <div class="mt-1">
-            <button mat-mini-fab aria-label="subscribe-unsubscribe" matTooltip="on/off" (click)="toggleSubscribe()">
+            <button mat-mini-fab aria-label="subscribe-unsubscribe" matTooltip="subscribe/unsubscribe"
+                (click)="toggleSubscribe()">
                 <mat-icon>{{subscribed ? 'toggle_on':'toggle_off'}}</mat-icon>
             </button>
         </div>
         @if (_publishOptions.topic !== 'screen') {
         <div class="mt-1">
-            <button mat-mini-fab aria-label="publish-audio" matTooltip="on/off" (click)="togglePublishAudio()">
+            <button mat-mini-fab aria-label="publish-audio" matTooltip="publish/unpublish"
+                (click)="togglePublishAudio()">
                 <mat-icon>{{_publishOptions.audio ? 'mic':'mic_off'}}</mat-icon>
             </button>
         </div>
         }
         <div class="mt-1">
-            <button mat-mini-fab aria-label="publish-video" matTooltip="on/off" (click)="togglePublishVideo()">
+            <button mat-mini-fab aria-label="publish-video" matTooltip="publish/unpublish"
+                (click)="togglePublishVideo()">
                 <mat-icon>{{_publishOptions.video ? _videoOnIcon:_videoOffIcon}}
                 </mat-icon>
             </button>
         </div>
         @if (_publishOptions.topic !== 'screen') {
         <div class="mt-1">
-            <button mat-mini-fab aria-label="subscribe-audio" matTooltip="mute/unmute" (click)="toggleSubscribeAudio()">
+            <button mat-mini-fab aria-label="subscribe-audio" matTooltip="subscribe/unsubscribe" (click)="toggleSubscribeAudio()">
                 <mat-icon>{{_subscribeOptions.audio && audioEnabled ? 'volume_up':'volume_off'}}</mat-icon>
             </button>
         </div>
         }
         <div class="mt-1">
-            <button mat-mini-fab aria-label="subscribe-video" matTooltip="play/pause" (click)="toggleSubscribeVideo()">
+            <button mat-mini-fab aria-label="subscribe-video" matTooltip="subscribe/unsubscribe" (click)="toggleSubscribeVideo()">
                 <mat-icon>{{_subscribeOptions.video && videoEnabled ? 'play_arrow':'pause'}}
                 </mat-icon>
             </button>

@@ -141,32 +141,36 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
     this.videoEnabled = this._mediaStream ? MediaStreamHelper.isVideoEnabled(this._mediaStream) : false;
   }
 
+  on_addtrack = (event: MediaStreamTrackEvent) => {
+    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+      console.debug(`${CNAME}|MediaStream::onaddtrack`, event);
+    }
+    this._mediaStream?.addTrack(event.track)
+    this.doUpdateStates()
+  }
+
+  on_removetrack = (event: MediaStreamTrackEvent) => {
+    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+      console.debug(`${CNAME}|MediaStream::onremovetrack`, event);
+    }
+    this._mediaStream?.removeTrack(event.track)
+    this.doUpdateStates()
+  }
+
   _mediaStream: MediaStream | undefined;
   set mediaStream(mediaStream: MediaStream | undefined) {
+    // remove previous events
+    if (this._mediaStream) {
+      this._mediaStream.removeEventListener('addtrack', this.on_addtrack)
+      this._mediaStream.removeEventListener('removetrack', this.on_removetrack)
+    }
     this._mediaStream = mediaStream;
     this.doUpdateStates()
     if (this._mediaStream) {
-      this._mediaStream.addEventListener('addtrack', (event: MediaStreamTrackEvent) => {
-        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|MediaStream::onaddtrack`, event);
-        }
-        this.doUpdateStates()
-      })
-
-      // this._mediaStream.onremovetrack = (event: MediaStreamTrackEvent) => {
-      //   if (globalThis.logLevel.isDebugEnabled) {
-      //     console.debug(`${COMPONENT_NAME}|MediaStream::onremovetrack`, event);
-      //   }
-      //   this.doUpdateStates()
-      // };
+      this._mediaStream.addEventListener('addtrack', this.on_addtrack)
       // Best practice: (https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener)
       // to be able to register more than one listener
-      this._mediaStream.addEventListener('removetrack', (event: MediaStreamTrackEvent) => {
-        if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-          console.debug(`${CNAME}|MediaStream::onremovetrack`, event);
-        }
-        this.doUpdateStates()
-      })
+      this._mediaStream.addEventListener('removetrack', this.on_removetrack)
     }
   }
 

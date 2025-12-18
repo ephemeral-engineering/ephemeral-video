@@ -14,12 +14,12 @@
         <mat-icon aria-hidden="false" aria-label="fullscreen">fullscreen</mat-icon></button> -->
   <div controls>
     <div>
-      <button mat-mini-fab aria-label="publish-audio" matTooltip="Publish audio" (click)="togglePublishAudio()">
+      <button mat-mini-fab aria-label="publish-audio" matTooltip="publish/unpublish" (click)="togglePublishAudio()">
         <mat-icon>{{_publishOptions.audio && audioEnabled ? 'mic':'mic_off'}}</mat-icon>
       </button>
     </div>
     <div class="mt-1">
-      <button mat-mini-fab aria-label="publish-video" matTooltip="Publish video" (click)="togglePublishVideo()">
+      <button mat-mini-fab aria-label="publish-video" matTooltip="publish/unpublish" (click)="togglePublishVideo()">
         <mat-icon>{{_publishOptions.video && videoEnabled ? 'videocam':'videocam_off'}}
         </mat-icon>
       </button>
