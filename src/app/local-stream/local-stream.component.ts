@@ -5,7 +5,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 
-import { LocalStream, PublishOptions } from 'ephemeral-webrtc';
+import { LocalParticipant, LocalStream, PublishOptions } from 'ephemeral-webrtc';
 
 import { MediaStreamHelper, MediaStreamInfo } from '../MediaStreamHelper';
 import { ControlledStreamComponent } from '../controlled-stream/controlled-stream.component';
@@ -28,6 +28,8 @@ export class LocalStreamComponent implements OnInit {
 
   audioEnabled = false;
   videoEnabled = false;
+
+  published = true;
 
   private doUpdateStates() {
     this.audioEnabled = this._mediaStream ? MediaStreamHelper.isAudioEnabled(this._mediaStream) : false;
@@ -95,6 +97,19 @@ export class LocalStreamComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void { }
+
+  togglePublish() {
+    if (this._localStream) {
+      const localParticipant = this._localStream.getParticipant() as LocalParticipant;
+
+      if (this.published) {
+        localParticipant.unpublish(this._localStream)
+      } else {
+        localParticipant.publish(this._localStream, this._localStream.getPublishOptions())
+      }
+      this.published = !this.published;
+    }
+  }
 
   togglePublishAudio() {
     if (this._localStream) {

@@ -88,9 +88,11 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
       this.mediaStream = mediaStream;
     })
 
-    const on_connectionStateChanged = (event: Event) => {
-      const peerConnection = event.target as RTCPeerConnection;
-      switch (peerConnection.connectionState) {
+    const on_connectionStateChanged = (connectionState: RTCPeerConnectionState) => {
+      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+        console.debug(`${CNAME}|onPeerConnectionStateChanged`, event);
+      }
+      switch (connectionState) {
         case "new":
         case "connecting":
           this.setOnlineStatus("Connecting…");
@@ -99,7 +101,7 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
           this.setOnlineStatus("Online");
           break;
         case "disconnected":
-          this.setOnlineStatus("Disconnecting…");
+          this.setOnlineStatus("Disconnected");
           break;
         case "closed":
           this.setOnlineStatus("Offline");
@@ -112,6 +114,9 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
           break;
       }
     };
+    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+      console.debug(`${CNAME}|setting onPeerConnectionStateChanged`);
+    }
     this._remoteStream.onPeerConnectionStateChanged(on_connectionStateChanged)
   }
 
