@@ -1,4 +1,4 @@
-import { enableProdMode, importProvidersFrom, inject, provideAppInitializer } from '@angular/core';
+import { enableProdMode, importProvidersFrom, inject, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
 
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
@@ -35,7 +35,7 @@ function initializeAppFactory(httpClient: HttpClient): () => Observable<any> {
 
 bootstrapApplication(AppComponent, {
   providers: [
-    provideHttpClient(),
+    provideZoneChangeDetection(),provideHttpClient(),
     provideAppInitializer(() => {
         const initializerFn = (initializeAppFactory)(inject(HttpClient));
         return initializerFn();
