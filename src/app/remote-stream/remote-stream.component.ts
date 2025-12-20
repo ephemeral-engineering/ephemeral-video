@@ -70,7 +70,6 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
     const l_stream = this._remoteStream;
 
     this._publishOptions = l_stream.getPublishOptions();
-
     l_stream.onPublishOptionsUpdate(() => {
       this._publishOptions = l_stream.getPublishOptions();
     })
@@ -81,44 +80,44 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
     })
 
     this.mediaStream = this._remoteStream.getMediaStream();
-    this._remoteStream.onMediaStream((mediaStream: MediaStream | undefined) => {
-      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-        console.debug(`${CNAME}|onMediaStream`, mediaStream);
-      }
-      this.mediaStream = mediaStream;
-    })
 
-    const on_connectionStateChanged = (connectionState: RTCPeerConnectionState) => {
-      if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-        console.debug(`${CNAME}|onPeerConnectionStateChanged`, connectionState);
-      }
-      switch (connectionState) {
-        case "new":
-        case "connecting":
-          this.setOnlineStatus("Connecting…");
-          break;
-        case "connected":
-          this.setOnlineStatus("Online");
-          break;
-        case "disconnected":
-          this.setOnlineStatus("Disconnected");
-          break;
-        case "closed":
-          this.setOnlineStatus("Offline");
-          break;
-        case "failed":
-          this.setOnlineStatus("Error");
-          break;
-        default:
-          this.setOnlineStatus("Unknown");
-          break;
-      }
-    };
-    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-      console.debug(`${CNAME}|setting onPeerConnectionStateChanged`);
-    }
-    this._remoteStream.onPeerConnectionStateChanged(on_connectionStateChanged)
+    this._remoteStream.onMediaStream(this.on_mediastream)
+    this._remoteStream.onPeerConnectionStateChanged(this.on_connectionStateChanged)
   }
+
+  on_mediastream = (mediaStream: MediaStream | undefined) => {
+    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+      console.debug(`${CNAME}|onMediaStream`, mediaStream);
+    }
+    this.mediaStream = mediaStream;
+  }
+
+  on_connectionStateChanged = (connectionState: RTCPeerConnectionState) => {
+    if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
+      console.debug(`${CNAME}|onPeerConnectionStateChanged`, connectionState);
+    }
+    switch (connectionState) {
+      case "new":
+      case "connecting":
+        this.setOnlineStatus("Connecting…");
+        break;
+      case "connected":
+        this.setOnlineStatus("Online");
+        break;
+      case "disconnected":
+        this.setOnlineStatus("Disconnected");
+        break;
+      case "closed":
+        this.setOnlineStatus("Offline");
+        break;
+      case "failed":
+        this.setOnlineStatus("Error");
+        break;
+      default:
+        this.setOnlineStatus("Unknown");
+        break;
+    }
+  };
 
   _mediaStreamInfo: any;//MediaStreamInfo;
   @Input() set mediaStreamInfo(info: any) {
@@ -183,7 +182,9 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this._remoteStream) {
-      this._remoteStream.getParticipant().offData(this.on_participantData);
+      this._remoteStream.getParticipant().offData(this.on_participantData)
+      this._remoteStream.offMediaStream(this.on_mediastream)
+      this._remoteStream.offPeerConnectionStateChanged(this.on_connectionStateChanged)
     }
   }
 
