@@ -19,11 +19,10 @@ export type VideoInfo = {
 const CNAME = 'StreamVideo';
 
 @Component({
-  selector: 'app-stream-video',
-  templateUrl: './stream-video.component.html',
-  styleUrls: ['./stream-video.component.css'],
-  standalone: true,
-  imports: [NgStyle, NgClass]
+    selector: 'app-stream-video',
+    templateUrl: './stream-video.component.html',
+    styleUrls: ['./stream-video.component.css'],
+    imports: [NgStyle, NgClass]
 })
 export class StreamVideoComponent implements AfterViewInit, OnDestroy {
 

@@ -21,13 +21,12 @@ const DATA_SEPARATOR = '|';
 const CNAME = 'ControlledStream';
 
 @Component({
-  selector: 'app-controlled-stream',
-  standalone: true,
-  imports: [MatButtonModule, MatChipsModule, MatIconModule, MatTooltip,
-    JsonPipe, KeyValuePipe, NgStyle,
-    StreamVideoComponent, PointerComponent],
-  templateUrl: './controlled-stream.component.html',
-  styleUrl: './controlled-stream.component.css'
+    selector: 'app-controlled-stream',
+    imports: [MatButtonModule, MatChipsModule, MatIconModule, MatTooltip,
+        JsonPipe, KeyValuePipe, NgStyle,
+        StreamVideoComponent, PointerComponent],
+    templateUrl: './controlled-stream.component.html',
+    styleUrl: './controlled-stream.component.css'
 })
 export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 

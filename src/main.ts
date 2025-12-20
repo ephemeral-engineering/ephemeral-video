@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, enableProdMode, importProvidersFrom } from '@angular/core';
+import { enableProdMode, importProvidersFrom, inject, provideAppInitializer } from '@angular/core';
 
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
@@ -36,12 +36,10 @@ function initializeAppFactory(httpClient: HttpClient): () => Observable<any> {
 bootstrapApplication(AppComponent, {
   providers: [
     provideHttpClient(),
-    {
-      provide: APP_INITIALIZER,
-      useFactory: initializeAppFactory,
-      multi: true,
-      deps: [HttpClient],
-    },
+    provideAppInitializer(() => {
+        const initializerFn = (initializeAppFactory)(inject(HttpClient));
+        return initializerFn();
+      }),
     importProvidersFrom(AppRoutingModule),
     WINDOW_PROVIDERS,
     // AuthGuard,

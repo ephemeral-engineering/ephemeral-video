@@ -14,11 +14,10 @@ import { GLOBAL_STATE } from '../global-state';
 const CNAME = 'LocalStream';
 
 @Component({
-  selector: 'app-local-stream',
-  templateUrl: './local-stream.component.html',
-  styleUrls: ['./local-stream.component.css'],
-  standalone: true,
-  imports: [NgStyle, MatButtonModule, MatChipsModule, MatIconModule, MatTooltip, ControlledStreamComponent],
+    selector: 'app-local-stream',
+    templateUrl: './local-stream.component.html',
+    styleUrls: ['./local-stream.component.css'],
+    imports: [NgStyle, MatButtonModule, MatChipsModule, MatIconModule, MatTooltip, ControlledStreamComponent]
 })
 export class LocalStreamComponent implements OnInit {
 

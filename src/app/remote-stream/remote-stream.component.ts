@@ -16,13 +16,12 @@ import { GLOBAL_STATE } from '../global-state';
 const CNAME = 'RemoteStream';
 
 @Component({
-  selector: 'app-remote-stream',
-  templateUrl: './remote-stream.component.html',
-  styleUrls: ['./remote-stream.component.css'],
-  standalone: true,
-  // MatProgressSpinnerModule
-  imports: [MatButtonModule, MatChipsModule, MatIconModule, MatTooltip,
-    ControlledStreamComponent]
+    selector: 'app-remote-stream',
+    templateUrl: './remote-stream.component.html',
+    styleUrls: ['./remote-stream.component.css'],
+    // MatProgressSpinnerModule
+    imports: [MatButtonModule, MatChipsModule, MatIconModule, MatTooltip,
+        ControlledStreamComponent]
 })
 export class RemoteStreamComponent implements OnInit, OnDestroy {
 

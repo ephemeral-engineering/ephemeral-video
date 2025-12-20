@@ -16,11 +16,10 @@ export type Pointer = {
 const CNAME = 'Pointer';
 
 @Component({
-  selector: 'app-pointer',
-  standalone: true,
-  imports: [MatIconModule],
-  templateUrl: './pointer.component.html',
-  styleUrl: './pointer.component.scss'
+    selector: 'app-pointer',
+    imports: [MatIconModule],
+    templateUrl: './pointer.component.html',
+    styleUrl: './pointer.component.scss'
 })
 export class PointerComponent {
 
