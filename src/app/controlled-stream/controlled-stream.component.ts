@@ -1,4 +1,4 @@
-import { JsonPipe, KeyValuePipe, NgStyle } from '@angular/common';
+import { NgStyle } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, HostBinding, Input, NgZone, OnDestroy, ViewChild } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -21,12 +21,12 @@ const DATA_SEPARATOR = '|';
 const CNAME = 'ControlledStream';
 
 @Component({
-    selector: 'app-controlled-stream',
-    imports: [MatButtonModule, MatChipsModule, MatIconModule, MatTooltip,
-        JsonPipe, KeyValuePipe, NgStyle,
-        StreamVideoComponent, PointerComponent],
-    templateUrl: './controlled-stream.component.html',
-    styleUrl: './controlled-stream.component.css'
+  selector: 'app-controlled-stream',
+  imports: [MatButtonModule, MatChipsModule, MatIconModule, MatTooltip,
+    NgStyle,
+    StreamVideoComponent, PointerComponent],
+  templateUrl: './controlled-stream.component.html',
+  styleUrl: './controlled-stream.component.css'
 })
 export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
 

@@ -1,4 +1,3 @@
-import { NgStyle } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
@@ -14,10 +13,10 @@ import { GLOBAL_STATE } from '../global-state';
 const CNAME = 'LocalStream';
 
 @Component({
-    selector: 'app-local-stream',
-    templateUrl: './local-stream.component.html',
-    styleUrls: ['./local-stream.component.css'],
-    imports: [NgStyle, MatButtonModule, MatChipsModule, MatIconModule, MatTooltip, ControlledStreamComponent]
+  selector: 'app-local-stream',
+  templateUrl: './local-stream.component.html',
+  styleUrls: ['./local-stream.component.css'],
+  imports: [MatButtonModule, MatChipsModule, MatIconModule, MatTooltip, ControlledStreamComponent]
 })
 export class LocalStreamComponent implements OnInit {
 

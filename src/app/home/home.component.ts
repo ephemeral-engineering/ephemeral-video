@@ -45,12 +45,12 @@ interface Message {
 const CNAME = 'Home';
 
 @Component({
-    selector: 'app-home',
-    templateUrl: './home.component.html',
-    styleUrls: ['./home.component.css'],
-    imports: [NgClass, NgStyle,
-        RemovePipe, JsonPipe,
-        ClipboardModule, AlertComponent, LocalStreamComponent, RemoteStreamComponent, MatButtonModule, MatIconModule, MatTooltip, FormsModule, MatFormFieldModule, MatInputModule, MatSelectModule, KeyValuePipe, FilterOutPipe]
+  selector: 'app-home',
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.css'],
+  imports: [NgStyle,
+    RemovePipe, JsonPipe,
+    ClipboardModule, AlertComponent, LocalStreamComponent, RemoteStreamComponent, MatButtonModule, MatIconModule, MatTooltip, FormsModule, MatFormFieldModule, MatInputModule, MatSelectModule, KeyValuePipe, FilterOutPipe]
 })
 export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
 
