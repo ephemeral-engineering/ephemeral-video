@@ -90,7 +90,7 @@ export class RemoteStreamComponent implements OnInit, OnDestroy {
 
     const on_connectionStateChanged = (connectionState: RTCPeerConnectionState) => {
       if (globalThis.ephemeralVideoLogLevel.isDebugEnabled) {
-        console.debug(`${CNAME}|onPeerConnectionStateChanged`, event);
+        console.debug(`${CNAME}|onPeerConnectionStateChanged`, connectionState);
       }
       switch (connectionState) {
         case "new":
