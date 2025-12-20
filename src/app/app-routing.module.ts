@@ -8,8 +8,6 @@ import { HomeComponent } from './home/home.component';
 const routes: Routes = [
   { path: '', component: HomeComponent }, //, canActivate: [AuthGuard]
   { path: ':id', component: HomeComponent },
-  // { path: '', redirectTo: '/home', pathMatch: 'full' },
-  // { path: ':id', redirectTo: '/home/:id', pathMatch: 'full' }
 ];
 
 // https://angular.io/guide/router#base-href
