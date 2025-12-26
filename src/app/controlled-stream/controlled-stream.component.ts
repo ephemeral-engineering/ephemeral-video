@@ -214,12 +214,12 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
   }
 
   @HostBinding("style.--flex-direction")
-  private flexDirection: string = 'row';
+  flexDirection: string = 'row';
 
   @HostBinding("style.--min-height")
-  private minHeight: string = '50px';
+  minHeight: string = '50px';
   @HostBinding("style.--min-width")
-  private minWidth: string = '50px';
+  minWidth: string = '50px';
 
   @ViewChild('container') container: ElementRef | undefined;
   @ViewChild('label') label: ElementRef | undefined;
