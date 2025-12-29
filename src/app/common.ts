@@ -1,3 +1,4 @@
+
 export const getSessionStorage = (key: string) => {
     try {
         return sessionStorage.getItem(key) || undefined;

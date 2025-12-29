@@ -1,6 +1,6 @@
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { JsonPipe, KeyValuePipe, NgClass, NgStyle } from '@angular/common';
+import { JsonPipe, KeyValuePipe, NgStyle } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, HostListener, Inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule, UntypedFormBuilder, UntypedFormControl, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -270,6 +270,10 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
 
         this.remoteParticipants.add(participant);
 
+        if (this.remoteParticipants.size == 2) {
+          conversation.requestSFU(true)
+        }
+
         this.localParticipant?.shareData(`n|${this.gstate.nickname}`, participant.peerId)
 
         participant.onStreamPublished((stream: RemoteStream) => {
@@ -313,6 +317,9 @@ export class HomeComponent implements AfterViewInit, OnInit, OnDestroy {
         }
         if (participant instanceof RemoteParticipant) {
           this.doRemoveRemoteParticipant(participant)
+          if (this.remoteParticipants.size < 2) {
+            conversation.requestSFU(false)
+          }
         }
         else if (participant instanceof LocalParticipant) {
           if (globalThis.ephemeralVideoLogLevel.isInfoEnabled) {
