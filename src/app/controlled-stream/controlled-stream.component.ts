@@ -74,7 +74,7 @@ export class ControlledStreamComponent implements AfterViewInit, OnDestroy {
       if (this._stream instanceof LocalStream) {
         const localStream: LocalStream = this._stream;
         // forward to subscribers, except the originating peer
-        const to = new Set(localStream.getPeers());
+        const to = new Set(localStream.getSubscribers().keys());
         to.delete(peerId)
         localStream.sendData(data, to)
       }
